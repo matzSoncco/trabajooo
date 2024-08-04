@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Equipo{% endblock %}
+
+{% block content %}
+<style>
+    .editable-duration {
+        padding: 5px;
+        border: 1px solid transparent;
+    }
+    .editable-duration:hover {
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+    }
+    .editable-duration.editing {
+        background-color: #fff;
+        border: 1px solid #007bff;
+        box-shadow: 0 0 5px rgba(0,123,255,0.5);
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        console.log('Documento listo');
+
+        // Función para cargar la tabla de EPPs añadidos
+        function loadDurationPpe() {
+            $.ajax({
+                url: "{% url 'table_duration_ppe' %}",
+                success: function(data) {
+                    $('#duration-table-container').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error de AJAX al cargar la tabla:", status, error);
+                }
+            });
+        }
+
+        // Cargar las tablas al cargar la página
+        loadDurationPpe();
+
+        // Manejar el evento click para todos los botones de guardar duración
+        $(document).on('click', '.save-duration-btn', function(e) {
+            e.preventDefault(); // Prevenir cualquier acción por defecto del botón
+            
+            console.log('Botón clickeado'); // Para verificar si el evento se está capturando
+            
+            var row = $(this).closest('tr');
+            var ppeId = row.data('ppe-id');
+            var newDuration = row.find('.editable-duration').text();
+            
+            console.log('PPE ID:', ppeId);
+            console.log('Nueva duración:', newDuration);
+
+            $.ajax({
+                url: "{% url 'update_ppe_duration' %}",
+                method: 'POST',
+                data: {
+                    'ppe_id': ppeId,
+                    'duration': newDuration,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    console.log("Respuesta del servidor:", response);
+                    if (response.success) {
+                        alert('Duración actualizada con éxito');
+                    } else {
+                        alert('Error al actualizar la duración: ' + (response.error || 'Error desconocido'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error de AJAX:", status, error);
+                    alert('Error de conexión: ' + error);
+                }
+            });
+        });
+
+        // Opcional: resaltar la celda cuando se está editando
+        $(document).on('focus', '.editable-duration', function() {
+            $(this).addClass('editing');
+        }).on('blur', '.editable-duration', function() {
+            $(this).removeClass('editing');
+        });
+    });
+</script>
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <div class="titulo-pagina">
+            <h2>Tabla de duracion de EPP</h2>
+        </div>
+        <div class="tabla-creacion" id="duration-table-container">
+            <!-- Aquí se cargará la tabla de duración de EPPs -->
+        </div>
+    </section>
+</section>
+{% endblock %}

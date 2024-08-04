@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="principal">
+        <div class="titulo-pagina">
+            <h2>Inicio</h2>
+        </div>
+        <div class="botonoes-pag-principal">
+            <div class="fila-links-inicio">
+                <div class="link-inicio">
+                    <a class="referencia" href="{% url 'create_ppe' %}">Catalogar</a>
+                </div>
+                <div class="link-inicio">
+                    <a class="referencia" href="{% url 'add_ppe' %}">Ingresar Stock</a>
+                </div>
+                <div class="link-inicio">
+                    <a class="referencia" href="{% url 'add_ppe_loan' %}">Salidas</a>
+                </div>
+            </div>
+            <div class="fila-links-inicio">
+                <div class="link-inicio">
+                    <a class="referencia" href="#">Devolución</a>
+                </div>
+                <div class="link-inicio">
+                    <a class="referencia" href="{% url 'total_cost_table' %}">Reportes</a>
+                </div>
+                <div class="link-inicio">
+                    <a class="referencia" href="{% url 'history' %}">Historial</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
+{% endif %}
+{% endblock %}

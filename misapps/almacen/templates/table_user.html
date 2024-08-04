@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Usuarios Almaceneros{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <div class="contenedor-principal">
+            <table class="tabla" id="duration-table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Nombres</th>
+                        <th>Apellidos</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in admin %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.first_name }}</td>
+                            <td>{{ user.last_name }}</td>
+                            <td>{{ user.email }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}

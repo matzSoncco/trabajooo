@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Asignar EPPs{% endblock %}
+
+{% block content %}
+<section class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="titulo">Asignar EPPs</h2>
+                </div>
+                <div class="card-body">
+                    <form class="formulario" method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <style>
+                            .formulario label {
+                                color: black; /* Color de texto negro para etiquetas */
+                            }
+                        </style>
+                        <button class="btn btn-primary btn-block mt-3" type="submit">Agregar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

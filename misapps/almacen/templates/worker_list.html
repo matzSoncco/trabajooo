@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Trabajador{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <div class="tabla-creacion" id="worker-table-container">
+            <div class="top-form">
+                <h2>Tabla de Trabajadores</h2>
+                <a class="volver-btn" href="{% url 'create_worker' %}">Agregar Trabajador</a>
+            </div>
+            <div class="buscar">
+                <form class="formulario-buscar" method="get" action=".">
+                    <div class="cuadro-busqueda">
+                        <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                    </div>
+                    <div class="btn-busqueda-elemento">
+                        <button type="submit" class="btn buscar-btn">Buscar</button>
+                    </div>
+                </form>
+            </div>
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>DNI</th>
+                        <th>Nombres</th>
+                        <th>Apellidos</th>
+                        <th>Cargo</th>
+                        <th>Fecha de contrato</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for worker in workers %}
+                        <tr>
+                            <td>{{ worker.dni }}</td>
+                            <td>{{ worker.name }}</td>
+                            <td>{{ worker.surname }}</td>
+                            <td>{{ worker.position }}</td>
+                            <td>{{ worker.contractDate }}</td>
+                            <td>{% if worker.workerStatus %}Activo{% else %}Inactivo{% endif %}</td>
+                            <td>
+                                <div class="botones-acciones">
+                                    <button><img class="icono-btn" src="../../static/img/anadir.png" alt=""></button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No hay trabajadores en la empresa.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}

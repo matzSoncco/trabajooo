@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <div class="titulo-pagina">
+            <h2>Tabla de historial de acciones</h2>
+        </div>
+        <div class="tabla-creacion" id="duration-table-container">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Acción</th>
+                        <th>Objeto</th>
+                        <th>Fecha y Hora</th>
+                        <th>Información Adicional</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in history_records %}
+                        <tr>
+                            <td>{{ record.user }}</td>
+                            <td>{{ record.action }}</td>
+                            <td>{{ record.object_name }}</td>
+                            <td>{{ record.timestamp }}</td>
+                            <td>{{ record.additional_info }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}

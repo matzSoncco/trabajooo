@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Material{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <nav class="navegacion-link-formularios-top">
+            <a class="link-form" href="{% url 'create_ppe' %}">EPPs</a>
+            <a class="link-form" href="{% url 'create_tool' %}">Herramientas</a>
+            <a class="link-form" href="{% url 'create_equipment' %}">Equipos</a>
+            <a class="link-form" href="{% url 'create_material' %}">Materiales</a>
+        </nav>
+        <div class="contenedor-principal">
+            <div class="top-form">
+                <h2 class="titulo-primario">Creación de Materiales</h2>
+            </div>
+            <div class="centrado">
+                <div class="formulario-contenedor-individual">
+                    <form method="post" action="{% url 'create_material' %}" enctype="multipart/form-data" class="box">
+                        {% csrf_token %}
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_name" class="label">Nombre</label>
+                                {{ form.name }}
+                            </div>
+                        </div>
+        
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_unit" class="label">Unidad</label>
+                                {{ form.unit }}
+                            </div>
+                            <div class="campo">
+                                <label for="id_new_unit" class="label">Agregar nueva unidad</label>
+                                {{ form.new_unit }}
+                            </div>
+                            <div class="campo">
+                                <button type="button" id="add-unit-btn">Agregar</button>
+                            </div>
+                        </div>
+        
+                        <div class="campo">
+                            <label for="id_image" class="label">Imágen</label>
+                            {{ form.image }}
+                        </div>
+        
+                        <div class="campo-botones">
+                            <button class="form-btn aceptar-btn" type="submit">Crear Material</button>
+                            <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="centrado">
+            <a class="form-btn ver-obj-btn" href="{% url 'material_total' %}" style="
+                display: inline-block;
+                padding: 10px 20px;
+                font-size: 16px;
+                color: #fff;
+                background-color: #2c3e50;
+                border: none;
+                border-radius: 5px;
+                text-decoration: none;
+                text-align: center;
+                transition: background-color 0.3s ease;
+                margin-top: 20px;
+            " onmouseover="this.style.backgroundColor='#34495e';" onmouseout="this.style.backgroundColor='#2c3e50';">
+                Ver Materiales
+            </a>
+        </div>
+    </section>
+</section>
+{% if messages %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for message in messages %}
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: "{{ message }}",
+                    confirmButtonText: 'Aceptar'
+                });
+            {% endfor %}
+        });
+    </script>
+{% endif %}
+<script>
+    document.getElementById('add-unit-btn').addEventListener('click', function() {
+        const newUnitField = document.getElementById('id_new_unit');
+        const unitSelect = document.getElementById('id_unit');
+        const newUnit = newUnitField.value.trim();
+
+        if (newUnit) {
+            fetch('{% url "add_new_unit" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 'new_unit': newUnit })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const newOption = new Option(newUnit, newUnit, true, true);
+                    unitSelect.add(newOption);
+                    unitSelect.value = newUnit;
+                    newUnitField.value = '';
+                    document.querySelector('form').submit();  // Actualiza y envía el formulario automáticamente
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        } else {
+            alert('Por favor, ingresa un nombre de unidad.');
+        }
+    });
+</script>
+{% endblock %}

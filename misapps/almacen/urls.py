@@ -10,6 +10,7 @@ urlpatterns = [
     #EPP
     path('ppe/create/', views.create_ppe, name='create_ppe'),
     path('ppe/total/', views.ppe_total, name='ppe_total'),
+    path('ppe/total/add', views.ppe_total_add, name='ppe_total_add'),
     path('add_new_unit/', views.add_new_unit, name='add_new_unit'),
     path('get_ppe_data/', views.get_ppe_data, name='get_ppe_data'),
     path('save_all_ppe/', views.save_all_ppe, name='save_all_ppe'),
@@ -25,6 +26,7 @@ urlpatterns = [
     path('ppe/add/', views.add_ppe, name='add_ppe'),
     path('ppe/add/table/', views.show_added_ppe, name='table_added_ppe'),
     path('ppe/<str:name>/modify/', views.modify_ppe, name='modify_ppe'),
+    path('ppe/<str:name>/modifyadd/', views.modify_ppe_add, name='modify_ppe_add'),
     path('ppe/<str:ppe_name>/delete/', views.delete_ppe, name='delete_ppe'),
     path('ppe/total_ppe_stock/', views.total_ppe_stock, name='total_ppe_stock'),
 
@@ -46,8 +48,13 @@ urlpatterns = [
 
     #HERRAMIENTAS
     path('tool/', views.tool_list, name='tool_list'),
+    path('tool/add/', views.add_tool, name='add_tool'),
     path('tool/create/', views.create_tool, name='create_tool'),
+    path('get_tool_data/', views.get_tool_data, name='get_tool_data'),
+    path('tool/create/table/', views.Tools, name='table_created_tools'),
+    path('save_all_tools/', views.save_all_tools, name='save_all_tools'),
     path('tool/total/', views.tool_total, name='tool_total'),
+    path('tool/total/add', views.tool_total_add, name='tool_total_add'),
     path('tool/<str:tool_name>/delete/', views.delete_tool, name='delete_tool'),
     path('tool/<str:name>/modify/', views.modify_tool, name='modify_tool'),
     path('tool/total_tool_stock/', views.total_tool_stock, name='total_tool_list'),

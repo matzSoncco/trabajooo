@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 class Tool(models.Model):
     idTool = models.CharField(verbose_name=_('ID'), primary_key=True, editable=False, max_length=10)
@@ -20,6 +21,7 @@ class Tool(models.Model):
     image = models.ImageField(upload_to='uploads/', blank=True, null=True)
     unitCost = models.DecimalField(default=0.0, null=False, max_digits=8, decimal_places=2)
     totalCost = models.DecimalField(default=0.0, null=False, max_digits=10, decimal_places=2, editable=False)
+    creationDate = models.DateField(verbose_name=_('Fecha de Creación'), default=timezone.now, blank=False, null=False)
 
     def clean(self):
         if self.level == -1:

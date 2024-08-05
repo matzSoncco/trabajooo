@@ -132,14 +132,14 @@
     <section class="contendor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'add_ppe' %}">EPPs</a>
-            <a class="link-form" href="#">Herramientas</a>
+            <a class="link-form" href="{% url 'add_tool'%}">Herramientas</a>
             <a class="link-form" href="#">Equipos</a>
             <a class="link-form" href="#">Materiales</a>
         </nav>
         <div class="contenedor-formulario">
             <div class="top-form">
                 <h2 class="titulo-primario">Añadir de Equipos de Protección Personal </h2>
-                <a class="link-top-form" href="{% url 'table_added_ppe' %}">Ver tabla</a>
+                <a class="link-top-form" href="{% url 'ppe_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual">

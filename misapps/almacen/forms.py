@@ -366,41 +366,78 @@ class CreateToolForm(forms.ModelForm):
                 "type": "file",
             }),
         }
+LEVELS = [
+    (-1, 'Elija un nivel'),
+    (1, 'Bajo'),
+    (2, 'Medio'),
+    (3, 'Mayor')
+]
 
 class ToolForm(forms.ModelForm):
-    level = forms.ChoiceField(widget=forms.Select(attrs={
+    name = forms.CharField(widget=forms.TextInput(attrs={
         "class": "input",
-        "placeholder": "Seleccione el nivel"
+        "type": "text",
+        "placeholder": "Ingrese el nombre de la herramienta",
+        "id": "id_name"
+    }))
+
+    quantity = forms.IntegerField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Ingrese la cantidad a añadir",
+        "id": "id_quantity",
+        "min": "1",
+        "max": "99999"
+    }))
+
+    level = forms.ChoiceField(choices=LEVELS, widget=forms.Select(attrs={
+        "class": "input",
+        "id": "id_level"
+    }))
+
+    stock = forms.IntegerField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Ingrese el stock ideal",
+        "id": "id_stock"
+    }))
+
+    guideNumber = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "Ingrese el número de guía",
+        "id": "id_guideNumber"
+    }))
+    
+    unitCost = forms.FloatField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Ingrese el costo unitario",
+        "id": "id_unitCost",
+        "step": "0.01"
+    }))
+
+    creationDate = forms.DateField(widget=forms.DateInput(attrs={
+        "class": "input",
+        "type": "date",
+        "id": "id_creationDate"
+    }))
+
+    image = forms.ImageField(widget=forms.FileInput(attrs={
+        "class": "input",
+        "type": "file",
+        "id": "id_image"
     }))
 
     class Meta:
         model = Tool
-        fields = ['name', 'level', 'stock', 'guideNumber', 'image']
-        widgets = {
-            'name': forms.TextInput(attrs={
-                "class": "input",
-                "type": "text",
-                "placeholder": "Ingrese el nombre de la herramienta"
-            }),
-            'stock': forms.NumberInput(attrs={
-                "class": "input",
-                "type": "number",
-                "placeholder": "Ingrese el stock"
-            }),
-            'guideNumber': forms.TextInput(attrs={
-                "class": "input",
-                "type": "text",
-                "placeholder": "Ingrese el número de guía"
-            }),
-            'image': forms.FileInput(attrs={
-                "class": "input",
-                "type": "file",
-            })
-        }
-    
+        fields = ['name', 'quantity', 'level', 'stock', 'guideNumber', 'image', 'unitCost', 'creationDate']
+
     def __init__(self, *args, **kwargs):
         super(ToolForm, self).__init__(*args, **kwargs)
         self.fields['image'].required = False
+        # Asegúrate de definir LEVEL_CHOICES en tu código o cambiarlo según tu necesidad.
+
 
 class CreateToolForm(forms.ModelForm):
     name = forms.CharField(widget=forms.TextInput(attrs={

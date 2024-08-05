@@ -35,6 +35,7 @@ from .models.Tool import Tool
 from .models.History import History
 from .models.Unit import Unit
 from .models.PpeStockUpdate import PpeStockUpdate
+from .models.ToolStockUpdate import ToolStockUpdate
 from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, LoanForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm
 
 logger = logging.getLogger(__name__)
@@ -448,6 +449,29 @@ def ppe_total(request):
     form = CreatePpeForm()  # Inicializa el formulario para crear o editar
     return render(request, 'ppe_total.html', {'ppes': ppes, 'form': form})
 
+def ppe_total_add(request):
+    ppes = Ppe.objects.all()  
+    
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            ppe_id = request.POST.get('delete')
+            ppe = get_object_or_404(Ppe, id=ppe_id)
+            ppe.delete()
+            messages.success(request, 'EPP eliminado exitosamente.')
+            return redirect('ppe_total')
+
+        if 'edit' in request.POST:
+            ppe_id = request.POST.get('edit')
+            ppe = get_object_or_404(Ppe, id=ppe_id)
+            form = PpeForm(request.POST, request.FILES, instance=ppe)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'EPP actualizado exitosamente.')
+                return redirect('ppe_total')
+    
+    form = PpeForm()  # Inicializa el formulario para crear o editar
+    return render(request, 'ppe_total_add.html', {'ppes': ppes, 'form': form})
+
 @login_required
 def create_ppe(request):
     if request.method == 'POST':
@@ -583,6 +607,42 @@ def modify_ppe(request, name):
         form = CreatePpeForm(instance=ppe)
 
     return render(request, 'modify_ppe.html', {'form': form, 'ppe': ppe})
+
+@login_required
+def modify_ppe_add(request, name):
+    ppe = get_object_or_404(Ppe, name=name)
+
+    if request.method == 'POST':
+        form = CreatePpeForm(request.POST, request.FILES, instance=ppe)
+
+        new_unit_name = request.POST.get('new_unit')
+        if new_unit_name:
+            unit, created = Unit.objects.get_or_create(name=new_unit_name)
+            post_data = request.POST.copy()
+            post_data['unit'] = unit.id
+            form = PpeForm(post_data, request.FILES, instance=ppe)
+        
+        if form.is_valid():
+            ppe = form.save(commit=False)
+            ppe.save()
+
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(ppe),
+                object_name=ppe.name, 
+                action='Modified',
+                user=request.user,
+                timestamp=timezone.now()
+            )
+
+            messages.success(request, 'EPP modificado exitosamente.')
+            return redirect('ppe_total')
+        else:
+            print("Form is not valid")
+            print(form.errors)
+    else:
+        form = PpeForm(instance=ppe)
+
+    return render(request, 'modify_ppe_add.html', {'form': form, 'ppe': ppe})
 
 @login_required 
 def total_ppe_stock(request):
@@ -840,6 +900,128 @@ def total_material_stock(request):
     return JsonResponse({'total_stock': total_stock})
 
 #TOOLS
+@login_required
+def Tools(request):
+    query = request.GET.get('q', '')
+    if query:
+        tool = Tool.objects.filter(name__icontains=query)
+    else:
+        tool = Tool.objects.all()
+    
+    context = {'tool': tool, 'query': query}
+    return render(request, 'table_created_tools.html', context)
+
+def get_tool_data(request):
+    tool_id = request.GET.get('id')
+    tool = get_object_or_404(Tool, idTool=tool_id)
+    data = {
+        'guideNumber': tool.guideNumber,
+        'creationDate': tool.creationDate,
+        'name': tool.name,
+        'unitCost': tool.unitCost,
+        'quantity': tool.quantity,
+        'stock': tool.stock,
+        'level': tool.level,
+    }
+    return JsonResponse(data)
+@login_required
+def add_tool(request):
+    if request.method == 'POST':
+        form = ToolForm(request.POST, request.FILES)
+        if form.is_valid():
+            guideNumber = form.cleaned_data['guideNumber']
+            creationDate = form.cleaned_data['creationDate']
+            name = form.cleaned_data['name']
+            unitCost = Decimal(form.cleaned_data['unitCost'])
+            quantity = int(form.cleaned_data['quantity'])
+            stock = int(form.cleaned_data['stock'])
+            level = int(form.cleaned_data['level'])
+            
+            tool, created = Tool.objects.get_or_create(idTool=guideNumber, defaults={
+                'name': name,
+                'unitCost': unitCost,
+                'quantity': quantity,
+                'stock': stock,
+                'level': level,
+                'creationDate': creationDate
+            })
+            
+            if not created:
+                # Update existing tool
+                tool.quantity += quantity
+                tool.stock = stock
+                tool.unitCost = ((tool.unitCost * tool.quantity) + (unitCost * quantity)) / (tool.quantity + quantity)
+                tool.save()
+            
+            # Create the stock update record
+            ToolStockUpdate.objects.create(
+                tool=tool,
+                quantity=quantity,
+                unitCost=unitCost,
+                date=creationDate
+            )
+            
+            return redirect('add_tool')
+        else:
+            # Print form errors for debugging
+            print(form.errors)
+            return JsonResponse({'status': 'error', 'message': form.errors})
+    else:
+        form = ToolForm()
+    return render(request, 'add_tool.html', {'form': form})
+
+@csrf_exempt
+def save_all_tools(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            for item in data:
+                tool = Tool.objects.get(name=item['name'])
+                quantity = int(item['quantity'])
+                unitCost = Decimal(item['unitCost'])
+                stock = int(item['stock'])
+                creationDate = item['creationDate']  # Asegúrate de que esto esté presente
+                
+                total_cost = (tool.unitCost * Decimal(tool.quantity)) + (unitCost * quantity)
+                tool.quantity += quantity
+                tool.unitCost = total_cost / tool.quantity
+                tool.stock = stock
+                tool.save()
+                
+                ToolStockUpdate.objects.create(
+                    tool=tool,
+                    quantity=quantity,
+                    unitCost=unitCost,
+                    date=creationDate
+                )
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'invalid method'})
+
+def tool_total_add(request):
+    tools = Tool.objects.all()  
+    
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            tool_id = request.POST.get('delete')
+            tool = get_object_or_404(Ppe, id=ppe_id)
+            tool.delete()
+            messages.success(request, 'Herramienta eliminado exitosamente.')
+            return redirect('tool_total')
+
+        if 'edit' in request.POST:
+            tool_id = request.POST.get('edit')
+            tool = get_object_or_404(Tool, id=tool_id)
+            form = ToolForm(request.POST, request.FILES, instance=tool)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Herramienta actualizado exitosamente.')
+                return redirect('tool_total')
+    
+    form = ToolForm()  # Inicializa el formulario para crear o editar
+    return render(request, 'tool_total_add.html', {'tools': tools, 'form': form})
+
 def tool_total(request):
     tools = Tool.objects.all()  
     

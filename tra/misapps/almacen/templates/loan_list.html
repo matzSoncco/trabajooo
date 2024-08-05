@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Préstamos{% endblock %}
+
+{% block content %}
+<section class="container mt-4">
+    <div class="row mb-4">
+        <div class="col text-center">
+            <h2 class="titulo display-4">Préstamos</h2>
+        </div>
+    </div>
+    <nav class="row justify-content-between mb-4">
+        <div class="col-md-6">
+            <form class="form-inline" method="get" action="{% url 'loan_list' %}">
+                <input type="text" class="form-control mr-2" name="q" placeholder="Buscar por nombre de trabajador" value="{{ query|default_if_none:'' }}">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </form>
+        </div>
+        <div class="col-md-6 text-right">
+            <ul class="list-inline">
+                <li class="list-inline-item"><a href="{% url 'add_loan' %}" class="btn btn-success">Asignar a Trabajador</a></li>
+                <li class="list-inline-item"><a href="{% url 'material_list' %}" class="btn btn-secondary">Materiales</a></li>
+                <li class="list-inline-item"><a href="{% url 'tool_list' %}" class="btn btn-secondary">Herramientas</a></li>
+                <li class="list-inline-item"><a href="{% url 'equipment_list' %}" class="btn btn-secondary">Equipos</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered tablaEPP">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Nombre Trabajador</th>
+                    <th>Apellido Trabajador</th>
+                    <th>Código de Orden de Trabajo</th>
+                    <th>Fecha de asignación</th>
+                    <th>Estado de devolución</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in loans %}
+                <tr>
+                    <td>{{ item.worker.name }}</td>
+                    <td>{{ item.worker.surname }}</td>
+                    <td>{{ item.workOrderCode }}</td>
+                    <td>{{ item.loanDate }}</td>
+                    <td>{{ item.status }}</td>
+                    <td>
+                        <button 
+                            class="btn btn-info btn-sm" 
+                            onclick="openDetailsWindow(this)"
+                            data-dni="{{ item.worker.dni }}"
+                            data-nombres="{{ item.worker.name }}"
+                            data-apellidos="{{ item.worker.surname }}"
+                            data-codigo="{{ item.workOrderCode }}"
+                            data-fecha-asignacion="{{ item.loanDate }}"
+                            data-fecha-devolucion="{{ item.returnLoanDate }}"
+                            data-estado="{{ item.status }}"
+                            data-material="{{ item.material.name }}"
+                            data-herramienta="{{ item.tool.name }}"
+                            data-equipo="{{ item.equipment.name }}"
+                        >Detalles</button>
+                        <a href="{% url 'modify_loan' item.idLoan %}" class="btn btn-info btn-sm">Editar</a>
+                        <a  class="btn btn-danger btn-sm"
+                            onclick="openDeleteWindow(this)"
+                            data-url="{% url 'delete_loan' item.idLoan %}"
+                            data-id="{{ item.idLoan }}"
+                        >Eliminar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+<script>
+    function openDeleteWindow(button) {
+        const deleteUrl = button.getAttribute('data-url');
+        const deleteId = button.getAttribute('data-id');
+        const rowToDelete = button.closest('tr');
+    
+        const confirmation = confirm("¿Estás seguro que deseas eliminar el Material?");
+        if (confirmation) {
+            fetch(deleteUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'), // Asegúrate de tener esta función para obtener el token CSRF
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: deleteId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    rowToDelete.remove(); // Elimina la fila de la tabla
+                } else {
+                    alert("Hubo un problema al intentar eliminar el material.");
+                }
+            })
+            .catch(error => console.error('Error al eliminar:', error));
+        }
+    }
+    
+    // Función auxiliar para obtener el token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Buscar el token CSRF en las cookies
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    function openDetailsWindow(button) {
+        // Obtener los datos del botón
+        const dni = button.getAttribute('data-dni');
+        const nombres = button.getAttribute('data-nombres');
+        const apellidos = button.getAttribute('data-apellidos');
+        const codigo = button.getAttribute('data-codigo');
+        const fechaAsignacion = button.getAttribute('data-fecha-asignacion');
+        const fechaDevolucion = button.getAttribute('data-fecha-devolucion');
+        const estado = button.getAttribute('data-estado');
+        const material = button.getAttribute('data-material');
+        const herramienta = button.getAttribute('data-herramienta');
+        const equipo = button.getAttribute('data-equipo');
+    
+        // Crear contenido HTML para la nueva ventana
+        const newWindowContent = `
+            <html>
+            <head>
+                <title>Detalles del Préstamo</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .details-container { padding: 20px; }
+                    .details-container h2 { text-align: center; }
+                    .details-container p { margin: 10px 0; }
+                </style>
+            </head>
+            <body>
+                <div class="details-container">
+                    <h2>Detalles del Préstamo</h2>
+                    <p><strong>DNI del Trabajador:</strong> ${dni}</p>
+                    <p><strong>Nombres:</strong> ${nombres}</p>
+                    <p><strong>Apellidos:</strong> ${apellidos}</p>
+                    <p><strong>Código de Orden de Trabajo:</strong> ${codigo}</p>
+                    <p><strong>Fecha de Asignación:</strong> ${fechaAsignacion}</p>
+                        <p><strong>Fecha de Devolución:</strong> ${fechaDevolucion}</p>
+                        <p><strong>Estado de Devolución:</strong> ${estado}</p>
+                        <p><strong>Material:</strong> ${material}</p>
+                        <p><strong>Herramienta:</strong> ${herramienta}</p>
+                        <p><strong>Equipo:</strong> ${equipo}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+        
+            // Abrir una nueva ventana y escribir el contenido HTML
+            const newWindow = window.open('', '', 'width=600,height=400');
+            newWindow.document.write(newWindowContent);
+            newWindow.document.close(); // Necesario para algunos navegadores
+        }
+    </script>
+{% endblock %}

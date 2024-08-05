@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Herramientas{% endblock %}
+
+{% block content %}
+<section class="container mt-4">
+    <div class="row mb-4">
+        <div class="col text-center">
+            <h2 class="titulo display-4">Herramientas</h2>
+        </div>
+    </div>
+    <nav class="row justify-content-between mb-4">
+        <div class="col-md-6">
+            <form class="form-inline" method="get" action="{% url 'tool_list' %}">
+                <input type="text" class="form-control mr-2" name="q" placeholder="Buscar por nombre" value="{{ query|default_if_none:'' }}">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </form>
+        </div>
+        <div class="col-md-6 text-right">
+            <ul class="list-inline">
+                <button onclick="abrirModalStockTotal()" class="btn btn-secondary">Stock total</button>
+                <li class="list-inline-item"><a href="{% url 'loan_list' %}" class="btn btn-secondary">Volver</a></li>
+                <li class="list-inline-item"><a href="{% url 'add_tool' %}" class="btn btn-success">Agregar Herramientas</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered tablaEPP">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Cantidad</th>
+                    <th>Nivel</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tools %}
+                <tr>
+                    <td>{{ item.idTool }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.get_level_display }}</td>
+                    <td>{{ item.stock }}</td>
+                    <td>
+                        <a href="{% url 'modify_tool' item.idTool %}" class="btn btn-info btn-sm">Editar</a>
+                        <a  class="btn btn-danger btn-sm"
+                            onclick="openDeleteWindow(this)"
+                            data-url="{% url 'delete_tool' item.idTool %}"
+                            data-id="{{ item.idTool }}"
+                        >Eliminar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+<div id="ventanaModal" class="modal">
+    <div class="modal-content">
+        <span class="cerrar" onclick="cerrarModal()">&times;</span>
+            <h2>Stock Total</h2>
+            <p>El stock total es: <span id="stockTotalValue">Cargando...</span></p>
+    </div>
+</div>
+<script>
+    // Obtener el modal una vez y guardarlo en una variable
+    var modal = document.getElementById("ventanaModal");
+
+    function abrirModalStockTotal() {
+        modal.style.display = "flex";
+        actualizarStockTotal();
+    }
+
+    function cerrarModal() {
+        modal.style.display = "none";
+    }
+
+    function actualizarStockTotal() {
+        var stockTotalElement = document.getElementById("stockTotalValue");
+        stockTotalElement.textContent = "Cargando...";
+
+        fetch('/tool/total_tool_stock/')
+            .then(response => response.json())
+            .then(data => {
+                stockTotalElement.textContent = data.total_stock;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                stockTotalElement.textContent = "Error al cargar";
+            });
+    }
+
+    // Agregar el evento de clic al window una sola vez
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            cerrarModal();
+        }
+    };
+
+    function openDeleteWindow(button) {
+        const deleteUrl = button.getAttribute('data-url');
+        const deleteId = button.getAttribute('data-id');
+        const rowToDelete = button.closest('tr');
+    
+        const confirmation = confirm("¿Estás seguro que deseas eliminar la Herramienta?");
+        if (confirmation) {
+            fetch(deleteUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'), // Asegúrate de tener esta función para obtener el token CSRF
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: deleteId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    rowToDelete.remove(); // Elimina la fila de la tabla
+                } else {
+                    alert("Hubo un problema al intentar eliminar la herramienta.");
+                }
+            })
+            .catch(error => console.error('Error al eliminar:', error));
+        }
+    }
+    
+    // Función auxiliar para obtener el token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Buscar el token CSRF en las cookies
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

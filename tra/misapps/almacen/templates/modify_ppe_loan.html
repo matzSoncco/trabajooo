@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Modificar Entrega de EPP{% endblock %}
+
+{% block content %}
+<section class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="titulo text-center mb-4">Modificar Entrega de EPP</h2>
+                    <form method="post" class="formulario p-4 shadow-sm rounded bg-light">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <style>
+                            .formulario label {
+                                color: black; /* Asegura que las etiquetas <label> tengan texto negro */
+                            }
+                        </style>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary mr-2">Actualizar</button>
+                            <a href="{% url 'ppe_loan_list' %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

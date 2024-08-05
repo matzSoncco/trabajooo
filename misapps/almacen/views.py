@@ -1117,69 +1117,78 @@ def worker_details(request):
     return JsonResponse({}, status=400)
 
 @csrf_exempt
-@transaction.atomic
 def confirm_ppe_loan(request):
-    data = json.loads(request.body)
-    ppe_loans = data.get('ppe_loans', [])
-
-    for loan in ppe_loans:
-        ppe_name = loan.get('name')
-        worker_name = loan.get('worker', {}).get('name')  # Si es un diccionario
-        worker_position = loan.get('workerPosition')
-        worker_dni = loan.get('workerDni')
-        loan_date = datetime.strptime(loan.get('loanDate'), '%Y-%m-%d').date()
-        quantity = int(loan.get('quantity'))
-        is_renewal = loan.get('isRenewal', False)
-        is_exception = loan.get('isException', False)
-        new_expiration_date = datetime.strptime(loan.get('newExpirationDate'), '%Y-%m-%d').date()
-
+    if request.method == 'POST':
         try:
-            ppe = Ppe.objects.get(name=ppe_name)
-            worker = Worker.objects.get(dni=worker_dni)
+            data = json.loads(request.body)
+            ppe_loans = data.get('ppe_loans', [])
 
-            # Verificar si ya existe un préstamo activo
-            active_loan = PpeLoan.objects.filter(
-                ppe=ppe,
-                worker=worker,
-                loanDate__lte=loan_date,
-                expirationDate__gte=loan_date
-            ).first()
+            for loan in ppe_loans:
+                ppe_name = loan.get('name')
+                worker = loan.get('worker', {})
+                worker_name = worker.get('name')
+                worker_dni = worker.get('dni')
+                loan_date = datetime.strptime(loan.get('loanDate'), '%Y-%m-%d').date()
+                quantity = int(loan.get('quantity'))
+                is_renewal = loan.get('isRenewal', False)
+                is_exception = loan.get('isException', False)
+                new_expiration_date_str = loan.get('newExpirationDate')
 
-            if active_loan and not (is_renewal or is_exception):
-                return JsonResponse({
-                    'success': False, 
-                    'error': f'Ya existe un préstamo activo para {ppe_name} asignado a {worker_name}'
-                })
+                try:
+                    ppe = Ppe.objects.get(name=ppe_name)
+                    worker = Worker.objects.get(dni=worker_dni)
 
-            if ppe.quantity >= quantity:
-                if active_loan and (is_renewal or is_exception):
-                    # Actualizar el préstamo existente
-                    active_loan.expirationDate = new_expiration_date
-                    active_loan.save()
-                else:
-                    # Crear un nuevo préstamo
-                    new_loan = PpeLoan(
-                        worker=worker,
-                        workerPosition=worker_position,
-                        workerDni=worker_dni,
-                        loanDate=loan_date,
-                        expirationDate=new_expiration_date,
-                        loanAmount=quantity,
+                    if not new_expiration_date_str:
+                        expiration_date = loan_date + timedelta(days=ppe.duration)
+                    else:
+                        expiration_date = datetime.strptime(new_expiration_date_str, '%Y-%m-%d').date()
+
+                    active_loan = PpeLoan.objects.filter(
                         ppe=ppe,
-                        confirmed=True
-                    )
-                    new_loan.save()
-                    ppe.quantity -= quantity
-                    ppe.save()
-            else:
-                return JsonResponse({'success': False, 'error': 'Cantidad insuficiente disponible'})
+                        worker=worker,
+                        loanDate__lte=loan_date,
+                        expirationDate__gte=loan_date
+                    ).first()
 
-        except Ppe.DoesNotExist:
-            return JsonResponse({'success': False, 'error': f'EPP {ppe_name} no encontrado'})
-        except Worker.DoesNotExist:
-            return JsonResponse({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
+                    if active_loan and not (is_renewal or is_exception):
+                        return JsonResponse({
+                            'success': False, 
+                            'error': f'Ya existe un préstamo activo para {ppe_name} asignado a {worker_name}'
+                        })
 
-    return JsonResponse({'success': True})
+                    if ppe.quantity >= quantity:
+                        if active_loan and (is_renewal or is_exception):
+                            active_loan.expirationDate = expiration_date
+                            active_loan.save()
+                        else:
+                            new_loan = PpeLoan(
+                                worker=worker,
+                                workerPosition=loan.get('workerPosition'),
+                                workerDni=worker_dni,
+                                loanDate=loan_date,
+                                expirationDate=expiration_date,
+                                loanAmount=quantity,
+                                ppe=ppe,
+                                confirmed=True
+                            )
+                            new_loan.save()
+                            ppe.quantity -= quantity
+                            ppe.save()
+                    else:
+                        return JsonResponse({'success': False, 'error': 'Cantidad insuficiente disponible'})
+
+                except Ppe.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': f'EPP {ppe_name} no encontrado'})
+                except Worker.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
+
+            return JsonResponse({'success': True})
+        
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
 
 
 @login_required

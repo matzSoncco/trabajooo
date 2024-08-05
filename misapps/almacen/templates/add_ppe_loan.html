@@ -7,6 +7,24 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
     $(document).ready(function() {
         // Autocomplete para trabajador y DNI
         $("#id_worker").autocomplete({
@@ -163,7 +181,6 @@
             $('#popup').show();
         }
 
-        // Evento del botón "give-btn"
         $("#give-btn").click(function() {
             if (ppe_loans.length === 0) {
                 alert("No hay EPPs seleccionados para entregar.");
@@ -175,8 +192,19 @@
                 let quantity = ppe.quantity;
                 let workerName = $('#id_worker').val().trim();
                 let workerPosition = $('#id_workerPosition').val().trim();
-                let workerDni = $('#id_workerDni').val().trim();
-                let loanDate = $('#id_loanDate').val();
+                let workerDni = $('#id_workerDni').val().trim(); // Asegúrate de que este campo tenga un valor
+                let loanDate = $('#id_loanDate').val().trim();
+
+                if (!workerDni) {
+                    alert('DNI del trabajador no válido.');
+                    return;
+                }
+
+                // Validar formato de fecha antes de enviar
+                if (!loanDate || isNaN(new Date(loanDate).getTime())) {
+                    alert('Fecha de préstamo no válida.');
+                    return;
+                }
 
                 $.ajax({
                     url: '{% url "check_ppe_duration" %}',
@@ -186,34 +214,27 @@
                         'loan_date': loanDate
                     },
                     success: function(renewalResponse) {
-                        let isAssigned = !renewalResponse.can_assign;
-                        let needsRenewal = isAssigned;
-
-                        let row = $('tr[data-ppe-id="' + ppe.id + '"]');
-                        row.find('td:eq(2)').text(isAssigned ? 'SÍ' : 'NO');
-                        
-                        if (needsRenewal) {
-                            let renewalCheckbox = $('<input>').attr({
-                                type: 'checkbox',
-                                class: 'renewal-checkbox'
-                            });
-                            row.find('td:eq(3)').append(renewalCheckbox);
-                        }
-
-                        // Validar loanDate y renewalResponse.duration
-                        let loanDateObj = new Date(loanDate);
-                        if (isNaN(loanDateObj.getTime())) {
-                            alert('Fecha de préstamo no válida.');
+                        if (!renewalResponse.success) {
+                            alert('Error al obtener la duración del EPP: ' + renewalResponse.message);
                             return;
                         }
 
                         let duration = renewalResponse.duration;
-                        if (isNaN(duration)) {
+                        if (isNaN(duration) || duration <= 0) {
                             alert('Duración de renovación no válida.');
                             return;
                         }
 
+                        let loanDateObj = new Date(loanDate);
                         let expirationDate = new Date(loanDateObj.getTime() + duration * 24 * 60 * 60 * 1000);
+
+                        let row = $('tr[data-ppe-id="' + ppe.id + '"]');
+                        row.find('td:eq(2)').text('SÍ'); // Assuming it is always assigned
+                        let renewalCheckbox = $('<input>').attr({
+                            type: 'checkbox',
+                            class: 'renewal-checkbox'
+                        });
+                        row.find('td:eq(3)').append(renewalCheckbox);
                         row.find('td:eq(4)').text(expirationDate.toISOString().split('T')[0]);
 
                         ppeToAssign.push({
@@ -226,11 +247,10 @@
                             },
                             loanDate: loanDate,
                             expirationDate: expirationDate.toISOString().split('T')[0],
-                            isRenewal: needsRenewal,
-                            isAssigned: isAssigned
+                            isRenewal: renewalCheckbox.is(':checked'),
+                            isAssigned: true // Adjust as needed
                         });
 
-                        // Si es la última fila, enviar los datos al servidor
                         if (ppe.id === ppe_loans[ppe_loans.length - 1].id) {
                             sendDataToServer(ppeToAssign);
                         }
@@ -244,14 +264,15 @@
             buildPopupTable();
         });
 
-        // Evento del botón "confirm-btn"
+
+
         $('#confirm-btn').click(function() {
             ppeToAssign = [];
             
             $('#popup-table tbody tr').each(function() {
                 let row = $(this);
                 let ppeName = row.find('td:first').text();
-                let quantity = row.find('td:eq(1)').text();
+                let quantity = parseInt(row.find('td:eq(1)').text(), 10);
                 let workerName = $('#id_worker').val().trim();
                 let workerPosition = $('#id_workerPosition').val().trim();
                 let workerDni = $('#id_workerDni').val().trim();
@@ -265,13 +286,8 @@
                             let duration = durationResponse.duration;
                             let loanDateObj = new Date(loanDate);
 
-                            // Validar loanDate y duration
-                            if (isNaN(loanDateObj.getTime())) {
-                                alert('Fecha de préstamo no válida.');
-                                return;
-                            }
-                            if (isNaN(duration)) {
-                                alert('Duración de préstamo no válida.');
+                            if (isNaN(loanDateObj.getTime()) || isNaN(duration) || duration <= 0) {
+                                alert('Datos inválidos para la duración o fecha.');
                                 return;
                             }
 
@@ -291,7 +307,6 @@
                                 isAssigned: row.find('td:eq(2)').text() === 'SÍ'
                             });
 
-                            // Si es la última fila, enviar los datos al servidor
                             if (row.is(':last-child')) {
                                 sendDataToServer(ppeToAssign);
                             }
@@ -306,12 +321,16 @@
             });
         });
 
+
         function sendDataToServer(ppeToAssign) {
             $.ajax({
                 url: '{% url "confirm_ppe_loan" %}',
                 method: 'POST',
                 data: JSON.stringify({ ppe_loans: ppeToAssign }),
                 contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
                 success: function(response) {
                     if (response.success) {
                         alert('Préstamo confirmado exitosamente.');

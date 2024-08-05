@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect
 from decimal import Decimal
+from datetime import datetime, timedelta
+from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout
 from django.utils import timezone
@@ -358,18 +360,26 @@ def confirm_ppe_loan(request):
 
     for loan in ppe_loans:
         ppe_name = loan.get('name')
-        worker_name = loan.get('worker', {})
+        worker_name = loan.get('worker', {}).get('name')
         worker_position = loan.get('workerPosition')
         worker_dni = loan.get('workerDni')
-        loan_date = datetime.strptime(loan.get('loanDate'), '%d-%m-%Y').date()
+        loan_date_str = loan.get('loanDate')
         quantity = int(loan.get('quantity'))
         is_renewal = loan.get('isRenewal', False)
         is_exception = loan.get('isException', False)
-        new_expiration_date = datetime.strptime(loan.get('newExpirationDate'), '%d-%m-%Y').date()
+        
+        # Verificar y convertir la fecha del préstamo
+        try:
+            loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError) as e:
+            return JsonResponse({'success': False, 'error': 'Fecha de préstamo no válida'}, status=400)
 
         try:
             ppe = Ppe.objects.get(name=ppe_name)
             worker = Worker.objects.get(dni=worker_dni)
+
+            # Calcular la nueva fecha de expiración
+            new_expiration_date = loan_date + timedelta(days=ppe.duration)
 
             # Verificar si ya existe un préstamo activo
             active_loan = PpeLoan.objects.filter(
@@ -411,7 +421,7 @@ def confirm_ppe_loan(request):
         except Ppe.DoesNotExist:
             return JsonResponse({'success': False, 'error': f'EPP {ppe_name} no encontrado'})
         except Worker.DoesNotExist:
-            return JsonResponse({'success': False, 'error': f'Trabajador {worker_name} no encontrado'})
+            return JsonResponse({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
 
     return JsonResponse({'success': True})
     
@@ -1107,38 +1117,70 @@ def worker_details(request):
     return JsonResponse({}, status=400)
 
 @csrf_exempt
+@transaction.atomic
 def confirm_ppe_loan(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        ppe_loans = data.get('ppe_loans', [])
-        
-        try:
-            for loan_data in ppe_loans:
-                worker = get_object_or_404(Worker, name=loan_data['worker'])
-                ppe = get_object_or_404(Ppe, name=loan_data['name'])
-                
-                PpeLoan.objects.create(
-                    worker=worker,
-                    ppe=ppe,
-                    loanAmount=loan_data['quantity'],
-                    workerPosition=loan_data['workerPosition'],
-                    workerDni=loan_data['workerDni'],
-                    loanDate=loan_data['loanDate']
-                )
-                
-                # Actualizar la cantidad de EPP disponible
-                ppe.quantity -= int(loan_data['quantity'])
-                ppe.save()
-                
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    data = json.loads(request.body)
+    ppe_loans = data.get('ppe_loans', [])
 
-def load_given_ppe(request):
-    given_ppes = PpeLoan.objects.filter(confirmed=False)
-    return render(request, 'partials/given_ppe_table.html', {'given_ppes': given_ppes})
+    for loan in ppe_loans:
+        ppe_name = loan.get('name')
+        worker_name = loan.get('worker', {}).get('name')  # Si es un diccionario
+        worker_position = loan.get('workerPosition')
+        worker_dni = loan.get('workerDni')
+        loan_date = datetime.strptime(loan.get('loanDate'), '%Y-%m-%d').date()
+        quantity = int(loan.get('quantity'))
+        is_renewal = loan.get('isRenewal', False)
+        is_exception = loan.get('isException', False)
+        new_expiration_date = datetime.strptime(loan.get('newExpirationDate'), '%Y-%m-%d').date()
+
+        try:
+            ppe = Ppe.objects.get(name=ppe_name)
+            worker = Worker.objects.get(dni=worker_dni)
+
+            # Verificar si ya existe un préstamo activo
+            active_loan = PpeLoan.objects.filter(
+                ppe=ppe,
+                worker=worker,
+                loanDate__lte=loan_date,
+                expirationDate__gte=loan_date
+            ).first()
+
+            if active_loan and not (is_renewal or is_exception):
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'Ya existe un préstamo activo para {ppe_name} asignado a {worker_name}'
+                })
+
+            if ppe.quantity >= quantity:
+                if active_loan and (is_renewal or is_exception):
+                    # Actualizar el préstamo existente
+                    active_loan.expirationDate = new_expiration_date
+                    active_loan.save()
+                else:
+                    # Crear un nuevo préstamo
+                    new_loan = PpeLoan(
+                        worker=worker,
+                        workerPosition=worker_position,
+                        workerDni=worker_dni,
+                        loanDate=loan_date,
+                        expirationDate=new_expiration_date,
+                        loanAmount=quantity,
+                        ppe=ppe,
+                        confirmed=True
+                    )
+                    new_loan.save()
+                    ppe.quantity -= quantity
+                    ppe.save()
+            else:
+                return JsonResponse({'success': False, 'error': 'Cantidad insuficiente disponible'})
+
+        except Ppe.DoesNotExist:
+            return JsonResponse({'success': False, 'error': f'EPP {ppe_name} no encontrado'})
+        except Worker.DoesNotExist:
+            return JsonResponse({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
+
+    return JsonResponse({'success': True})
+
 
 @login_required
 def delete_ppe_loan(request, id):

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Equipo{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <nav class="navegacion-link-formularios-top">
+            <a class="link-form" href="{% url 'create_ppe' %}">EPPs</a>
+            <a class="link-form" href="{% url 'create_tool' %}">Herramientas</a>
+            <a class="link-form" href="{% url 'create_equipment' %}">Equipos</a>
+            <a class="link-form" href="{% url 'create_material' %}">Materiales</a>
+        </nav>
+        <div class="contenedor-principal">
+            <div class="top-form">
+                <h2 class="titulo-primario">Creación de Equipos</h2>
+            </div>
+            <div class="centrado">
+                <div class="formulario-contenedor-individual">
+                    <form method="post" action="{% url 'create_equipment' %}" enctype="multipart/form-data" class="box">
+                        {% csrf_token %}
+                        <div class="campo">
+                            <label for="" class="label">Nombre</label>
+                            {{ form.name }}
+                        </div>
+
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="" class="label">Número de serie</label>
+                                {{ form.serialNumber }}
+                            </div>
+    
+                            <div class="campo">
+                                <label for="" class="label">Nivel</label>
+                                {{ form.level }}
+                            </div>
+                        </div>
+                        
+                        <div class="campo">
+                            <label for="" class="label">Imágen</label>
+                            {{ form.image }}
+                        </div>
+            
+                        <div class="campo-botones">
+                            <button class="form-btn aceptar-btn" type="submit">Crear</button>
+                            <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>            
+        </div>
+        <div class="centrado">
+            <a class="form-btn ver-obj-btn" href="{% url 'equipment_total' %}" style="
+                display: inline-block;
+                padding: 10px 20px;
+                font-size: 16px;
+                color: #fff;
+                background-color: #2c3e50;
+                border: none;
+                border-radius: 5px;
+                text-decoration: none;
+                text-align: center;
+                transition: background-color 0.3s ease;
+                margin-top: 20px;
+            " onmouseover="this.style.backgroundColor='#34495e';" onmouseout="this.style.backgroundColor='#2c3e50';">
+                Ver Equipos
+            </a>
+        </div>
+    </section>
+</section>
+{% if messages %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for message in messages %}
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: "{{ message }}",
+                    confirmButtonText: 'Aceptar'
+                });
+            {% endfor %}
+        });
+    </script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar EPP{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <div class="contenedor-principal">
+        <div class="top-form">
+            <h2 class="titulo-primario">Confirmar Eliminación</h2>
+        </div>
+        <div class="centrado">
+            <p>¿Estás seguro de que quieres eliminar el EPP "{{ epp.name }}"?</p>
+            <form id="delete-form" method="post" action="{% url 'delete_ppe' epp.idPpe %}">
+                {% csrf_token %}
+                <input type="hidden" name="confirm" value="yes">
+                <button type="submit" class="btn btn-danger">Eliminar</button>
+                <button type="button" class="btn btn-secondary" onclick="window.history.back();">Cancelar</button>
+            </form>            
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "¡No podrás recuperar este EPP después de eliminarlo!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form').submit();
+            } else {
+                window.history.back();
+            }
+        });
+    });
+</script>
+{% endblock %}

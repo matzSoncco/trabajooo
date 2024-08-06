@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}Asignar Herramientas{% endblock %}
+
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script>
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+$(document).ready(function() {
+    // Autocomplete para trabajador y DNI
+    $("#id_worker").autocomplete({
+        source: "{% url 'worker_autocomplete' %}",
+        minLength: 2,
+        select: function(event, ui) {
+            $.ajax({
+                url: "{% url 'worker_details' %}",
+                data: { worker_name: ui.item.value },
+                success: function(data) {
+                    $("#id_worker").val(data.name);
+                    $("#id_workerDni").val(data.dni);
+                    $("#id_workerPosition").val(data.position);
+                }
+            });
+        }
+    });
+
+    $("#id_workerDni").autocomplete({
+        source: "{% url 'dni_autocomplete' %}",
+        minLength: 2,
+        select: function(event, ui) {
+            $("#id_workerDni").val(ui.item.value);
+            $.ajax({
+                url: "{% url 'worker_autocomplete' %}",
+                data: { term: ui.item.value },
+                success: function(data) {
+                    $("#id_worker").val(data[0]);
+                }
+            });
+        }
+    });
+    const addedItems = [];
+
+    // Add tool to form when "Añadir" button is clicked
+    $(document).on('click', '#add-to-form', function() {
+        let toolName = $(this).data('tool-name');
+        $('#id_tool').val(toolName);
+    });
+
+    // Handle form submission
+    $('#loan-form').on('submit', function(e) {
+        e.preventDefault();
+        const toolName = $('#id_tool').val();
+        const quantity = $('#id_loanAmount').val();
+
+        // Check tool availability
+        $.ajax({
+            url: '/check_tool_availability/',  // Update this URL to match your Django URL configuration
+            method: 'GET',
+            data: { tool_name: toolName },
+            success: function(response) {
+                if (response.can_assign && response.available >= quantity) {
+                    addItemToTable(toolName, quantity);
+                    clearForm();
+                } else {
+                    alert('No hay suficiente cantidad disponible de esta herramienta.');
+                }
+            },
+            error: function() {
+                alert('Error al verificar la disponibilidad de la herramienta.');
+            }
+        });
+    });
+
+    function addItemToTable(toolName, quantity) {
+        addedItems.push({ name: toolName, quantity: quantity });
+        updateGivenItemsTable();
+    }
+
+    function updateGivenItemsTable() {
+        const tableHtml = `
+            <h2 class="titulo-primario">Herramientas a asignar</h2>
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${addedItems.map(item => `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        $('#view-given-items-table-container').html(tableHtml);
+    }
+
+    function clearForm() {
+        $('#id_tool').val('');
+        $('#id_loanAmount').val('');
+    }
+
+    // Handle "Entregar" button click
+    $('#give-btn').on('click', function() {
+        if (addedItems.length === 0) {
+            alert('No hay herramientas para asignar.');
+            return;
+        }
+
+        const formData = {
+            workOrder: $('#id_workOrder').val(),
+            loanDate: $('#id_loanDate').val(),
+            returnLoanDate: $('#id_returnLoanDate').val(),
+            workerDni: $('#id_workerDni').val(),
+            worker: $('#id_worker').val(),
+            workerPosition: $('#id_workerPosition').val(),
+            tool_loans: addedItems
+        };
+
+        $.ajax({
+            url: '/confirm_tool_loan/',  // Update this URL to match your Django URL configuration
+            method: 'POST',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Asignación de herramientas completada con éxito.');
+                    addedItems.length = 0;  // Clear the array
+                    updateGivenItemsTable();
+                    clearForm();
+                } else {
+                    alert('Error al asignar herramientas: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Error al procesar la asignación de herramientas.');
+            }
+        });
+    });
+});
+</script>
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <nav class="navegacion-link-formularios-top">
+            <a class="link-form" href="{% url 'add_ppe_loan' %}">EPPs</a>
+            <a class="link-form" href="{% url 'add_tool_loan' %}">Herramientas</a>
+            <a class="link-form" href="#">Equipos</a>
+            <a class="link-form" href="#">Materiales</a>
+        </nav>
+        <div class="contenedor-formulario">
+            <div id="loan-message"></div>
+            <div class="top-form">
+                <h2 class="titulo-primario">Asignar de Equipos de Protección Personal</h2>
+                {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                <a class="link-top-form" href="#">Ver tabla</a>
+            </div>
+            <div class="centrado">
+                <div class="formulario-contenedor-individual" >
+                    <form id="loan-form" method="post" action="{% url 'add_tool_loan' %}" enctype="application/json" class="box">
+                        {% csrf_token %}
+
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_workOrder" class="label">Orden de Trabajo</label>
+                                {{ form.workOrder }}
+                            </div>
+                            <div class="campo">
+                                <label for="id_tool" class="label">Herramienta</label>
+                                {{ form.tool }}
+                            </div>
+                        </div>
+                        
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_loandate" class="label">Fecha de asignación</label>
+                                {{ form.loanDate }}
+                            </div>
+                            <div class="campo">
+                                <label for="id_loandate" class="label">Fecha de devolución</label>
+                                {{ form.returnLoanDate }}
+                            </div>
+                        </div>
+        
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="" class="label">Cantidad</label>
+                                {{ form.loanAmount }}
+                            </div>
+                            <div class="campo">
+                                <label for="id_workerDni" class="label">DNI trajador</label>
+                                {{ form.workerDni }}
+                            </div>
+                        </div>
+        
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_worker" class="label">Trabajador</label>
+                                {{ form.worker }}
+                            </div>
+                            <div class="campo">
+                                <label for="id_workerPosition" class="label">Cargo</label>
+                                {{ form.workerPosition }}
+                            </div>
+                        </div>
+
+                        <div class="campo-botones">
+                            <button id="agregar-a-tabla-pre" class="form-btn aceptar-btn" type="submit">Agregar</button>
+                            <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="tabla-creacion" id="added-items-table-container">
+                    <h2 class="titulo-primario">Herramientas en base de datos</h2>
+                    <table class="tabla">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Cantidad</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in tools %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>
+                                    <button id="add-to-form" class="" data-tool-id="{{ item.id }}" data-tool-name="{{ item.name }}" data-tool-quantity="1">Añadir</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3">No hay Herramientas disponibles.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tabla-creacion" id="view-given-items-table-container">
+
+            </div>
+            <button id="give-btn">Entregar</button>
+            <button id="volver-btn">Salir</button>
+        </div>
+    </section>
+</section>
+{% endblock %}

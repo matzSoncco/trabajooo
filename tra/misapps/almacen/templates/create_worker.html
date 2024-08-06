@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Trabajador{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <div class="contenedor-principal">
+            <div class="top-form">
+                <h2 class="titulo-primario">Agregar Trabajador a la Base de Datos</h2>
+                <a class="ver-tabla-btn" href="{% url 'worker_list' %}">Tabla de Trabajadores</a>
+            </div>
+            <div class="centrado">
+                <form method="post" action="{% url 'create_worker' %}" enctype="multipart/form-data" class="box">
+                    {% csrf_token %}
+                    <div class="fila-form">
+                        <div class="campo">
+                            <label for="" class="label">DNI:</label>
+                            {{ form.dni }}
+                        </div>
+                        <div class="campo">
+                            <label for="" class="label">Fecha de contrato:</label>
+                            {{ form.contractDate }}
+                        </div>
+                    </div>
+
+                    <div class="fila-form">
+                        <div class="campo">
+                            <label for="" class="label">Nombres:</label>
+                            {{ form.name }}
+                        </div>
+                    </div>
+
+                    <div class="fila-form">
+                        <div class="campo">
+                            <label for="" class="label">Apellidos:</label>
+                            {{ form.surname }}
+                        </div>
+                    </div>
+    
+                    <div class="fila-form">
+                        <div class="campo">
+                            <label for="" class="label">Cargo:</label>
+                            {{ form.position }}
+                        </div>
+                        <div class="campo">
+                            <label for="" class="label">Estado:</label>
+                            {{ form.workerStatus }}
+                        </div>
+                    </div>  
+                    <div class="campo-botones">
+                        <button class="form-btn aceptar-btn" type="submit">Agregar Trabajador</button>
+                        <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</section>
+{% endblock %}

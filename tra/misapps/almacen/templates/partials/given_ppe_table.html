@@ -1,0 +1,12 @@
+<table>
+    <tr>
+        <th>Nombre del EPP</th>
+        <th>Cantidad</th>
+    </tr>
+    {% for ppe_loan in given_ppes %}
+    <tr>
+        <td>{{ ppe_loan.ppe.name }}</td>
+        <td>{{ ppe_loan.loanAmount }}</td>
+    </tr>
+    {% endfor %}
+</table>

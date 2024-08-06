@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Usuarios Almaceneros{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <nav class="navegacion-link-formularios-top">
+            <a class="link-form" href="{% url 'total_cost_table' %}">Total</a>
+            <a class="link-form" href="{% url 'total_ppe_cost_table' %}">EPPs</a>
+            <a class="link-form" href="{% url 'total_tool_cost_table' %}">Herramientas</a>
+            <a class="link-form" href="{% url 'total_equip_cost_table' %}">Equipos</a>
+            <a class="link-form" href="{% url 'total_mat_cost_table' %}">Materiales</a>
+        </nav>
+        <div class="contenedor-principal" id="cost-table-container">
+            <nav class="navegacion-tabla-costo">
+                <a class="volver-btn" href="{% url 'home' %}">Volver</a>
+            </nav>
+            <h2 class="titulo-primario">Tabla de costos de EPPs</h2>
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Nombre</th>
+                        <th>Cantidad</th>
+                        <th>Costo Unitario</th>
+                        <th>Costo sub Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in equipment %}
+                        <tr>
+                            <td>{{ item.idEquipment }}</td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.quantity}}</td>
+                            <td>s/.{{ item.unitCost }}</td>
+                            <td>s/.{{ item.totalCost }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No hay equipos disponibles.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4"><strong>Costo Total Final </strong>
+                        <td><strong>s/. {{ total_cost_final }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>            
+        </div>
+    </section>
+</section>
+{% endblock %}

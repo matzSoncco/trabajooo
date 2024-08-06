@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+<div class="contenedor-general">
+    <div class="contenedor-formulario">
+        <div class="centrado">
+            <form method="post" action="" class="box">
+                {% csrf_token %}
+                
+                <div class="campo">
+                    <label for="username" class="label">Nombre Usuario</label>
+                    {{ form.username }}
+                </div>
+
+                <div class="campo">
+                    <label for="password" class="label">Contraseña</label>
+                    {{ form.password }}
+                </div>
+
+                <div class="campo-botones">
+                    <button class="form-btn aceptar-btn" type="submit">Iniciar Sesión</button>
+                    <button class="form-btn cancelar-btn" type="button">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

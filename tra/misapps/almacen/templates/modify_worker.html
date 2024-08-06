@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Modificar datos de Trabajador{% endblock %}
+
+{% block content %}
+<section class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="titulo">Modificar datos de Trabajador</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="formulario p-4 shadow-sm rounded bg-light">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <style>
+                            .formulario label {
+                                color: black; /* Asegura que las etiquetas <label> tengan texto negro */
+                            }
+                        </style>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary mr-2">Actualizar</button>
+                            <a href="{% url 'worker_list' %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

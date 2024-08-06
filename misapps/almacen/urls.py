@@ -9,6 +9,7 @@ urlpatterns = [
 
     #EPP
     path('ppe/create/', views.create_ppe, name='create_ppe'),
+    path('ppe/total/add', views.ppe_total_add, name='ppe_total_add'),
     path('ppe/total/', views.ppe_total, name='ppe_total'),
     path('add_new_unit/', views.add_new_unit, name='add_new_unit'),
     path('get_ppe_data/', views.get_ppe_data, name='get_ppe_data'),
@@ -30,14 +31,24 @@ urlpatterns = [
 
     #EQUIPOS
     path('equipment/', views.equipment_list, name='equipment_list'),
+    path('equipment/create/table/', views.Equipments, name='table_created_equipment'),
+    path('get_equipment_data/', views.get_equipment_data, name='get_equipment_data'),
+    path('equipment/total/add', views.equipment_total_add, name='equipment_total_add'),
+    path('save_all_equipment/', views.save_all_equipment, name='save_all_equipment'),
     path('equipment/<str:equipment_name>/delete/', views.delete_equipment, name='delete_equipment'),
     path('equipment/<str:name>/modify/', views.modify_equipment, name='modify_equipment'),
     path('equipment/create/', views.create_equipment, name='create_equipment'),
     path('equipment/total/', views.equipment_total, name='equipment_total'),
+    path('equipment/add/', views.add_equipment, name='add_equipment'),
     path('equipment/total_equipment_stock/', views.total_equipment_stock, name='total_equipment_stock'),
 
     #MATERIALES
     path('material/', views.material_list, name='material_list'),
+    path('material/add/', views.add_material, name='add_material'),
+    path('get_material_data/', views.get_material_data, name='get_material_data'),
+    path('material/create/table/', views.Materials, name='table_created_material'),
+    path('material/total/add', views.material_total_add, name='material_total_add'),
+    path('save_all_material/', views.save_all_material, name='save_all_material'),
     path('material/create/', views.create_material, name='create_material'),
     path('material/total/', views.material_total, name='material_total'),
     path('material/<str:material_name>/modify/', views.modify_material, name='modify_material'),
@@ -46,6 +57,11 @@ urlpatterns = [
 
     #HERRAMIENTAS
     path('tool/', views.tool_list, name='tool_list'),
+    path('tool/add/', views.add_tool, name='add_tool'),
+    path('get_tool_data/', views.get_tool_data, name='get_tool_data'),
+    path('save_all_tool/', views.save_all_tools, name='save_all_tools'),
+    path('tool/create/table/', views.Tools, name='table_created_tools'),
+    path('tool/total/add', views.tool_total_add, name='tool_total_add'),
     path('tool/create/', views.create_tool, name='create_tool'),
     path('tool/total/', views.tool_total, name='tool_total'),
     path('tool/<str:tool_name>/delete/', views.delete_tool, name='delete_tool'),

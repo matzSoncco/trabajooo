@@ -1096,6 +1096,81 @@ def total_equipment_stock(request):
     return JsonResponse({'total_stock': total_stock})
 
 #MATERIAL
+@login_required
+def Materials(request):
+    query = request.GET.get('q', '')
+    if query:
+        tool = Material.objects.filter(name__icontains=query)
+    else:
+        tool = Material.objects.all()
+    
+    context = {'material': Material, 'query': query}
+    return render(request, 'table_created_material.html', context)
+
+def get_material_data(request):
+    material_id = request.GET.get('id')
+    material = get_object_or_404(Material, idMaterial=material_id)
+    data = {
+        'guideNumber': material.guideNumber,
+        'creationDate': material.creationDate,
+        'name': material.name,
+        'unitCost': material.unitCost,
+        'quantity': material.quantity,
+        'stock': material.stock
+    }
+    return JsonResponse(data)
+
+@csrf_exempt
+def save_all_material(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            for item in data:
+                material = Material.objects.get(name=item['name'])
+                quantity = int(item['quantity'])
+                unitCost = Decimal(item['unitCost'])
+                stock = int(item['stock'])
+                
+                total_cost = (material.unitCost * Decimal(material.quantity)) + (unitCost * quantity)
+                material.quantity += quantity
+                material.unitCost = total_cost / material.quantity
+                material.stock = stock
+                material.save()
+                
+                PpeStockUpdate.objects.create(
+                    material=material,
+                    quantity=quantity,
+                    unitCost=unitCost,
+                    date=item['creationDate']
+                )
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'invalid method'})
+
+def material_total_add(request):
+    material = Material.objects.all()  
+    
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            material_id = request.POST.get('delete')
+            material = get_object_or_404(Material, id=material_id)
+            material.delete()
+            messages.success(request, 'Material eliminado exitosamente.')
+            return redirect('material_total')
+
+        if 'edit' in request.POST:
+            material_id = request.POST.get('edit')
+            material = get_object_or_404(Material, id=material_id)
+            form = MaterialForm(request.POST, request.FILES, instance=material)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Material actualizado exitosamente.')
+                return redirect('material_total')
+    
+    form = MaterialForm()  # Inicializa el formulario para crear o editar
+    return render(request, 'material_total_add.html', {'material': material, 'form': form})
+
 def material_total(request):
     materials = Material.objects.all()
     
@@ -1169,11 +1244,37 @@ def add_material(request):
     if request.method == 'POST':
         form = MaterialForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('material_list')
+            # Obtener datos del formulario y convertirlos a los tipos correctos
+            guideNumber = form.cleaned_data['guideNumber']
+            creationDate = form.cleaned_data['creationDate']
+            name = form.cleaned_data['name']
+            unitCost = Decimal(form.cleaned_data['unitCost'])
+            quantity = int(form.cleaned_data['quantity'])
+            stock = int(form.cleaned_data['stock'])
+            
+            # Obtener o crear el objeto Ppe
+            material, created = Material.objects.get_or_create(name=name)
+            
+            # Actualizar la cantidad y el costo unitario del Ppe
+            total_cost = (material.unitCost * Decimal(material.quantity)) + (unitCost * quantity)
+            total_quantity = material.quantity + quantity
+            material.unitCost = total_cost / total_quantity
+            material.quantity = total_quantity
+            material.stock = stock
+            material.save()
+            
+            # Crear el registro de actualización de stock
+            PpeStockUpdate.objects.create(
+                material=material,
+                quantity=quantity,
+                unitCost=unitCost,
+                date=creationDate
+            )
+            
+            return redirect('add_material')
     else:
         form = MaterialForm()
-    return render(request, 'create_material.html', {'form': form})
+    return render(request, 'add_material.html', {'form': form})
 
 @login_required
 def delete_material(request, material_name):
@@ -1337,7 +1438,7 @@ def tool_total_add(request):
     if request.method == 'POST':
         if 'delete' in request.POST:
             tool_id = request.POST.get('delete')
-            tool = get_object_or_404(Ppe, id=tool_id)
+            tool = get_object_or_404(Tool, id=tool_id)
             tool.delete()
             messages.success(request, 'Herramienta eliminado exitosamente.')
             return redirect('tool_total')

@@ -247,37 +247,53 @@ class CreateEquipmentForm(forms.ModelForm):
         }
 
 class EquipmentForm(forms.ModelForm):
-    level = forms.ChoiceField(widget=forms.Select(attrs={
-        "class": "input",
-        "placeholder": "Seleccione el nivel"
+    name = forms.CharField(widget=forms.TextInput(attrs={
+        'class': 'input',
+        'type': 'text',
+        'placeholder': 'Ingrese nombre del equipo'
     }))
+
+    stock = forms.IntegerField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Ingrese el stock ideal",
+    }))
+
+    guideNumber = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "Ingrese el número de guía"
+    }))
+
+    quantity = forms.IntegerField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Ingrese la cantidad a añadir",
+        "min": "1",
+        "max": "99999"
+    }))
+
+    creationDate = forms.DateField(widget=forms.DateInput(attrs={
+        "class": "input",
+        "type": "date",
+    }))
+
+    level = forms.ChoiceField(widget=forms.Select(attrs={
+        "class": "input"
+    }))
+
+    unitCost = forms.FloatField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Ingrese el costo unitario",
+    }))
+
     class Meta:
         model = Equipment
-        fields = ['name', 'level', 'stock', 'guideNumber', 'image']
-        widgets = {
-            'name': forms.TextInput(attrs={
-                "class": "input",
-                "type": "text",
-                "placeholder": "Ingrese el nombre del equipo"
-            }),
-            'stock': forms.NumberInput(attrs={
-                "class": "input",
-                "type": "number",
-                "placeholder": "Ingrese el stock"
-            }),
-            'guideNumber': forms.TextInput(attrs={
-                "class": "input",
-                "type": "text",
-                "placeholder": "Ingrese el número de guía"
-            }),
-            'image': forms.FileInput(attrs={
-                "class": "input",
-                "type": "file",
-            })
-        }
+        fields = ['name', 'level', 'stock', 'guideNumber', 'quantity', 'creationDate']
 
-    def __init__(self, *args, **kwargs):
-        super(EquipmentForm, self).__init__(*args, **kwargs)
+    def _init_(self, *args, **kwargs):
+        super(EquipmentForm, self)._init_(*args, **kwargs)
         self.fields['image'].required = False
 
 class EquipmentStockUpdateForm(forms.ModelForm):

@@ -13,6 +13,7 @@
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -57,6 +58,7 @@
             }
         });
 
+        // Variables y funciones para manejo de ppe_loans
         let ppe_loans = [];
 
         function updatePreDeliveryTable() {
@@ -106,6 +108,7 @@
             });
         });
 
+        // Lógica para enviar formulario
         $('#ppe-loan-form').submit(function(e) {
             e.preventDefault();
 
@@ -114,28 +117,110 @@
             var loanDate = $('#id_loanDate').val();
             var loanAmount = $('#id_loanAmount').val();
 
-            let ppeData = {
-                name: ppeName,
-                quantity: loanAmount,
-                worker: {
-                    name: $("#id_worker").val(),
-                    dni: $("#id_workerDni").val()
+            $.ajax({
+                url: '{% url "check_ppe_availability" %}',
+                data: {
+                    'ppe_name': ppeName,
+                    'worker': workerName,
+                    'loan_date': loanDate,
+                    'quantity': loanAmount
                 },
-                workerPosition: $("#id_workerPosition").val(),
-                workerDni: $("#id_workerDni").val(),
-                loanDate: loanDate
-            };
-
-            ppe_loans.push(ppeData);
-            updatePreDeliveryTable();
-            $("#id_ppe, #id_loanAmount").val('');
+                success: function(response) {
+                    if (response.can_assign) {
+                        let ppeData = {
+                            name: ppeName,
+                            quantity: loanAmount,
+                            worker: $("#id_worker").val(),
+                            workerPosition: $("#id_workerPosition").val(),
+                            workerDni: $("#id_workerDni").val(),
+                            loanDate: loanDate
+                        };
+                        ppe_loans.push(ppeData);
+                        updatePreDeliveryTable();
+                        $("#id_ppe, #id_loanAmount").val('');
+                    } else {
+                        alert(response.message || 'No se puede asignar el EPP.');
+                    }
+                },
+                error: function() {
+                    alert('Error al verificar la disponibilidad del EPP.');
+                }
+            });
         });
 
+        // Eliminar elementos de la lista de pre-entrega
         $(document).on('click', '.remove-from-pre-delivery', function() {
             let index = $(this).data('index');
             ppe_loans.splice(index, 1);
             updatePreDeliveryTable();
         });
+
+        let ppeToAssign = [];
+
+        // Función para construir la tabla de EPPs en el popup
+        function buildPopupTable() {
+            let popupTableBody = $('#popup-table tbody');
+            popupTableBody.empty();
+
+            ppe_loans.forEach(ppe => {
+                let row = $('<tr>').attr('data-ppe-id', ppe.id);
+                row.append($('<td>').text(ppe.name));
+                row.append($('<td>').text(ppe.quantity));
+
+                // Verificar si hay una asignación en curso para este EPP y este trabajador
+                $.ajax({
+                    url: '{% url "check_ppe_assignment" %}',
+                    data: {
+                        'ppe_name': ppe.name,
+                        'worker_dni': $('#id_workerDni').val().trim()
+                    },
+                    async: false,  // Hacemos esto síncrono para simplificar la lógica
+                    success: function(response) {
+                        let isAssigned = response.is_assigned;
+                        let assignedCell = $('<td>').text(isAssigned ? 'SÍ' : 'NO');
+                        row.append(assignedCell);
+
+                        let renewalCell = $('<td>');
+                        if (isAssigned) {
+                            let renewalCheckbox = $('<input>').attr({
+                                type: 'checkbox',
+                                class: 'renewal-checkbox'
+                            });
+                            renewalCell.append(renewalCheckbox);
+                        }
+                        row.append(renewalCell);
+
+                        let expirationDateCell = $('<td>');
+                        if (isAssigned) {
+                            $.ajax({
+                                url: '{% url "check_ppe_duration" %}',
+                                data: {
+                                    'ppe_name': ppe.name,
+                                    'loan_date': $('#id_loanDate').val().trim()
+                                },
+                                async: false,
+                                success: function(durationResponse) {
+                                    if (durationResponse.success) {
+                                        let duration = durationResponse.duration;
+                                        let loanDateObj = new Date($('#id_loanDate').val().trim());
+                                        let expirationDate = new Date(loanDateObj.getTime() + duration * 24 * 60 * 60 * 1000);
+                                        expirationDateCell.text(expirationDate.toISOString().split('T')[0]);
+                                    }
+                                }
+                            });
+                        }
+                        row.append(expirationDateCell);
+                    },
+                    error: function() {
+                        alert('Error al verificar la asignación del EPP.');
+                    }
+                });
+
+                popupTableBody.append(row);
+            });
+
+            $('#popup').show();
+        }
 
         $("#give-btn").click(function() {
             if (ppe_loans.length === 0) {
@@ -143,37 +228,103 @@
                 return;
             }
 
+            buildPopupTable();
+        });
+
+        $('#confirm-btn').click(function() {
+            let allRenewalChecked = true;
+            $('.renewal-checkbox').each(function() {
+                if (!$(this).is(':checked')) {
+                    allRenewalChecked = false;
+                    return false;  // breaks the loop
+                }
+            });
+
+            if (!allRenewalChecked) {
+                alert('Todos los checkboxes de renovación deben estar marcados para confirmar.');
+                return;
+            }
+
+            ppeToAssign = [];
+            $('#popup-table tbody tr').each(function() {
+                let row = $(this);
+                let ppeId = row.attr('data-ppe-id');
+                let ppe = ppe_loans.find(p => p.id == ppeId);
+
+                ppeToAssign.push({
+                    name: ppe.name,
+                    quantity: ppe.quantity,
+                    worker: {
+                        name: $('#id_worker').val().trim(),
+                        position: $('#id_workerPosition').val().trim(),
+                        dni: $('#id_workerDni').val().trim()
+                    },
+                    loanDate: $('#id_loanDate').val().trim(),
+                    expirationDate: row.find('td:eq(4)').text(),
+                    isRenewal: row.find('.renewal-checkbox').is(':checked'),
+                    isAssigned: row.find('td:eq(2)').text() === 'SÍ'
+                });
+            });
+
+            sendDataToServer(ppeToAssign);
+        });
+
+
+        function parseDate(dateString) {
+            let parts = dateString ? dateString.split('-') : [];
+            if (parts.length !== 3) return null;
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+
+        function formatDate(date) {
+            let day = String(date.getDate()).padStart(2, '0');
+            let month = String(date.getMonth() + 1).padStart(2, '0');
+            let year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        function sendDataToServer(ppeToAssign) {
+            if (typeof csrftoken === 'undefined') {
+                console.error('CSRF token no definido');
+                return;
+            }
+
             $.ajax({
                 url: '{% url "confirm_ppe_loan" %}',
                 method: 'POST',
-                data: JSON.stringify({ ppe_loans: ppe_loans }),
+                data: JSON.stringify({ ppe_loans: ppeToAssign }),
                 contentType: 'application/json',
                 headers: {
                     'X-CSRFToken': csrftoken
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('Préstamo confirmado exitosamente.');
+                        alert('Préstamos confirmados exitosamente.');
                         $('#popup').hide();
-                        ppe_loans = [];
                         updatePreDeliveryTable();
                     } else {
-                        alert('Error al confirmar el préstamo: ' + response.error);
+                        let errorMessages = response.errors.map(error => error.error).join('\n');
+                        alert('Errores al confirmar los préstamos:\n' + errorMessages);
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error("Error en la llamada AJAX:", status, error);
-                    alert('Error al confirmar el préstamo: ' + error);
+                    alert('Error al confirmar los préstamos: ' + error);
                 }
             });
-        });
+        }
+
 
         $('#cancel-btn').click(function() {
             $('#popup').hide();
         });
+
+        $(document).on('change', '.renewal-checkbox', function() {
+            let renewalDate = $(this).closest('tr').find('.renewal-date');
+            renewalDate.prop('disabled', !$(this).is(':checked'));
+        });
     });
 </script>
-
 <style>
     #popup {
         position: fixed;
@@ -228,14 +379,14 @@
     <section class="contendor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'add_ppe_loan' %}">EPPs</a>
-            <a class="link-form" href="#">Herramientas</a>
+            <a class="link-form" href="{% url 'add_tool_loan' %}">Herramientas</a>
             <a class="link-form" href="#">Equipos</a>
             <a class="link-form" href="#">Materiales</a>
         </nav>
         <div class="contenedor-formulario">
             <div id="loan-message"></div>
             <div class="top-form">
-                <h2 class="titulo-primario">Asignar de Equipos de Protección Personal</h2>
+                <h2 class="titulo-primario">Asignar de Herramientas</h2>
                 {% if messages %}
                 <ul class="messages">
                     {% for message in messages %}
@@ -247,7 +398,7 @@
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual" >
-                    <form id="ppe-loan-form" method="post" action="{% url 'add_ppe_loan' %}" enctype="multipart/form-data" class="box">
+                    <form id="ppe-loan-form" method="post" action="{% url 'add_ppe_loan' %}" enctype="application/json" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
                             <div class="campo">
@@ -281,7 +432,7 @@
                                 {{ form.workerPosition }}
                             </div>
                         </div>
-        
+
                         <div class="campo-botones">
                             <button id="agregar-a-tabla-pre" class="form-btn aceptar-btn" type="submit">Agregar</button>
                             <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
@@ -290,7 +441,7 @@
                 </div>
                 <div class="tabla-creacion" id="added-ppe-table-container">
                     <h2 class="titulo-primario">EPPs en base de datos</h2>
-                    <table>
+                    <table class="tabla">
                         <thead>
                             <tr>
                                 <th>Nombre</th>

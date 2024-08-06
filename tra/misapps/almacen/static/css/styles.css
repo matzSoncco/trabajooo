@@ -360,7 +360,7 @@ button[type="button"]:hover {
 /* Contenedor principal de la tabla y el formulario de búsqueda */
 .tabla-creacion {
     width: 100%;
-    max-width: 1000px;
+    max-width: 500px;
     margin: 20px auto;
     padding: 20px;
     background-color: #ffffff;

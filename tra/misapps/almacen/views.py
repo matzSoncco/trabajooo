@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from decimal import Decimal
 from datetime import datetime, timedelta
-from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout
 from django.utils import timezone
@@ -13,10 +12,8 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.http import require_http_methods
-from django.db import transaction
 from django.utils import timezone
 from datetime import datetime, timedelta
-from django.db import IntegrityError
 from datetime import datetime
 import json
 import logging
@@ -27,16 +24,15 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from .models.Ppe import Ppe
 from .models.PpeLoan import PpeLoan
-from .models.PpeLoan import PpeLoan
+from .models.ToolLoan import ToolLoan
 from .models.Equipment import Equipment
 from .models.Worker import Worker
 from .models.Material import Material
-from .models.Loan import Loan
 from .models.Tool import Tool
 from .models.History import History
 from .models.Unit import Unit
 from .models.PpeStockUpdate import PpeStockUpdate
-from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, LoanForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm
+from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm, ToolLoanForm
 
 logger = logging.getLogger(__name__)
 
@@ -207,194 +203,6 @@ def show_added_ppe(request):
         epp = Ppe.objects.all()
     print(f"Número de PPEs encontrados: {epp.count()}")  # Añade este print
     return render(request, 'table_added_ppe.html', {'epp': epp, 'query': query})
-
-@require_GET
-def check_ppe_availability(request):
-    ppe_name = request.GET.get('ppe_name')
-
-    try:
-        ppe = Ppe.objects.get(name=ppe_name)
-        quantity = ppe.quantity
-
-        can_assign = quantity > 0
-        message = '' if can_assign else 'No hay suficiente cantidad disponible.'
-
-        response = {
-            'can_assign': can_assign,
-            'available': quantity,
-            'message': message
-        }
-    except Ppe.DoesNotExist:
-        response = {
-            'can_assign': False,
-            'available': 0,
-            'message': 'EPP no encontrado.'
-        }
-
-    return JsonResponse(response)
-
-@require_http_methods(["GET"])
-def check_ppe_duration(request):
-    ppe_name = request.GET.get('ppe_name')
-
-    try:
-        ppe = Ppe.objects.get(name=ppe_name)
-        return JsonResponse({
-            'success': True,
-            'duration': ppe.duration
-        })
-    except Ppe.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'message': 'EPP no encontrado.'
-        }, status=404) 
-
-@require_GET
-def check_ppe_assignment(request):
-    ppe_name = request.GET.get('ppe_name')
-    worker_dni = request.GET.get('worker_dni')
-
-    if not ppe_name or not worker_dni:
-        return JsonResponse({'error': 'Se requieren nombre de EPP y DNI del trabajador'}, status=400)
-
-    try:
-        ppe = Ppe.objects.get(name=ppe_name)
-    except Ppe.DoesNotExist:
-        return JsonResponse({'error': 'EPP no encontrado'}, status=404)
-
-    # Buscar préstamos activos para este EPP y trabajador
-    active_loan = PpeLoan.objects.filter(
-        ppe=ppe,
-        workerDni=worker_dni,
-        expirationDate__gt=timezone.now().date(),
-        confirmed=True
-    ).first()
-
-    is_assigned = active_loan is not None
-
-    return JsonResponse({
-        'is_assigned': is_assigned,
-        'loan_id': active_loan.idPpeLoan if active_loan else None
-    })
-    
-@csrf_exempt
-def process_loan(loan):
-    ppe_name = loan.get('name')
-    quantity = int(loan.get('quantity', 0))
-    
-    worker_data = loan.get('worker', {})
-    worker_name = worker_data.get('name')
-    worker_dni = worker_data.get('dni')
-    worker_position = worker_data.get('position')
-    
-    loan_date_str = loan.get('loanDate')
-    is_renewal = loan.get('isRenewal', False)
-    is_exception = loan.get('isAssigned', False)
-    
-    if not ppe_name:
-        return {'success': False, 'error': 'Falta el nombre del EPP'}
-    
-    if not loan_date_str:
-        return {'success': False, 'error': 'Falta la fecha de préstamo'}
-    
-    try:
-        loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
-    except ValueError:
-        return {'success': False, 'error': 'Formato de fecha inválido'}
-    
-    try:
-        ppe = Ppe.objects.get(name=ppe_name)
-        worker = Worker.objects.get(dni=worker_dni)
-    except Ppe.DoesNotExist:
-        return {'success': False, 'error': f'EPP {ppe_name} no encontrado'}
-    except Worker.DoesNotExist:
-        return {'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'}
-
-    # Verificar duración y asignación activa
-    duration_check = check_ppe_loan_duration(ppe, worker, loan_date)
-    if not duration_check['can_assign'] and not (is_renewal or is_exception):
-        return {'success': False, 'error': duration_check['message']}
-
-    # Verificar cantidad disponible
-    if ppe.stock < quantity:  # Cambiado de ppe.quantity a ppe.stock
-        return {'success': False, 'error': f'Cantidad insuficiente disponible para {ppe_name}'}
-
-    # Procesar el préstamo
-    active_loan = PpeLoan.objects.filter(
-        ppe=ppe,
-        worker=worker,
-        loanDate__lte=loan_date,
-        expirationDate__gte=loan_date
-    ).first()
-
-    if active_loan:
-        if is_renewal or is_exception:
-            ppe_duration = ppe.duration
-            new_expiration_date = loan_date + timedelta(days=ppe_duration)
-            active_loan.expirationDate = new_expiration_date
-            active_loan.save()
-            return {'success': True, 'message': f'Préstamo actualizado para {ppe_name} asignado a {worker.name}'}
-        else:
-            return {'success': False, 'error': f'El EPP {ppe_name} ya está prestado al trabajador {worker.name}'}
-    else:
-        new_loan = PpeLoan(
-            worker=worker,
-            workerPosition=worker_position,
-            workerDni=worker_dni,
-            loanDate=loan_date,
-            loanAmount=quantity,
-            ppe=ppe,
-            confirmed=True
-        )
-        new_loan.save()
-        ppe.quantity -= quantity  # Actualizar stock en lugar de quantity
-        ppe.save()
-        return {'success': True, 'message': f'Nuevo préstamo creado para {ppe_name} asignado a {worker.name}'}
-
-def check_ppe_loan_duration(ppe, worker, loan_date):
-    last_loan = PpeLoan.objects.filter(ppe=ppe, worker=worker).order_by('-loanDate').first()
-    if last_loan:
-        days_since_last_loan = (loan_date - last_loan.loanDate).days
-        if days_since_last_loan < ppe.duration:
-            return {
-                'can_assign': False,
-                'message': f'No se puede asignar el EPP. Deben pasar al menos {ppe.duration} días desde el último préstamo.'
-            }
-    return {'can_assign': True, 'message': 'Se puede asignar el EPP.'}
-
-import traceback
-
-@csrf_exempt
-def confirm_ppe_loan(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
-            ppe_loans = data.get('ppe_loans', [])
-            responses = []
-
-            for loan in ppe_loans:
-                try:
-                    response = process_loan(loan)
-                    responses.append(response)
-                except Exception as e:
-                    print(f"Error procesando préstamo: {str(e)}")
-                    print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
-                    responses.append({'success': False, 'error': str(e)})
-
-            if any(not r['success'] for r in responses):
-                return JsonResponse({'success': False, 'errors': responses}, status=400)
-
-            return JsonResponse({'success': True, 'messages': responses})
-
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'error': 'Error al decodificar JSON'}, status=400)
-        except Exception as e:
-            print(f"Error general: {str(e)}")
-            print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
     
 def ppe_total(request):
     ppes = Ppe.objects.all()  
@@ -981,50 +789,196 @@ def modify_worker(request, id):
     else:
         return render(request, 'modify_worker.html', {'form': form})
 
-#LOAN
-@login_required
-def loan_list(request):
-    query = request.GET.get('q')
-    if query:
-        loans = Loan.objects.filter(worker__name__icontains=query)
-    else:
-        loans = Loan.objects.all()
-    return render(request, 'loan_list.html', {'loans': loans, 'query': query})
-
-@login_required
-def add_loan(request):
+#TOOLLOAN
+login_required
+def add_tool_loan(request):
+    tools = Tool.objects.all()
     if request.method == 'POST':
-        form = LoanForm(request.POST)
+        form = ToolLoanForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('add_loan')
+            messages.success(request, 'Préstamo de herramienta añadido con éxito.')
+            return redirect('add_tool_loan')
+        else:
+            messages.error(request, 'Por favor, corrija los errores en el formulario.')
     else:
-        form = LoanForm()
-    return render(request, 'add_loan.html', {'form': form})
-
-@login_required
-def delete_loan(request, id):
-    loans = get_object_or_404(Loan, idLoan=id)
+        form = ToolLoanForm()
     
-    if request.method == 'POST':
-        loans.delete()
-        return redirect('loan_list')
-    else:
-        return render(request, 'delete_loan.html', {'loans': loans})
+    return render(request, 'add_tool_loan.html', {'form': form, 'tools': tools})
     
-@login_required
-def modify_loan(request, id):
-    loans = get_object_or_404(Loan, idLoan=id)
-    form = LoanForm(instance=loans)
-
+@require_http_methods(["GET", "POST"])
+def tool_loan_form(request):
     if request.method == 'POST':
-        form = LoanForm(request.POST, instance=loans)
+        form = ToolLoanForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('loan_list')
+            # No guardamos el formulario aún, solo obtenemos los datos limpios
+            cleaned_data = form.cleaned_data
+            
+            # Obtenemos el trabajador
+            worker_name = cleaned_data['worker']
+            try:
+                worker = Worker.objects.get(name=worker_name)
+            except Worker.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Trabajador no encontrado'
+                }, status=400)
+
+            # Obtenemos el EPP
+            tool_name = cleaned_data['tool']
+            try:
+                tool = Tool.objects.get(name=tool_name)
+            except Tool.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'EPP no encontrado'
+                }, status=400)
+
+            # Construimos la respuesta JSON
+            response_data = {
+                'success': True,
+                'data': {
+                    'worker': worker.name,
+                    'workerPosition': cleaned_data['workerPosition'],
+                    'workerDni': worker.dni,
+                    'loanStatus': tool.loanStatus,
+                    'loanDate': cleaned_data['loanDate'].strftime('%Y-%m-%d'),
+                    'returnLoanDate': cleaned_data['returnLoanDate'].strftime('%Y-%m-%d'),
+                    'tool': tool.name,
+                    'quantity': cleaned_data['loanAmount'],
+                    # Agrega aquí cualquier otro campo que necesites
+                }
+            }
+            return JsonResponse(response_data)
+        else:
+            # Si el formulario no es válido, devolvemos los errores
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            }, status=400)
     else:
-        return render(request, 'modify_loan.html', {'form': form})
+        # Para solicitudes GET, simplemente devolvemos un mensaje
+        return JsonResponse({
+            'success': True,
+            'message': 'Use POST to submit form data'
+        })
     
+@require_GET
+def check_tool_availability(request):
+    tool_name = request.GET.get('tool_name')
+
+    try:
+        tool = Tool.objects.get(name=tool_name)
+        quantity = tool.quantity
+
+        can_assign = quantity > 0
+        message = '' if can_assign else 'No hay suficiente cantidad disponible.'
+
+        response = {
+            'can_assign': can_assign,
+            'available': quantity,
+            'message': message
+        }
+    except Tool.DoesNotExist:
+        response = {
+            'can_assign': False,
+            'available': 0,
+            'message': 'Herramienta no encontrada.'
+        }
+
+    return JsonResponse(response)
+
+def process_tool_loan(loan):
+    tool_name = loan.get('name')
+    quantity = int(loan.get('quantity', 0))
+    
+    worker_data = loan.get('worker', {})
+    worker_name = worker_data.get('name')
+    worker_dni = worker_data.get('dni')
+    worker_position = worker_data.get('position')
+    
+    loan_date_str = loan.get('loanDate')
+    return_date_str = loan.get('returnLoanDate')
+    loan_status = loan.get('loanStatus')
+    
+    if not tool_name:
+        return {'success': False, 'error': 'Falta el nombre de la herramienta'}
+    
+    if not loan_date_str:
+        return {'success': False, 'error': 'Falta la fecha de entrega'}
+    
+    if not return_date_str:
+        return {'success': False, 'error': 'Falta la fecha de devolución'}
+    
+    try:
+        loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return {'success': False, 'error': 'Formato de fecha de entrega inválido'}
+    
+    try:
+        return_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return {'success': False, 'error': 'Formato de fecha de devolución inválido'}
+    
+    try:
+        tool = Tool.objects.get(name=tool_name)
+        worker = Worker.objects.get(dni=worker_dni)
+    except Tool.DoesNotExist:
+        return {'success': False, 'error': f'Herramienta {tool_name} no encontrada'}
+    except Worker.DoesNotExist:
+        return {'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'}
+
+    # Verificar cantidad disponible
+    if tool.quantity < quantity:  # Cambiado de ppe.quantity a ppe.stock
+        return {'success': False, 'error': f'Cantidad insuficiente disponible para {tool_name}'}
+
+    # Procesar el préstamo
+    new_loan = ToolLoan(
+        worker=worker,
+        workerPosition=worker_position,
+        workerDni=worker_dni,
+        loanDate=loan_date,
+        loanAmount=quantity,
+        tool=tool,
+        loanStatus=loan_status,
+    )
+    new_loan.save()
+    tool.quantity -= quantity  # Actualizar stock en lugar de quantity
+    tool.save()
+    return {'success': True, 'message': f'Nuevo préstamo creado para {tool_name} asignado a {worker.name}'}
+
+@csrf_exempt
+def confirm_tool_loan(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
+            tool_loans = data.get('tool_loans', [])
+            responses = []
+
+            for loan in tool_loans:
+                try:
+                    response = process_tool_loan(loan)
+                    responses.append(response)
+                except Exception as e:
+                    print(f"Error procesando préstamo: {str(e)}")
+                    print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
+                    responses.append({'success': False, 'error': str(e)})
+
+            if any(not r['success'] for r in responses):
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            return JsonResponse({'success': True, 'messages': responses})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Error al decodificar JSON'}, status=400)
+        except Exception as e:
+            print(f"Error general: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
 #PPELOAN
 @login_required
 def ppe_loan_list(request):
@@ -1044,7 +998,7 @@ def add_ppe_loan(request):
         form = PpeLoanForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('add_loan')
+            return redirect('add_ppe_loan')
     else:
         form = PpeLoanForm()
     return render(request, 'add_ppe_loan.html', {'form': form, 'ppes': ppes})
@@ -1127,6 +1081,194 @@ def worker_details(request):
             'position': worker.position
         })
     return JsonResponse({}, status=400)
+
+@require_GET
+def check_ppe_availability(request):
+    ppe_name = request.GET.get('ppe_name')
+
+    try:
+        ppe = Ppe.objects.get(name=ppe_name)
+        quantity = ppe.quantity
+
+        can_assign = quantity > 0
+        message = '' if can_assign else 'No hay suficiente cantidad disponible.'
+
+        response = {
+            'can_assign': can_assign,
+            'available': quantity,
+            'message': message
+        }
+    except Ppe.DoesNotExist:
+        response = {
+            'can_assign': False,
+            'available': 0,
+            'message': 'EPP no encontrado.'
+        }
+
+    return JsonResponse(response)
+
+@require_http_methods(["GET"])
+def check_ppe_duration(request):
+    ppe_name = request.GET.get('ppe_name')
+
+    try:
+        ppe = Ppe.objects.get(name=ppe_name)
+        return JsonResponse({
+            'success': True,
+            'duration': ppe.duration
+        })
+    except Ppe.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'EPP no encontrado.'
+        }, status=404) 
+
+@require_GET
+def check_ppe_assignment(request):
+    ppe_name = request.GET.get('ppe_name')
+    worker_dni = request.GET.get('worker_dni')
+
+    if not ppe_name or not worker_dni:
+        return JsonResponse({'error': 'Se requieren nombre de EPP y DNI del trabajador'}, status=400)
+
+    try:
+        ppe = Ppe.objects.get(name=ppe_name)
+    except Ppe.DoesNotExist:
+        return JsonResponse({'error': 'EPP no encontrado'}, status=404)
+
+    # Buscar préstamos activos para este EPP y trabajador
+    active_loan = PpeLoan.objects.filter(
+        ppe=ppe,
+        workerDni=worker_dni,
+        expirationDate__gt=timezone.now().date(),
+        confirmed=True
+    ).first()
+
+    is_assigned = active_loan is not None
+
+    return JsonResponse({
+        'is_assigned': is_assigned,
+        'loan_id': active_loan.idPpeLoan if active_loan else None
+    })
+    
+@csrf_exempt
+def process_ppe_loan(loan):
+    ppe_name = loan.get('name')
+    quantity = int(loan.get('quantity', 0))
+    
+    worker_data = loan.get('worker', {})
+    worker_name = worker_data.get('name')
+    worker_dni = worker_data.get('dni')
+    worker_position = worker_data.get('position')
+    
+    loan_date_str = loan.get('loanDate')
+    is_renewal = loan.get('isRenewal', False)
+    is_exception = loan.get('isAssigned', False)
+    
+    if not ppe_name:
+        return {'success': False, 'error': 'Falta el nombre del EPP'}
+    
+    if not loan_date_str:
+        return {'success': False, 'error': 'Falta la fecha de préstamo'}
+    
+    try:
+        loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return {'success': False, 'error': 'Formato de fecha inválido'}
+    
+    try:
+        ppe = Ppe.objects.get(name=ppe_name)
+        worker = Worker.objects.get(dni=worker_dni)
+    except Ppe.DoesNotExist:
+        return {'success': False, 'error': f'EPP {ppe_name} no encontrado'}
+    except Worker.DoesNotExist:
+        return {'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'}
+
+    # Verificar duración y asignación activa
+    duration_check = check_ppe_loan_duration(ppe, worker, loan_date)
+    if not duration_check['can_assign'] and not (is_renewal or is_exception):
+        return {'success': False, 'error': duration_check['message']}
+
+    # Verificar cantidad disponible
+    if ppe.quantity < quantity:  # Cambiado de ppe.quantity a ppe.stock
+        return {'success': False, 'error': f'Cantidad insuficiente disponible para {ppe_name}'}
+
+    # Procesar el préstamo
+    active_loan = PpeLoan.objects.filter(
+        ppe=ppe,
+        worker=worker,
+        loanDate__lte=loan_date,
+        expirationDate__gte=loan_date
+    ).first()
+
+    if active_loan:
+        if is_renewal or is_exception:
+            ppe_duration = ppe.duration
+            new_expiration_date = loan_date + timedelta(days=ppe_duration)
+            active_loan.expirationDate = new_expiration_date
+            active_loan.save()
+            return {'success': True, 'message': f'Préstamo actualizado para {ppe_name} asignado a {worker.name}'}
+        else:
+            return {'success': False, 'error': f'El EPP {ppe_name} ya está prestado al trabajador {worker.name}'}
+    else:
+        new_loan = PpeLoan(
+            worker=worker,
+            workerPosition=worker_position,
+            workerDni=worker_dni,
+            loanDate=loan_date,
+            loanAmount=quantity,
+            ppe=ppe,
+            confirmed=True
+        )
+        new_loan.save()
+        ppe.quantity -= quantity  # Actualizar stock en lugar de quantity
+        ppe.save()
+        return {'success': True, 'message': f'Nuevo préstamo creado para {ppe_name} asignado a {worker.name}'}
+
+def check_ppe_loan_duration(ppe, worker, loan_date):
+    last_loan = PpeLoan.objects.filter(ppe=ppe, worker=worker).order_by('-loanDate').first()
+    if last_loan:
+        days_since_last_loan = (loan_date - last_loan.loanDate).days
+        if days_since_last_loan < ppe.duration:
+            return {
+                'can_assign': False,
+                'message': f'No se puede asignar el EPP. Deben pasar al menos {ppe.duration} días desde el último préstamo.'
+            }
+    return {'can_assign': True, 'message': 'Se puede asignar el EPP.'}
+
+import traceback
+
+@csrf_exempt
+def confirm_ppe_loan(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
+            ppe_loans = data.get('ppe_loans', [])
+            responses = []
+
+            for loan in ppe_loans:
+                try:
+                    response = process_ppe_loan(loan)
+                    responses.append(response)
+                except Exception as e:
+                    print(f"Error procesando préstamo: {str(e)}")
+                    print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
+                    responses.append({'success': False, 'error': str(e)})
+
+            if any(not r['success'] for r in responses):
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            return JsonResponse({'success': True, 'messages': responses})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Error al decodificar JSON'}, status=400)
+        except Exception as e:
+            print(f"Error general: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 @login_required
 def delete_ppe_loan(request, id):

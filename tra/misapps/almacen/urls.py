@@ -58,11 +58,9 @@ urlpatterns = [
     path('worker/delete/<int:id>/', views.delete_worker, name='delete_worker'),
     path('worker/modify/<int:id>/', views.modify_worker, name='modify_worker'),
 
-    #ASIGNACIONES
-    path('loan/', views.loan_list, name='loan_list'),
-    path('loan/create/', views.add_loan, name='add_loan'),
-    path('loan/delete/<int:id>/', views.delete_loan, name='delete_loan'),
-    path('loan/modify/<int:id>/', views.modify_loan, name='modify_loan'),
+    path('worker_autocomplete/', views.worker_autocomplete, name='worker_autocomplete'),
+    path('dni_autocomplete/', views.dni_autocomplete, name='dni_autocomplete'),
+    path('worker-details/', views.worker_details, name='worker_details'),
 
     #ASIGNACIONES DE EPP
     path('ppeloan/', views.ppe_loan_list, name='ppe_loan_list'),
@@ -72,12 +70,15 @@ urlpatterns = [
     path('check_ppe_duration/', views.check_ppe_duration, name='check_ppe_duration'),
     path('check-ppe-availability/', views.check_ppe_availability, name='check_ppe_availability'),
     path('check-ppe-loan-duration/', views.check_ppe_loan_duration, name='check_ppe_loan_duration'),
-    path('worker_autocomplete/', views.worker_autocomplete, name='worker_autocomplete'),
-    path('dni_autocomplete/', views.dni_autocomplete, name='dni_autocomplete'),
-    path('worker-details/', views.worker_details, name='worker_details'),
     path('confirm_ppe_loan/', views.confirm_ppe_loan, name='confirm_ppe_loan'),
     path('ppeloan/delete/<int:id>/', views.delete_ppe_loan, name='delete_ppe_loan'),
     path('ppeloan/modify/<int:id>/', views.modify_ppe_loan, name='modify_ppe_loan'),
+
+    #ASIGNACIONES DE HERRAMIENTAS
+    path('add_tool_loan/', views.add_tool_loan, name='add_tool_loan'),
+    path('tool_loan_form/', views.tool_loan_form, name='tool_loan_form'),
+    path('confirm_tool_loan/', views.confirm_tool_loan, name='confirm_tool_loan'),
+    path('check-tool-availability/', views.check_tool_availability, name='check_tool_availability'),
 
     #USUARIOS
     path('register_admin/', register_admin, name='register_admin'),

@@ -1,5 +1,4 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models.Ppe import Ppe
 from .models.PpeLoan import PpeLoan
@@ -7,8 +6,8 @@ from .models.Equipment import Equipment
 from .models.Material import Material
 from .models.Tool import Tool
 from .models.Worker import Worker
-from .models.Loan import Loan
 from .models.Unit import Unit
+from .models.ToolLoan import ToolLoan
 from .models.PpeStockUpdate import PpeStockUpdate
 from django.contrib.auth.models import User
 
@@ -442,86 +441,6 @@ class WorkerForm(forms.ModelForm):
                 'type': 'date'
             }),
         }
-
-
-class LoanForm(forms.ModelForm):
-    material = forms.ModelChoiceField(label='Material', queryset=Material.objects.all(), required=True)
-    tool = forms.ModelChoiceField(label='Herramienta', queryset=Tool.objects.all(), required=True)
-    equipment = forms.ModelChoiceField(label='Equipo', queryset=Equipment.objects.all(), required=True)
-    worker = forms.ModelChoiceField(label='Trabajador', queryset=Worker.objects.all(), required=True)
-    loanStatus = forms.BooleanField(label='Estado (Devuelto/No devuelto)', required=False)
-
-    class Meta:
-        model = Loan
-        fields = ['loanDate', 'returnLoanDate', 'worker', 'material', 'tool', 'equipment', 'workOrderCode', 'loanStatus']
-
-        widgets = {
-            'loanDate': forms.DateInput(attrs={'type': 'date'}),
-            'returnLoanDate': forms.DateInput(attrs={'type': 'date'}),
-            'loanStatus': forms.CheckboxInput(attrs={'class': 'status-checkbox'}),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        worker = cleaned_data.get('worker')
-        loan_date = cleaned_data.get('loanDate')
-        return_loan_date = cleaned_data.get('returnLoanDate')
-    
-        if worker and loan_date and return_loan_date:
-            # Verificar si hay préstamos existentes para este trabajador en las fechas especificadas
-            existing_loans = Loan.objects.filter(
-                worker=worker,
-                returnLoanDate__gte=return_loan_date,
-                loanDate__lte=loan_date,
-            ).exclude(pk=self.instance.pk).exists()
-            
-            if existing_loans:
-                raise ValidationError(f'El trabajador ya tiene objetos prestados durante este período.')
-        
-        return cleaned_data
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['worker'].label_from_instance = self.label_from_instance
-        self.fields['material'].label_from_instance = self.label_from_instance
-        self.fields['tool'].label_from_instance = self.label_from_instance
-        self.fields['equipment'].label_from_instance = self.label_from_instance
-    
-    def label_from_instance(self, obj):
-        if isinstance(obj, Worker):
-            return f"{obj.name} {obj.surname}"
-        else:
-            return obj.name
-        
-    def clean(self):
-        cleaned_data = super().clean()
-        worker = cleaned_data.get('worker')
-        loan_date = cleaned_data.get('loanDate')
-        new_loan_date = cleaned_data.get('newLoanDate')
-    
-        if worker and loan_date and new_loan_date:
-            existing_ppe_loans = PpeLoan.objects.filter(
-                worker=worker,
-                loanDate__lte=new_loan_date,
-                newLoanDate__gte=loan_date 
-            ).exclude(pk=self.instance.pk).exists()
-            
-            if existing_ppe_loans:
-                self.existing_ppe_loans  = True
-                raise ValidationError(f'El trabajador ya tiene EPPs entregados durante este período.')
-        
-        return cleaned_data
-    
-    def _init_(self, *args, **kwargs):
-        super()._init_(*args, **kwargs)
-        self.fields['worker'].label_from_instance = self.label_from_instance
-        
-    
-    def label_from_instance(self, obj):
-        if isinstance(obj, Worker):
-            return f"{obj.name} {obj.surname}"
-        else:
-            return obj.name
         
 class PpeLoanForm(forms.ModelForm):
     ppe = forms.CharField(widget=forms.TextInput(attrs={
@@ -563,3 +482,60 @@ class PpeLoanForm(forms.ModelForm):
     class Meta:
         model = PpeLoan
         fields = ['ppe' , 'loanDate', 'loanAmount', 'worker', 'workerPosition', 'workerDni']
+
+class ToolLoanForm(forms.ModelForm):
+    tool = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "Herramienta a asignar...",
+    }))
+
+    loanDate = forms.DateField(widget=forms.DateInput(attrs={
+        "class": "input",
+        "type": "date",
+    }))
+
+    returnLoanDate = forms.DateField(widget=forms.DateInput(attrs={
+        "class": "input",
+        "type": "date",
+    }))
+
+    loanAmount = forms.IntegerField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Cantidad a asignar"
+    }))
+
+    workOrder = forms.IntegerField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Código de orden de trabajo"
+    }))
+
+    worker = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "Nombre del trabajador",
+    }))
+
+    workerPosition = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "Posición del trabajador",
+        "readonly": "readonly",
+    }))
+
+    workerDni = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "DNI del trabajador",
+    }))
+
+    loanStatus = forms.BooleanField(widget=forms.CheckboxInput(attrs={
+        "class": "input",
+        "type": "checkbox",
+    }))
+
+    class Meta:
+        model = ToolLoan
+        fields = ['tool' , 'loanDate', 'loanAmount', 'worker', 'workerPosition', 'workerDni', 'returnLoanDate', 'workOrder', 'loanStatus']

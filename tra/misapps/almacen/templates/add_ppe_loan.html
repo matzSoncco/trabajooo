@@ -379,14 +379,14 @@
     <section class="contendor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'add_ppe_loan' %}">EPPs</a>
-            <a class="link-form" href="#">Herramientas</a>
+            <a class="link-form" href="{% url 'add_tool_loan' %}">Herramientas</a>
             <a class="link-form" href="#">Equipos</a>
             <a class="link-form" href="#">Materiales</a>
         </nav>
         <div class="contenedor-formulario">
             <div id="loan-message"></div>
             <div class="top-form">
-                <h2 class="titulo-primario">Asignar de Equipos de Protección Personal</h2>
+                <h2 class="titulo-primario">Asignar de Herramientas</h2>
                 {% if messages %}
                 <ul class="messages">
                     {% for message in messages %}
@@ -398,7 +398,7 @@
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual" >
-                    <form id="ppe-loan-form" method="post" action="{% url 'add_ppe_loan' %}" enctype="application/json class="box">
+                    <form id="ppe-loan-form" method="post" action="{% url 'add_ppe_loan' %}" enctype="application/json" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
                             <div class="campo">
@@ -432,7 +432,7 @@
                                 {{ form.workerPosition }}
                             </div>
                         </div>
-        
+
                         <div class="campo-botones">
                             <button id="agregar-a-tabla-pre" class="form-btn aceptar-btn" type="submit">Agregar</button>
                             <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>

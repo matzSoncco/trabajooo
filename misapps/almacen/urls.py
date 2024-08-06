@@ -32,6 +32,11 @@ urlpatterns = [
 
     #EQUIPOS
     path('equipment/', views.equipment_list, name='equipment_list'),
+    path('equipment/add/', views.add_equipment, name='add_equipment'),
+    path('equipment/create/table/', views.Equipments, name='table_created_equipment'),
+    path('save_all_equipment/', views.save_all_equipment, name='save_all_equipment'),
+    path('equipment/total/add', views.equipment_total_add, name='equipment_total_add'),
+    path('get_equipment_data/', views.get_equipment_data, name='get_equipment_data'),
     path('equipment/<str:equipment_name>/delete/', views.delete_equipment, name='delete_equipment'),
     path('equipment/<str:name>/modify/', views.modify_equipment, name='modify_equipment'),
     path('equipment/create/', views.create_equipment, name='create_equipment'),
@@ -40,6 +45,11 @@ urlpatterns = [
 
     #MATERIALES
     path('material/', views.material_list, name='material_list'),
+    path('material/add/', views.add_material, name='add_material'),
+    path('material/create/table/', views.Materials, name='table_created_material'),
+    path('get_material_data/', views.get_material_data, name='get_material_data'),
+    path('save_all_material/', views.save_all_material, name='save_all_material'),
+    path('material/total/add', views.material_total_add, name='material_total_add'),
     path('material/create/', views.create_material, name='create_material'),
     path('material/total/', views.material_total, name='material_total'),
     path('material/<str:material_name>/modify/', views.modify_material, name='modify_material'),

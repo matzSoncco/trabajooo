@@ -1,0 +1,43 @@
+<h2 class="titulo-primario">Creados</h2>
+<div class="buscar">
+    <form class="formulario-buscar" method="get" action=".">
+        <div class="cuadro-busqueda">
+            <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+        </div>
+        <div class="btn-busqueda-elemento">
+            <button type="submit" class="btn buscar-btn">Buscar</button>
+        </div>
+    </form>
+</div>
+<table class="tabla">
+    <thead>
+        <tr>
+            <th>Codigo</th>
+            <th>Nombre</th>
+            <th>Unidad</th>
+            <th>Imágen</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for material in material %}
+            <tr>
+                <td>{{ material.idmaterial }}</td>
+                <td>{{ material.name }}</td>
+                <td>{{ material.unit.name }}</td>
+                <td>
+                    {% if material.image %}
+                        <img src="{{ material.image.url }}" alt="{{ material.name }}" style="width: 50px; height: 50px;">
+                    {% else %}
+                        No image
+                    {% endif %}
+                </td>
+                <td><button id="agregar-formulario" data-material-id="{{ material.idmaterial }}"><img class="icono-btn" src="../../static/img/anadir.png" alt=""></button></td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">No hay Materiales disponibles.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

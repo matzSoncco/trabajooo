@@ -1,58 +1,58 @@
 {% extends 'base.html' %}
 
-{% block title %}Agregar Herramienta{% endblock %}
+{% block title %}Agregar Material{% endblock %}
 
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
-        var addedTools = [];
+        var addedMaterial = [];
 
-        function loadAddedToolsTable() {
-            let html = '<table><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
-            addedTools.forEach(function(tool) {
+        function loadAddedMaterialTable() {
+            let html = '<table><thead><tr><th>N° de Guía</th><th>Fecha</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
+            addedMaterial.forEach(function(material) {
                 html += `<tr>
-                            <td>${tool.guideNumber}</td>
-                            <td>${ppe.creationDate}</td>
-                            <td>${tool.name}</td>
-                            <td>${tool.unitCost}</td>
-                            <td>${tool.quantity}</td>
-                            <td>${tool.stock}</td>
+                            <td>${material.guideNumber}</td>
+                            <td>${material.creationDate}</td>
+                            <td>${material.name}</td>
+                            <td>${material.unitCost}</td>
+                            <td>${material.quantity}</td>
+                            <td>${material.stock}</td>
                          </tr>`;
             });
             html += '</tbody></table>';
-            $('#added-tools-table-container').html(html);
+            $('#added-material-table-container').html(html);
         }
 
-        loadAddedToolsTable();
+        loadAddedMaterialTable();
         
-        function loadCreatedToolsTable(query = '') {
+        function loadCreatedMaterialTable(query = '') {
             $.ajax({
-                url: "{% url 'table_created_tools' %}",
+                url: "{% url 'table_created_material' %}",
                 data: { q: query },
                 success: function(data) {
-                    $('#created-tools-table-container').html(data);
+                    $('#created-material-table-container').html(data);
                 }
             });
         }
 
         $(document).ready(function() {
-            loadCreatedToolsTable();
+            loadCreatedMaterialTable();
 
             $(document).on('submit', '#formulario-buscar', function(event) {
                 event.preventDefault();
                 var query = $(this).find('input[name="q"]').val();
-                loadCreatedToolsTable(query);
+                loadCreatedMaterialTable(query);
             });
         });
 
         $(document).on('click', '#agregar-formulario', function() {
             var row = $(this).closest('tr');
-            var toolId = row.find('td:first').text();
+            var materialId = row.find('td:first').text();
             
             $.ajax({
-                url: "{% url 'get_tool_data' %}",
-                data: { id: toolId },
+                url: "{% url 'get_material_data' %}",
+                data: { id: materialId },
                 success: function(data) {
                     $('#id_guideNumber').val(data.guideNumber);
                     $('#id_creationDate').val(data.creationDate);
@@ -60,7 +60,6 @@
                     $('#id_unitCost').val(data.unitCost);
                     $('#id_quantity').val(data.quantity);
                     $('#id_stock').val(data.stock);
-                    $('#id_level').val(data.level);
                 }
             });
         });
@@ -73,35 +72,34 @@
                 name: $('#id_name').val(),
                 unitCost: parseFloat($('#id_unitCost').val()),
                 quantity: parseInt($('#id_quantity').val()),
-                stock: parseInt($('#id_stock').val()),
-                level: parseInt($('#id_level').val())        
+                stock: parseInt($('#id_stock').val())
             };
-            addedTools.push(formData);
-            loadAddedToolsTable();
+            addedMaterial.push(formData);
+            loadAddedMaterialTable();
         });
 
         $('#save-all-btn').click(function() {
-            if (addedTools.length === 0) {
-                alert('No hay herramientas para guardar.');
+            if (addedMaterial.length === 0) {
+                alert('No hay Materiales para guardar.');
                 return;
             }
             $.ajax({
-                url: "{% url 'save_all_tools' %}",
+                url: "{% url 'save_all_material' %}",
                 method: 'POST',
-                data: JSON.stringify(addedTools),
+                data: JSON.stringify(addedMaterial),
                 contentType: 'application/json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        alert('Herramientas guardadas exitosamente.');
-                        addedTools = [];
-                        loadAddedToolsTable();
+                        alert('Materiales guardados exitosamente.');
+                        addedMaterial = [];
+                        loadAddedMaterialTable();
                     } else {
-                        alert('Hubo un error al guardar las herramientas: ' + response.message);
+                        alert('Hubo un error al guardar los Materiales: ' + response.message);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error al guardar herramientas:", xhr.responseText);
-                    alert('Hubo un error al guardar las herramientas: ' + xhr.responseText);
+                    console.error("Error al guardar Materiales:", xhr.responseText);
+                    alert('Hubo un error al guardar los Materiales: ' + xhr.responseText);
                 }
             });
         });
@@ -126,26 +124,26 @@
                     <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
                 </div>
                 <div class="item-lateral">
-                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de Herramientas</a>
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
                 </div>
             </nav>
         </div>
     </aside>
     <section class="contendor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
-            <a class="link-form" href="{% url 'add_ppe' %}">EPPs</a>
+            <a class="link-form" href="{% url 'add_material' %}">EPPs</a>
             <a class="link-form" href="{% url 'add_tool'%}">Herramientas</a>
             <a class="link-form" href="{% url 'add_equipment'%}">Equipos</a>
             <a class="link-form" href="{% url 'add_material'%}">Materiales</a>
         </nav>
         <div class="contenedor-formulario">
             <div class="top-form">
-                <h2 class="titulo-primario">Añadir Herramientas</h2>
-                <a class="link-top-form" href="{% url 'tool_total_add' %}">Ver tabla</a>
+                <h2 class="titulo-primario">Añadir Materiales </h2>
+                <a class="link-top-form" href="{% url 'material_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual">
-                    <form method="post" action="{% url 'add_tool' %}" enctype="multipart/form-data" class="box">
+                    <form method="post" action="{% url 'add_material' %}" enctype="multipart/form-data" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
                             <div class="campo">
@@ -154,17 +152,17 @@
                             </div>
                             <div class="campo">
                                 <label for="id_creationDate" class="label">Fecha</label>
-                                    {{ form.creationDate }} 
+                                {{ form.creationDate }}
                             </div>
                         </div>
-
+        
                         <div class="fila-form">
                             <div class="campo">
                                 <label for="id_name" class="label">Nombre</label>
                                 {{ form.name }}
                             </div>
                         </div>
-
+        
                         <div class="fila-form">
                             <div class="campo">
                                 <label for="id_unitCost" class="label">Costo Unitario</label>
@@ -176,15 +174,9 @@
                             </div>
                         </div>
 
-                        <div class="fila-form">
-                            <div class="campo">
-                                <label for="id_stock" class="label">Stock ideal</label>
-                                {{ form.stock }}
-                            </div>
-                            <div class="campo">
-                                <label for="id_level" class="label">Nivel</label>
-                                {{ form.level }}
-                            </div>
+                        <div class="campo">
+                            <label for="id_stock" class="label">Stock ideal</label>
+                            {{ form.stock }}
                         </div>
         
                         <div class="campo-botones">
@@ -193,12 +185,14 @@
                         </div>
                     </form>
                 </div>
-                <div class="tabla-creacion" id="added-tools-table-container">
+                <div class="tabla-creacion" id="added-material-table-container">
                     <h2 class="titulo-primario">Añadidos</h2>
+
                 </div>
                 <button id="save-all-btn">Guardar Todos</button>
             </div>
-            <div class="tabla-creacion" id="created-tools-table-container">
+            <div class="tabla-creacion" id="created-material-table-container">
+                
             </div>
         </div>
     </section>

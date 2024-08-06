@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Agregar Equipo{% endblock %}
+{% block title %}Agregar Equipo de P{% endblock %}
 
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -133,12 +133,12 @@
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'add_ppe' %}">EPPs</a>
             <a class="link-form" href="{% url 'add_tool'%}">Herramientas</a>
-            <a class="link-form" href="#">Equipos</a>
-            <a class="link-form" href="#">Materiales</a>
+            <a class="link-form" href="{% url 'add_equipment'%}">Equipos</a>
+            <a class="link-form" href="{% url 'add_material'%}">Materiales</a>
         </nav>
         <div class="contenedor-formulario">
             <div class="top-form">
-                <h2 class="titulo-primario">Añadir de Equipos de Protección Personal </h2>
+                <h2 class="titulo-primario">Añadir Equipos de Protección Personal </h2>
                 <a class="link-top-form" href="{% url 'ppe_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">

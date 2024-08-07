@@ -98,6 +98,12 @@ urlpatterns = [
     path('confirm_tool_loan/', views.confirm_tool_loan, name='confirm_tool_loan'),
     path('check_tool_availability/', views.check_tool_availability, name='check_tool_availability'),
 
+    #ASIGNACIONES DE EQUIPOS
+    path('add_equipment_loan/', views.add_equipment_loan, name='add_equipment_loan'),
+    path('equipment_loan_form/', views.equipment_loan_form, name='equipment_loan_form'),
+    path('confirm_equipment_loan/', views.confirm_equipment_loan, name='confirm_equipment_loan'),
+    path('check_equipment_availability/', views.check_equipment_availability, name='check_equipment_availability'),
+
     #USUARIOS
     path('register_admin/', register_admin, name='register_admin'),
     path('admin_list/', views.user_list, name='table_user'),

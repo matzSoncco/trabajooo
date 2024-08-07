@@ -662,11 +662,11 @@ def total_equipment_stock(request):
 def Materials(request):
     query = request.GET.get('q', '')
     if query:
-        tool = Material.objects.filter(name__icontains=query)
+        material = Material.objects.filter(name__icontains=query)
     else:
-        tool = Material.objects.all()
+        material = Material.objects.all()
     
-    context = {'material': Material, 'query': query}
+    context = {'material': material, 'query': query}
     return render(request, 'table_created_material.html', context)
 
 def get_material_data(request):

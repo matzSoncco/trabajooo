@@ -80,34 +80,6 @@
             $("#id_ppe").val(ppeName);
         });
 
-        $('#id_ppe').change(function() {
-            var ppeName = $(this).val();
-            var workerName = $('#id_worker').val();
-            var loanDate = $('#id_loanDate').val();
-
-            $.ajax({
-                url: '{% url "check_ppe_availability" %}',
-                data: {
-                    'ppe_name': ppeName,
-                    'worker': workerName,
-                    'loan_date': loanDate
-                },
-                success: function(response) {
-                    if (response.can_assign) {
-                        $('#id_loanAmount').attr('max', response.available);
-                        $('#id_loanAmount').prop('disabled', false);
-                        $('#loan-message').text('').removeClass('error-message');
-                    } else {
-                        $('#id_loanAmount').prop('disabled', true);
-                        $('#loan-message').text(response.message).addClass('error-message');
-                    }
-                },
-                error: function() {
-                    alert('Error al verificar la disponibilidad del EPP');
-                }
-            });
-        });
-
         // Lógica para enviar formulario
         $('#ppe-loan-form').submit(function(e) {
             e.preventDefault();
@@ -121,9 +93,7 @@
                 url: '{% url "check_ppe_availability" %}',
                 data: {
                     'ppe_name': ppeName,
-                    'worker': workerName,
-                    'loan_date': loanDate,
-                    'quantity': loanAmount
+                    'ppe_loan_amount': loanAmount  // Asegúrate de que este nombre coincida con el de la vista
                 },
                 success: function(response) {
                     if (response.can_assign) {

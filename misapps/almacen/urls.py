@@ -95,7 +95,7 @@ urlpatterns = [
     path('add_tool_loan/', views.add_tool_loan, name='add_tool_loan'),
     path('tool_loan_form/', views.tool_loan_form, name='tool_loan_form'),
     path('confirm_tool_loan/', views.confirm_tool_loan, name='confirm_tool_loan'),
-    path('check-tool-availability/', views.check_tool_availability, name='check_tool_availability'),
+    path('check_tool_availability/', views.check_tool_availability, name='check_tool_availability'),
 
     #USUARIOS
     path('register_admin/', register_admin, name='register_admin'),

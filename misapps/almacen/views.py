@@ -15,7 +15,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from datetime import datetime, timedelta
-from django.db import IntegrityError
+import traceback
 from datetime import datetime
 import json
 import logging
@@ -1632,8 +1632,6 @@ def check_ppe_renewal(request):
         }
 
     return JsonResponse(response)
-
-import traceback
 
 @csrf_exempt
 def confirm_ppe_loan(request):

@@ -25,7 +25,7 @@ urlpatterns = [
     path('ppe/show/table/', views.set_duration, name='show_duration_table'),
     path('ppe/add/', views.add_ppe, name='add_ppe'),
     path('ppe/add/table/', views.show_added_ppe, name='table_added_ppe'),
-    path('ppe/<str:name>/modify/', views.modify_ppe, name='modify_ppe'),
+    path('ppe/<str:name>/modify/', views.modify_ppe_add, name='modify_ppe_add'),
     path('ppe/<str:ppe_name>/delete/', views.delete_ppe, name='delete_ppe'),
     path('ppe/total_ppe_stock/', views.total_ppe_stock, name='total_ppe_stock'),
 

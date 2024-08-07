@@ -1137,7 +1137,9 @@ def return_view(request):
     form = ToolLoanSearchForm(request.GET or None)
     tool_loans = []
 
-    if form.is_valid():
+    if 'show_debtors' in request.GET:
+        tool_loans = ToolLoan.objects.filter(loanStatus=False)
+    elif form.is_valid():
         work_order = form.cleaned_data.get('work_order')
         worker_dni = form.cleaned_data.get('worker_dni')
 
@@ -1145,20 +1147,21 @@ def return_view(request):
             tool_loans = ToolLoan.objects.filter(workOrder=work_order)
         elif worker_dni:
             tool_loans = ToolLoan.objects.filter(workerDni=worker_dni)
+    else:
+        tool_loans = []  # Empty list when form is not valid and show_debtors is not requested
 
     if request.method == 'POST':
+        tool_loans = ToolLoan.objects.all()
         for loan in tool_loans:
             checkbox_name = f'returned_{loan.idToolLoan}'
-            if checkbox_name in request.POST:
-                loan.loanStatus = True
-            else:
-                loan.loanStatus = False
+            loan.loanStatus = checkbox_name in request.POST
             loan.save()
         return HttpResponseRedirect(request.path_info)
     
     return render(request, 'return.html', {
         'form': form,
         'tool_loans': tool_loans,
+        'show_debtors': 'view_debtors' in request.GET,
     })
 
 #WORKER
@@ -1320,77 +1323,152 @@ def check_tool_availability(request):
     return JsonResponse(response)
 
 def process_tool_loan(loan):
-    tool_name = loan.get('name')
-    quantity = int(loan.get('quantity', 0))
-    
-    worker_data = loan.get('worker', {})
-    worker_name = worker_data.get('name')
-    worker_dni = worker_data.get('dni')
-    worker_position = worker_data.get('position')
-    
-    loan_date_str = loan.get('loanDate')
-    return_date_str = loan.get('returnLoanDate')
-    loan_status = loan.get('loanStatus')
-    
-    if not tool_name:
-        return {'success': False, 'error': 'Falta el nombre de la herramienta'}
-    
-    if not loan_date_str:
-        return {'success': False, 'error': 'Falta la fecha de entrega'}
-    
-    if not return_date_str:
-        return {'success': False, 'error': 'Falta la fecha de devolución'}
-    
     try:
-        loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
-    except ValueError:
-        return {'success': False, 'error': 'Formato de fecha de entrega inválido'}
-    
-    try:
-        return_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
-    except ValueError:
-        return {'success': False, 'error': 'Formato de fecha de devolución inválido'}
-    
-    try:
-        tool = Tool.objects.get(name=tool_name)
-        worker = Worker.objects.get(dni=worker_dni)
-    except Tool.DoesNotExist:
-        return {'success': False, 'error': f'Herramienta {tool_name} no encontrada'}
-    except Worker.DoesNotExist:
-        return {'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'}
+        tool_name = loan.get('name')
+        worker_data = loan.get('worker', {})
+        worker_name = worker_data.get('name')
+        worker_position = worker_data.get('position')
+        worker_dni = worker_data.get('dni')
+        loan_date_str = loan.get('loanDate')
+        quantity = int(loan.get('quantity'))
+        is_renewal = loan.get('isRenewal', False)
+        is_assigned = loan.get('isAssigned', False)
 
-    # Verificar cantidad disponible
-    if tool.quantity < quantity:  # Cambiado de ppe.quantity a ppe.stock
-        return {'success': False, 'error': f'Cantidad insuficiente disponible para {tool_name}'}
+        # Verificar y convertir la fecha del préstamo
+        try:
+            loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return {'success': False, 'error': 'Fecha de préstamo no válida'}
 
-    # Procesar el préstamo
-    new_loan = ToolLoan(
-        worker=worker,
-        workerPosition=worker_position,
-        workerDni=worker_dni,
-        loanDate=loan_date,
-        loanAmount=quantity,
-        tool=tool,
-        loanStatus=loan_status,
-    )
-    new_loan.save()
-    tool.quantity -= quantity  # Actualizar stock en lugar de quantity
-    tool.save()
-    return {'success': True, 'message': f'Nuevo préstamo creado para {tool_name} asignado a {worker.name}'}
+        if worker_dni is None or worker_dni.strip() == "":
+            return {'success': False, 'error': 'DNI del trabajador no proporcionado'}
+
+        try:
+            tool = Tool.objects.get(name=tool_name)
+            worker = Worker.objects.get(dni=worker_dni)
+
+            # Calcular la nueva fecha de expiración (si aplica)
+            new_expiration_date = loan_date + timedelta(days=tool.duration)
+
+            # Verificar si ya existe un préstamo activo
+            active_loan = ToolLoan.objects.filter(
+                tool=tool,
+                worker=worker,
+                loanDate__lte=loan_date,
+                returnLoanDate__gte=loan_date
+            ).first()
+
+            if active_loan and not (is_renewal or is_assigned):
+                return {
+                    'success': False,
+                    'error': f'Ya existe un préstamo activo para {tool_name} asignado a {worker_name}'
+                }
+
+            if tool.quantity >= quantity:
+                if active_loan and (is_renewal or is_assigned):
+                    # Actualizar el préstamo existente
+                    active_loan.returnLoanDate = new_expiration_date
+                    active_loan.save()
+                else:
+                    # Crear un nuevo préstamo
+                    new_loan = ToolLoan(
+                        worker=worker,
+                        workerPosition=worker_position,
+                        workerDni=worker_dni,
+                        loanDate=loan_date,
+                        returnLoanDate=new_expiration_date,
+                        loanAmount=quantity,
+                        tool=tool,
+                        loanStatus=True
+                    )
+                    new_loan.save()
+                    tool.quantity -= quantity
+                    tool.save()
+            else:
+                return {'success': False, 'error': 'Cantidad insuficiente disponible'}
+
+            return {'success': True, 'message': f'Préstamo para {tool_name} procesado con éxito'}
+
+        except Tool.DoesNotExist:
+            return {'success': False, 'error': f'Herramienta {tool_name} no encontrada'}
+        except Worker.DoesNotExist:
+            return {'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'}
+
+    except Exception as e:
+        print(f"Error procesando préstamo: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
+        return {'success': False, 'error': str(e)}
 
 @csrf_exempt
 def confirm_tool_loan(request):
     if request.method == 'POST':
         try:
+            # Parsear los datos JSON
             data = json.loads(request.body)
             print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
+            
+            # Extraer datos generales
+            work_order = data.get('workOrder')
+            loan_date_str = data.get('loanDate')
+            return_loan_date_str = data.get('returnLoanDate')
+            worker_dni = data.get('workerDni')
+            worker_name = data.get('worker')
+            worker_position = data.get('workerPosition')
             tool_loans = data.get('tool_loans', [])
             responses = []
 
+            # Validar y convertir fechas
+            try:
+                loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                return JsonResponse({'success': False, 'error': 'Fechas de préstamo o devolución no válidas'}, status=400)
+            
+            if not tool_loans:
+                return JsonResponse({'success': False, 'error': 'No se proporcionaron préstamos de herramientas'}, status=400)
+
+            # Procesar cada préstamo de herramienta
             for loan in tool_loans:
                 try:
-                    response = process_tool_loan(loan)
-                    responses.append(response)
+                    tool_name = loan.get('name')
+                    quantity = int(loan.get('quantity'))
+
+                    if not tool_name or not quantity:
+                        responses.append({'success': False, 'error': 'Datos de herramienta incompletos'})
+                        continue
+
+                    # Buscar la herramienta y el trabajador
+                    tool = Tool.objects.get(name=tool_name)
+                    worker = Worker.objects.get(dni=worker_dni)
+
+                    # Verificar cantidad disponible
+                    if tool.quantity >= quantity:
+                        # Crear un nuevo préstamo de herramienta
+                        new_loan = ToolLoan(
+                            worker=worker,
+                            workerPosition=worker_position,
+                            workerDni=worker_dni,
+                            loanDate=loan_date,
+                            returnLoanDate=return_loan_date,
+                            loanAmount=quantity,
+                            tool=tool,
+                            loanStatus=True,
+                            workOrder=work_order
+                        )
+                        new_loan.save()
+
+                        # Actualizar cantidad de herramienta
+                        tool.quantity -= quantity
+                        tool.save()
+
+                        responses.append({'success': True, 'message': f'Préstamo para {tool_name} procesado con éxito'})
+                    else:
+                        responses.append({'success': False, 'error': f'Cantidad insuficiente disponible para {tool_name}'})
+
+                except Tool.DoesNotExist:
+                    responses.append({'success': False, 'error': f'Herramienta {tool_name} no encontrada'})
+                except Worker.DoesNotExist:
+                    responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 except Exception as e:
                     print(f"Error procesando préstamo: {str(e)}")
                     print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo

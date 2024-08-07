@@ -1157,12 +1157,15 @@ def create_worker(request):
                 user=request.user,
                 timestamp=timezone.now()
             )
-            return JsonResponse({'success': True, 'message': 'Trabajador creado con éxito'})
+            messages.success(request, 'Trabajador creado con éxito')
+            return redirect('create_worker')  # Redirects to the same page to show the popup
         else:
-            return JsonResponse({'success': False, 'errors': form.errors})
+            messages.error(request, 'Hubo un error al crear el trabajador. Por favor, revisa el formulario.')
+            return render(request, 'create_worker.html', {'form': form})
     else:
         form = WorkerForm()
     return render(request, 'create_worker.html', {'form': form})
+
 
 @login_required
 def delete_worker(request, id):

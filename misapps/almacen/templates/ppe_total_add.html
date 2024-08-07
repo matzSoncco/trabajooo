@@ -100,7 +100,6 @@
                                 <th>Precio Subtotal</th>
                                 
                                 <th>Imagen</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -119,17 +118,7 @@
                                     {% else %}
                                     No Image
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'modify_ppe_add' ppe.name %}" class="form-btn aceptar-btn">Editar</a>
-                                    <button type="button" class="custom-btn custom-btn-danger" 
-                                            data-action="delete" 
-                                            data-ppe-name="{{ ppe.name }}" 
-                                            data-action-url="{% url 'delete_ppe' ppe.name %}">
-                                        Eliminar
-                                    </button>
-                                </td>
-                                
+                                </td>                              
                             </tr>
                             {% empty %}
                             <tr>

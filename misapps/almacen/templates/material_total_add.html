@@ -100,7 +100,6 @@
                                 <th>Precio Subtotal</th>
                                 
                                 <th>Imagen</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -119,15 +118,6 @@
                                     {% else %}
                                     No Image
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'modify_material_add' material.name %}" class="form-btn aceptar-btn">Editar</a>
-                                    <button type="button" class="custom-btn custom-btn-danger" 
-                                            data-action="delete" 
-                                            data-material-name="{{ material.name }}" 
-                                            data-action-url="{% url 'delete_material' material.name %}">
-                                        Eliminar
-                                    </button>
                                 </td>
                                 
                             </tr>

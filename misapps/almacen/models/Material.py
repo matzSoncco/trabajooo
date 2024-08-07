@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from .Unit import Unit
+from django.utils import timezone
 
 class Material(models.Model):
     idMaterial = models.CharField(primary_key=True, editable=False, max_length=10)
@@ -11,8 +12,8 @@ class Material(models.Model):
     stock = models.IntegerField(null=False, default=0)
     guideNumber = models.IntegerField(null=False, default=0)
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
-    image = models.ImageField(upload_to='uploads/', blank=True, null=True)
-    creationDate = models.DateField(auto_now_add=True, blank=False, null=True)
+    image = models.ImageField(upload_to='uploads/', blank=False, null=True)
+    creationDate = models.DateField(verbose_name=_('Fecha de Creación'), default=timezone.now, blank=False, null=False)
     unitCost = models.DecimalField(default=0.0, null=False, max_digits=8, decimal_places=2)
     totalCost = models.DecimalField(default=0.0, null=False, max_digits=10, decimal_places=2, editable=False)
 

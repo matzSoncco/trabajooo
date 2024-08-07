@@ -405,7 +405,7 @@ class MaterialForm(forms.ModelForm):
     }))
     class Meta:
         model = Material
-        fields = ['name', 'unitCost', 'stock', 'unit', 'guideNumber', 'image', 'duration', 'creationDate', 'quantity']
+        fields = ['name', 'unitCost', 'stock', 'unit', 'guideNumber', 'image', 'creationDate', 'quantity']
         widgets = {
             'image': forms.FileInput(attrs={
                 "class": "input",

@@ -82,8 +82,8 @@ DATABASES = {
         'NAME': 'tesis',
         'USER': 'root',
         'HOST': 'localhost',
-        'PORT': '3307',
-        'PASSWORD': 'matz'
+        'PORT': '3306',
+        'PASSWORD': '1616'
     }
 }
 

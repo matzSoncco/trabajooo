@@ -529,13 +529,8 @@ class ToolForm(forms.ModelForm):
         model = Equipment
         fields = ['name', 'level', 'stock', 'guideNumber', 'quantity', 'creationDate']
 
-<<<<<<< HEAD
-    def init(self, *args, **kwargs):
-        super(ToolForm, self).init(*args, **kwargs)
-=======
     def _init_(self, *args, **kwargs):
         super(ToolForm, self)._init_(*args, **kwargs)
->>>>>>> d043e600778c4633d1e9469f4ee1c5912f8bc7c8
         self.fields['image'].required = False
 
 class ToolStockUpdateForm(forms.ModelForm):

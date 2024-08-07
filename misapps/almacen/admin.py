@@ -10,6 +10,8 @@ from .models.History import History
 from .models.Unit import Unit
 from .models.PpeStockUpdate import PpeStockUpdate
 from .models.PpeLoan import PpeLoan
+from .models.ToolLoan import ToolLoan
+admin.site.register(ToolLoan)
 admin.site.register(Equipment)
 admin.site.register(Material)
 admin.site.register(Ppe)

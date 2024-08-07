@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial{% endblock %}
+
+{% block content %}
+<section class="principal-general">
+    <aside class="menu-lateral">
+        <div class="tarjeta-presentacion">
+            <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
+            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+        </div>
+        <div class="menu-items-lateral">
+            <nav class="navegacion-lateral">
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'home' %}">Inicio</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+            </nav>
+        </div>
+    </aside>
+    <section class="contendor-lateral-derecho">
+        <div class="titulo-pagina">
+            <h2>Devoluciones</h2>
+        </div>
+        <form method="get" action="{% url 'return' %}">
+            {{ form.as_p }}
+            <button type="submit">Buscar</button>
+        </form>
+        
+        {% if tool_loans %}
+            <form method="post" action="{% url 'return' %}">
+                {% csrf_token %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código de Herramienta</th>
+                            <th>Nombre de Herramienta</th>
+                            <th>Cantidad del Préstamo</th>
+                            <th>Devolución</th>
+                            <th>Responsable</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loan in tool_loans %}
+                        <tr>
+                            <td>{{ loan.tool.idTool }}</td>
+                            <td>{{ loan.tool.name }}</td>
+                            <td>{{ loan.loanAmount }}</td>
+                            <td><input type="checkbox" name="returned_{{ loan.idToolLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
+                            <td>{{ loan.manager }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit">Actualizar Devoluciones</button>
+            </form>
+        {% else %}
+            <p>No se encontraron préstamos de herramientas para los criterios de búsqueda proporcionados.</p>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

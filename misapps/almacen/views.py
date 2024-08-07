@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from decimal import Decimal
 from datetime import datetime, timedelta
+from django.http import HttpResponseRedirect
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout
@@ -37,7 +38,7 @@ from .models.Tool import Tool
 from .models.History import History
 from .models.Unit import Unit
 from .models.PpeStockUpdate import PpeStockUpdate
-from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm, ToolLoanForm
+from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm, ToolLoanForm, ToolLoanSearchForm
 
 logger = logging.getLogger(__name__)
 
@@ -1130,6 +1131,35 @@ login_required
 def total_tool_stock(request):
     total_stock = Tool.objects.aggregate(Sum('stock'))['stock__sum'] or 0
     return JsonResponse({'total_stock': total_stock})
+
+@login_required
+def return_view(request):
+    form = ToolLoanSearchForm(request.GET or None)
+    tool_loans = []
+
+    if form.is_valid():
+        work_order = form.cleaned_data.get('work_order')
+        worker_dni = form.cleaned_data.get('worker_dni')
+
+        if work_order:
+            tool_loans = ToolLoan.objects.filter(workOrder=work_order)
+        elif worker_dni:
+            tool_loans = ToolLoan.objects.filter(workerDni=worker_dni)
+
+    if request.method == 'POST':
+        for loan in tool_loans:
+            checkbox_name = f'returned_{loan.idToolLoan}'
+            if checkbox_name in request.POST:
+                loan.loanStatus = True
+            else:
+                loan.loanStatus = False
+            loan.save()
+        return HttpResponseRedirect(request.path_info)
+    
+    return render(request, 'return.html', {
+        'form': form,
+        'tool_loans': tool_loans,
+    })
 
 #WORKER
 @login_required

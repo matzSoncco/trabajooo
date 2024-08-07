@@ -1137,18 +1137,19 @@ def return_view(request):
     form = ToolLoanSearchForm(request.GET or None)
     tool_loans = []
 
-    if 'show_debtors' in request.GET:
-        tool_loans = ToolLoan.objects.filter(loanStatus=False)
-    elif form.is_valid():
-        work_order = form.cleaned_data.get('work_order')
-        worker_dni = form.cleaned_data.get('worker_dni')
+    if request.method == 'GET':
+        if 'view_debtors' in request.GET:
+            tool_loans = ToolLoan.objects.filter(loanStatus=False)
+        elif form.is_valid():
+            work_order = form.cleaned_data.get('work_order')
+            worker_dni = form.cleaned_data.get('worker_dni')
 
-        if work_order:
-            tool_loans = ToolLoan.objects.filter(workOrder=work_order)
-        elif worker_dni:
-            tool_loans = ToolLoan.objects.filter(workerDni=worker_dni)
-    else:
-        tool_loans = []  # Empty list when form is not valid and show_debtors is not requested
+            if work_order:
+                tool_loans = ToolLoan.objects.filter(workOrder=work_order)
+            elif worker_dni:
+                tool_loans = ToolLoan.objects.filter(workerDni=worker_dni)
+        else:
+            tool_loans = []
 
     if request.method == 'POST':
         tool_loans = ToolLoan.objects.all()

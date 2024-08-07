@@ -47,7 +47,6 @@
                             <th>Cantidad del Préstamo</th>
                             <th>Devolución</th>
                             <th>Responsable</th>
-                            <th>Responsable</th>
                             <th>DNI Responsable</th>
                         </tr>
                     </thead>
@@ -58,7 +57,7 @@
                             <td>{{ loan.tool.name }}</td>
                             <td>{{ loan.loanAmount }}</td>
                             <td><input type="checkbox" name="returned_{{ loan.idToolLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
-                            <td>{{ loan.worker.name }}</td> <!-- Adjust to access just the name -->
+                            <td>{{ loan.worker.name }}</td>
                             <td>{{ loan.worker.dni }}</td>
                         </tr>
                         {% endfor %}

@@ -365,27 +365,24 @@ class MaterialForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "Ingrese el nombre del EPP",
-        "id": "id_name"
     }))
 
     unitCost = forms.FloatField(widget=forms.NumberInput(attrs={
         "class": "input",
         "type": "number",
         "placeholder": "Ingrese el costo unitario",
-        "id": "id_unitCost"
     }))
 
     stock = forms.IntegerField(widget=forms.NumberInput(attrs={
         "class": "input",
         "type": "number",
         "placeholder": "Ingrese el stock ideal",
-        "id": "id_stock"
     }))
 
     guideNumber = forms.CharField(widget=forms.TextInput(attrs={
         "class": "input",
         "type": "text",
-        "placeholder": "Ingrese la el número de guía",
+        "placeholder": "Ingrese el número de guía",
         "id": "id_guideNumber"
     }))
     
@@ -393,15 +390,13 @@ class MaterialForm(forms.ModelForm):
         "class": "input",
         "type": "number",
         "placeholder": "Ingrese la cantidad a añadir",
-        "id": "id_quantity",
         "min": "1",
         "max": "99999"
     }))
 
     creationDate = forms.DateField(widget=forms.DateInput(attrs={
         "class": "input",
-        "type": "date",
-        "id": "id_creationDate"
+        "type": "date",        
     }))
     class Meta:
         model = Material

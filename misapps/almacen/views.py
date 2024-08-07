@@ -1351,16 +1351,80 @@ def confirm_tool_loan(request):
         try:
             data = json.loads(request.body)
             print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
+
+            # Obtener los datos del formulario
+            work_order = data.get('workOrder')
+            loan_date_str = data.get('loanDate')
+            return_loan_date_str = data.get('returnLoanDate')
+            worker_dni = data.get('workerDni')
+            worker_name = data.get('worker')
+            worker_position = data.get('workerPosition')
+            manager = data.get('manager', '')
             tool_loans = data.get('tool_loans', [])
+
             responses = []
+
+            # Verificar la presencia de la fecha de retorno
+            if not return_loan_date_str:
+                responses.append({'success': False, 'error': 'Falta la fecha de retorno'})
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            # Verificar y convertir las fechas
+            try:
+                loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                responses.append({'success': False, 'error': 'Fecha de préstamo o retorno no válida'})
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            if worker_dni is None or worker_dni.strip() == "":
+                responses.append({'success': False, 'error': 'DNI del trabajador no proporcionado'})
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            try:
+                worker = Worker.objects.get(dni=worker_dni)
+            except Worker.DoesNotExist:
+                responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
 
             for loan in tool_loans:
                 try:
-                    response = process_tool_loan(loan)
-                    responses.append(response)
+                    tool_name = loan.get('name')
+                    quantity = int(loan.get('quantity'))
+
+                    # Verificar la herramienta
+                    try:
+                        tool = Tool.objects.get(name=tool_name)
+                    except Tool.DoesNotExist:
+                        responses.append({'success': False, 'error': f'Herramienta {tool_name} no encontrada'})
+                        continue
+
+                    # Verificar la cantidad disponible
+                    if tool.quantity < quantity:
+                        responses.append({'success': False, 'error': f'Cantidad insuficiente para {tool_name}'})
+                        continue
+
+                    # Crear un nuevo préstamo
+                    new_loan = ToolLoan(
+                        worker=worker,
+                        workerPosition=worker_position,
+                        workerDni=worker_dni,
+                        loanDate=loan_date,
+                        returnLoanDate=return_loan_date,
+                        loanAmount=quantity,
+                        manager=manager,
+                        tool=tool,
+                        workOrder=work_order,
+                        loanStatus=False  # Inicialmente no devuelto
+                    )
+                    new_loan.save()
+
+                    # Actualizar la cantidad disponible de la herramienta
+                    tool.quantity -= quantity
+                    tool.save()
+
                 except Exception as e:
-                    print(f"Error procesando préstamo: {str(e)}")
-                    print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
+                    print(f"Error procesando préstamo de herramienta: {str(e)}")
                     responses.append({'success': False, 'error': str(e)})
 
             if any(not r['success'] for r in responses):
@@ -1372,7 +1436,6 @@ def confirm_tool_loan(request):
             return JsonResponse({'success': False, 'error': 'Error al decodificar JSON'}, status=400)
         except Exception as e:
             print(f"Error general: {str(e)}")
-            print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

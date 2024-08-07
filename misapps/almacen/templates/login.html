@@ -4,6 +4,89 @@
 
 {% block content %}
 
+<style>
+    .contenedor-general {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        background-color: #f0f0f0;
+    }
+
+    .contenedor-formulario {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 2px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .centrado {
+        text-align: center;
+    }
+
+    .box {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .campo {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+
+    .label {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .aceptar-btn {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .aceptar-btn:hover {
+        background-color: #45a049;
+    }
+
+    .cancelar-btn {
+        background-color: #f44336;
+        color: white;
+        margin-left: 10px;
+    }
+
+    .cancelar-btn:hover {
+        background-color: #e53935;
+    }
+
+    .campo-botones {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .campo input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+</style>
+
 <div class="contenedor-general">
     <div class="contenedor-formulario">
         <div class="centrado">

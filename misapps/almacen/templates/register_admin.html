@@ -3,6 +3,104 @@
 {% block title %}Registrar Admin{% endblock %}
 
 {% block content %}
+
+<style>
+    .contenedor-general {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        background-color: #f0f0f0;
+    }
+
+    .contenedor-formulario {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .centrado {
+        text-align: center;
+    }
+
+    .box {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .fila-form {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .campo {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex: 1;
+    }
+
+    .label {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .aceptar-btn {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .aceptar-btn:hover {
+        background-color: #45a049;
+    }
+
+    .cancelar-btn {
+        background-color: #f44336;
+        color: white;
+        margin-left: 10px;
+    }
+
+    .cancelar-btn:hover {
+        background-color: #e53935;
+    }
+
+    .campo-botones {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .campo input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+        .fila-form {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+
 <div class="contenedor-general">
     <div class="contenedor-formulario">
         <div class="centrado">
@@ -12,11 +110,11 @@
                 <div class="fila-form">
                     <div class="campo">
                         <label for="name" class="label">Nombres</label>
-                        {{ form.first_name}}
+                        {{ form.first_name }}
                     </div>
                     <div class="campo">
                         <label for="name" class="label">Apellidos</label>
-                        {{ form.last_name}}
+                        {{ form.last_name }}
                     </div>
                 </div>
                 
@@ -51,4 +149,5 @@
         </div>
     </div>
 </div>
+
 {% endblock %}

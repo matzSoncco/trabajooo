@@ -1134,36 +1134,32 @@ def total_tool_stock(request):
 
 @login_required
 def return_view(request):
-    form = ToolLoanSearchForm(request.GET or None)
-    tool_loans = []
+    tool_loans = ToolLoan.objects.all()  # Mostrar todos los ToolLoan por defecto
 
-    if request.method == 'GET':
-        if 'view_debtors' in request.GET:
-            tool_loans = ToolLoan.objects.filter(loanStatus=False)
-        elif form.is_valid():
-            work_order = form.cleaned_data.get('work_order')
-            worker_dni = form.cleaned_data.get('worker_dni')
+    # Manejo de la búsqueda
+    work_order = request.GET.get('work_order')
+    worker_dni = request.GET.get('worker_dni')
 
-            if work_order:
-                tool_loans = ToolLoan.objects.filter(workOrder=work_order)
-            elif worker_dni:
-                tool_loans = ToolLoan.objects.filter(workerDni=worker_dni)
-        else:
-            tool_loans = []
+    if work_order:
+        tool_loans = tool_loans.filter(workOrder=work_order)
+    elif worker_dni:
+        tool_loans = tool_loans.filter(workerDni=worker_dni)
+    elif 'view_debtors' in request.GET:
+        tool_loans = tool_loans.filter(loanStatus=False)
 
+    # Manejo del POST para actualizar loanStatus
     if request.method == 'POST':
-        tool_loans = ToolLoan.objects.all()
         for loan in tool_loans:
             checkbox_name = f'returned_{loan.idToolLoan}'
             loan.loanStatus = checkbox_name in request.POST
             loan.save()
         return HttpResponseRedirect(request.path_info)
-    
+
     return render(request, 'return.html', {
-        'form': form,
         'tool_loans': tool_loans,
         'show_debtors': 'view_debtors' in request.GET,
     })
+
 
 #WORKER
 @login_required

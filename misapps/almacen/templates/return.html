@@ -31,11 +31,16 @@
             <h2>Devoluciones</h2>
         </div>
         <form method="get" action="{% url 'return' %}">
-            {{ form.as_p }}
+            <label for="work_order">Orden de Trabajo:</label>
+            <input type="text" id="work_order" name="work_order">
+    
+            <label for="worker_dni">DNI del Trabajador:</label>
+            <input type="text" id="worker_dni" name="worker_dni">
+    
             <button type="submit">Buscar</button>
             <button type="submit" name="view_debtors" value="1">Ver lista de todos los deudores</button>
         </form>
-
+    
         {% if tool_loans %}
             <form method="post" action="{% url 'return' %}">
                 {% csrf_token %}
@@ -66,9 +71,10 @@
                 <button type="submit">Guardar</button>
             </form>
         {% else %}
-            <p>No se encontraron préstamos de herramientas para los criterios de búsqueda proporcionados.</p>
+            <p>No se encontraron préstamos de herramientas.</p>
         {% endif %}
     </section>
+    
 </section>
 <style>
     /* Estilos del título de la página */

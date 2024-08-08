@@ -35,5 +35,7 @@ class History(models.Model):
             return 'Material'
         elif model_name == 'Ppe':
             return 'Equipo de protección personal'
+        elif model_name == 'Worker':
+            return 'Trabajador'
         else:
             return 'Otro'

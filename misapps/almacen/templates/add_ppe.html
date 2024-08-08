@@ -20,7 +20,7 @@ $(document).ready(function() {
                      </tr>`;
         });
         html += '</tbody></table>';
-        $('#added-ppe-table-container').html(html);
+        $('#added-items-table-container').html(html);
     }
 
     $(document).on('click', '#agregar-formulario', function() {
@@ -42,7 +42,7 @@ $(document).ready(function() {
     });
 
     // Modificado para ser más específico
-    $('.formulario-contenedor-individual form').submit(function(event) {
+    $('#formulario-contenedor-individual form').submit(function(event) {
         event.preventDefault();
         var formData = {
             guideNumber: $('#id_guideNumber').val(),
@@ -91,8 +91,8 @@ $(document).ready(function() {
             data: { q: query },
             success: function(data) {
                 // Extraer la tabla actualizada del HTML devuelto
-                var newTable = $(data).find('#created-ppe-table-container table');
-                $('#created-ppe-table-container table').replaceWith(newTable);
+                var newTable = $(data).find('#created-item-table-container table');
+                $('#created-item-table-container table').replaceWith(newTable);
             },
             error: function(xhr, status, error) {
                 console.error("Error en la búsqueda:", xhr.responseText);
@@ -141,7 +141,7 @@ $(document).ready(function() {
                 <a class="link-top-form" href="{% url 'ppe_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">
-                <div class="formulario-contenedor-individual">
+                <div id="formulario-contenedor-individual">
                     <form method="post" action="{% url 'add_ppe' %}" enctype="multipart/form-data" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
@@ -184,13 +184,13 @@ $(document).ready(function() {
                         </div>
                     </form>
                 </div>
-                <div class="tabla-creacion" id="added-ppe-table-container">
+                <div class="tabla-creacion" id="added-items-table-container">
                     <h2 class="titulo-primario">Añadidos</h2>
 
                 </div>
                 <button id="save-all-btn">Guardar Todos</button>
             </div>
-            <div class="tabla-creacion" id="created-ppe-table-container">
+            <div class="tabla-creacion" id="created-item-table-container">
                 <h2 class="titulo-primario">Creados</h2>
                 <div class="buscar">
                     <form class="formulario-buscar" method="get" action="{% url 'add_ppe' %}">

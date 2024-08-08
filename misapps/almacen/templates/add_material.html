@@ -20,30 +20,8 @@
                          </tr>`;
             });
             html += '</tbody></table>';
-            $('#added-material-table-container').html(html);
+            $('#added-item-table-container').html(html);
         }
-
-        loadAddedMaterialTable();
-        
-        function loadCreatedMaterialTable(query = '') {
-            $.ajax({
-                url: "{% url 'table_created_material' %}",
-                data: { q: query },
-                success: function(data) {
-                    $('#created-material-table-container').html(data);
-                }
-            });
-        }
-
-        $(document).ready(function() {
-            loadCreatedMaterialTable();
-
-            $(document).on('submit', '#formulario-buscar', function(event) {
-                event.preventDefault();
-                var query = $(this).find('input[name="q"]').val();
-                loadCreatedMaterialTable(query);
-            });
-        });
 
         $(document).on('click', '#agregar-formulario', function() {
             var row = $(this).closest('tr');
@@ -63,7 +41,7 @@
             });
         });
 
-        $('form').submit(function(event) {
+        $('#formulario-contenedor-individual form').submit(function(event) {
             event.preventDefault();
             var formData = {
                 guideNumber: $('#id_guideNumber').val(),
@@ -102,6 +80,28 @@
                 }
             });
         });
+
+        // Función para manejar la búsqueda y actualizar la tabla
+        function handleSearch(event) {
+            event.preventDefault();
+            var query = $(this).find('input[name="q"]').val();
+            $.ajax({
+                url: window.location.pathname,
+                data: { q: query },
+                success: function(data) {
+                    // Extraer la tabla actualizada del HTML devuelto
+                    var newTable = $(data).find('#created-item-table-container table');
+                    $('#created-item-table-container table').replaceWith(newTable);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error en la búsqueda:", xhr.responseText);
+                    alert('Hubo un error al realizar la búsqueda: ' + xhr.responseText);
+                }
+            });
+        }
+
+        // Asignar el manejador de eventos solo al formulario de búsqueda
+        $('.formulario-buscar').submit(handleSearch);
     });
 </script>
 
@@ -141,7 +141,7 @@
                 <a class="link-top-form" href="{% url 'material_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">
-                <div class="formulario-contenedor-individual">
+                <div id="formulario-contenedor-individual">
                     <form method="post" action="{% url 'add_material' %}" enctype="multipart/form-data" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
@@ -184,14 +184,56 @@
                         </div>
                     </form>
                 </div>
-                <div class="tabla-creacion" id="added-material-table-container">
+                <div class="tabla-creacion" id="added-item-table-container">
                     <h2 class="titulo-primario">Añadidos</h2>
 
                 </div>
                 <button id="save-all-btn">Guardar Todos</button>
             </div>
-            <div class="tabla-creacion" id="created-material-table-container">
-                
+            <div class="tabla-creacion" id="created-item-table-container">
+                <h2 class="titulo-primario">Creados</h2>
+                <div class="buscar">
+                    <form class="formulario-buscar" method="get" action=".">
+                        <div class="cuadro-busqueda">
+                            <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                        </div>
+                        <div class="btn-busqueda-elemento">
+                            <button type="submit" class="btn buscar-btn">Buscar</button>
+                        </div>
+                    </form>
+                </div>
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Nombre</th>
+                            <th>Unidad</th>
+                            <th>Imágen</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for material in material %}
+                            <tr>
+                                <td>{{ material.idMaterial }}</td>
+                                <td>{{ material.name }}</td>
+                                <td>{{ material.unit.name }}</td>
+                                <td>
+                                    {% if material.image %}
+                                        <img src="{{ material.image.url }}" alt="{{ material.name }}" style="width: 50px; height: 50px;">
+                                    {% else %}
+                                        No image
+                                    {% endif %}
+                                </td>
+                                <td><button id="agregar-formulario" data-material-id="{{ material.idmaterial }}"><img class="icono-btn" src="../../static/img/anadir.png" alt=""></button></td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4">No hay Materiales disponibles.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>

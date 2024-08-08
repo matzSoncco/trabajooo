@@ -20,30 +20,8 @@
                          </tr>`;
             });
             html += '</tbody></table>';
-            $('#added-equipment-table-container').html(html);
+            $('#added-item-table-container').html(html);
         }
-
-        loadAddedEquipmentTable();
-        
-        function loadCreatedEquipmentTable(query = '') {
-            $.ajax({
-                url: "{% url 'table_created_equipment' %}",
-                data: { q: query },
-                success: function(data) {
-                    $('#created-equipment-table-container').html(data);
-                }
-            });
-        }
-
-        $(document).ready(function() {
-            loadCreatedEquipmentTable();
-
-            $(document).on('submit', '#formulario-buscar', function(event) {
-                event.preventDefault();
-                var query = $(this).find('input[name="q"]').val();
-                loadCreatedEquipmentTable(query);
-            });
-        });
 
         $(document).on('click', '#agregar-formulario', function() {
             var row = $(this).closest('tr');
@@ -63,7 +41,7 @@
             });
         });
 
-        $('form').submit(function(event) {
+        $('#formulario-contenedor-individual form').submit(function(event) {
             event.preventDefault();
             var formData = {
                 guideNumber: $('#id_guideNumber').val(),
@@ -76,6 +54,54 @@
             addedEquipment.push(formData);
             loadAddedEquipmentTable();
         });
+
+        $('#save-all-btn').click(function() {
+        if (addedEquipment.length === 0) {
+            alert('No hay equipos para guardar.');
+            return;
+        }
+        $.ajax({
+            url: "{% url 'save_all_equipment' %}",
+            method: 'POST',
+            data: JSON.stringify(addedEquipment),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    alert('Equipos guardados exitosamente.');
+                    addedEquipment = [];
+                    loadaddedEquipmentTable();
+                } else {
+                    alert('Hubo un error al guardar los equipos: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error al guardar equipos:", xhr.responseText);
+                alert('Hubo un error al guardar los equipos: ' + xhr.responseText);
+            }
+        });
+    });
+
+    // Función para manejar la búsqueda y actualizar la tabla
+    function handleSearch(event) {
+        event.preventDefault();
+        var query = $(this).find('input[name="q"]').val();
+        $.ajax({
+            url: window.location.pathname,
+            data: { q: query },
+            success: function(data) {
+                // Extraer la tabla actualizada del HTML devuelto
+                var newTable = $(data).find('#created-item-table-container table');
+                $('#created-item-table-container table').replaceWith(newTable);
+            },
+            error: function(xhr, status, error) {
+                console.error("Error en la búsqueda:", xhr.responseText);
+                alert('Hubo un error al realizar la búsqueda: ' + xhr.responseText);
+            }
+        });
+    }
+
+    // Asignar el manejador de eventos solo al formulario de búsqueda
+    $('.formulario-buscar').submit(handleSearch);
     });
 </script>
 
@@ -115,7 +141,7 @@
                 <a class="link-top-form" href="{% url 'equipment_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">
-                <div class="formulario-contenedor-individual">
+                <div id="formulario-contenedor-individual">
                     <form method="post" action="{% url 'add_equipment' %}" enctype="multipart/form-data" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
@@ -158,69 +184,54 @@
                         </div>
                     </form>
                 </div>
-                <div class="tabla-creacion" id="added-equipment-table-container">
+                <div class="tabla-creacion" id="added-item-table-container">
                     <h2 class="titulo-primario">Añadidos</h2>
 
                 </div>
                 <button id="save-all-btn">Guardar Todos</button>
-                {% if messages %} 
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>  
-                    <script>
-                        $(document).ready(function() {
-                            $('#save-all-btn').click(function() {
-                                console.log('Save All button clicked'); // Verifica si el botón es clickeado
-                                if (addedEquipment.length === 0) {
-                                    Swal.fire({
-                                        icon: 'warning',
-                                        title: 'Advertencia',
-                                        text: 'No hay Equipos para guardar.',
-                                        confirmButtonText: 'Aceptar'
-                                    });
-                                    return;
-                                }
-
-                                $.ajax({
-                                    url: "{% url 'save_all_equipment' %}",
-                                    method: 'POST',
-                                    data: JSON.stringify(addedEquipment),
-                                    contentType: 'application/json',
-                                    success: function(response) {
-                                        console.log('AJAX success:', response); // Verifica la respuesta de AJAX
-                                        if (response.status === 'success') {
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'Éxito',
-                                                text: 'Equipos guardados exitosamente.',
-                                                confirmButtonText: 'Aceptar'
-                                            });
-                                            addedEquipment = [];
-                                            loadAddedEquipmentTable();
-                                        } else {
-                                            Swal.fire({
-                                                icon: 'error',
-                                                title: 'Error',
-                                                text: 'Hubo un error al guardar los Equipos: ' + response.message,
-                                                confirmButtonText: 'Aceptar'
-                                            });
-                                        }
-                                    },
-                                    error: function(xhr, status, error) {
-                                        console.log('AJAX error:', error); // Verifica el error de AJAX
-                                        Swal.fire({
-                                            icon: 'error',
-                                            title: 'Error',
-                                            text: 'Hubo un error al guardar los Equipos: ' + xhr.responseText,
-                                            confirmButtonText: 'Aceptar'
-                                        });
-                                    }
-                                });
-                            });
-                        });
-                    </script>
-                {% endif %}
             </div>
-            <div class="tabla-creacion" id="created-equipment-table-container">
-                
+            <div class="tabla-creacion" id="created-item-table-container">
+                <h2 class="titulo-primario">Creados</h2>
+                <div class="buscar">
+                    <form class="formulario-buscar" method="get" action=".">
+                        <div class="cuadro-busqueda">
+                            <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                        </div>
+                        <div class="btn-busqueda-elemento">
+                            <button type="submit" id="buscar-tabla" class="btn buscar-btn">Buscar</button>
+                        </div>
+                    </form>
+                </div>
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Nombre</th>
+                            <th>Imágen</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for equipment in equipment %}
+                            <tr>
+                                <td>{{ equipment.idEquipment }}</td>
+                                <td>{{ equipment.name }}</td>
+                                <td>
+                                    {% if equipment.image %}
+                                        <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" style="width: 50px; height: 50px;">
+                                    {% else %}
+                                        No image
+                                    {% endif %}
+                                </td>
+                                <td><button id="agregar-formulario" data-equipment-id="{{ equipment.idEquipment }}"><img class="icono-btn" src="../../static/img/anadir.png" alt=""></button></td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4">No hay Equipos disponibles.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>

@@ -55,8 +55,8 @@
     </aside>
     <section class="contendor-lateral-derecho">
         <div class="titulo-pagina">
-            <h2>Tabla de EPPs asignados</h2>
-            <button type="button" id="volver-btn" onclick="location.href='{% url 'add_ppe_loan' %}'">Volver</button>
+            <h2>Tabla de Materiales asignados</h2>
+            <button type="button" id="volver-btn" onclick="location.href='{% url 'add_material_loan' %}'">Volver</button>
         </div>
         <div class="buscar">
             <form class="formulario-buscar" id="search-form" method="get" action="{% url 'ppe_loan_list' %}">
@@ -75,7 +75,7 @@
                         <th>DNI</th>
                         <th>Nombres</th>
                         <th>Apellidos</th>
-                        <th>EPP</th>
+                        <th>Material</th>
                         <th>Cantidad</th>
                         <th>Fecha de préstamo</th>
                     </tr>
@@ -86,13 +86,13 @@
                         <td>{{ loan.worker.dni }}</td>
                         <td>{{ loan.worker.name }}</td>
                         <td>{{ loan.worker.surname }}</td>
-                        <td>{{ loan.ppe.name }}</td>
+                        <td>{{ loan.material.name }}</td>
                         <td>{{ loan.loanAmount }}</td>
                         <td>{{ loan.loanDate }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4">No hay EPPs asignados.</td>
+                        <td colspan="4">No hay Materiales asignados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

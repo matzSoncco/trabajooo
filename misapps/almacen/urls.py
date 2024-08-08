@@ -31,7 +31,6 @@ urlpatterns = [
 
     #EQUIPOS
     path('equipment/', views.equipment_list, name='equipment_list'),
-    path('equipment/create/table/', views.Equipments, name='table_created_equipment'),
     path('get_equipment_data/', views.get_equipment_data, name='get_equipment_data'),
     path('equipment/total/add', views.equipment_total_add, name='equipment_total_add'),
     path('save_all_equipment/', views.save_all_equipment, name='save_all_equipment'),
@@ -46,7 +45,6 @@ urlpatterns = [
     path('material/', views.material_list, name='material_list'),
     path('material/add/', views.add_material, name='add_material'),
     path('get_material_data/', views.get_material_data, name='get_material_data'),
-    path('material/create/table/', views.Materials, name='table_created_material'),
     path('material/total/add', views.material_total_add, name='material_total_add'),
     path('save_all_material/', views.save_all_material, name='save_all_material'),
     path('material/create/', views.create_material, name='create_material'),
@@ -60,7 +58,6 @@ urlpatterns = [
     path('tool/add/', views.add_tool, name='add_tool'),
     path('get_tool_data/', views.get_tool_data, name='get_tool_data'),
     path('save_all_tool/', views.save_all_tools, name='save_all_tools'),
-    path('tool/create/table/', views.Tools, name='table_created_tools'),
     path('tool/total/add', views.tool_total_add, name='tool_total_add'),
     path('tool/create/', views.create_tool, name='create_tool'),
     path('tool/total/', views.tool_total, name='tool_total'),
@@ -104,6 +101,7 @@ urlpatterns = [
     path('check_equipment_availability/', views.check_equipment_availability, name='check_equipment_availability'),
 
     #ASIGNACIONES DE MATERIALES
+    path('material_loan_list/', views.material_loan_list, name='material_loan_list'),
     path('add_material_loan/', views.add_material_loan, name='add_material_loan'),
     path('material_loan_form/', views.material_loan_form, name='material_loan_form'),
     path('confirm_material_loan/', views.confirm_material_loan, name='confirm_material_loan'),

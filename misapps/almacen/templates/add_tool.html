@@ -20,30 +20,8 @@
                          </tr>`;
             });
             html += '</tbody></table>';
-            $('#added-tools-table-container').html(html);
+            $('#added-items-table-container').html(html);
         }
-
-        loadAddedToolsTable();
-        
-        function loadCreatedToolsTable(query = '') {
-            $.ajax({
-                url: "{% url 'table_created_tools' %}",
-                data: { q: query },
-                success: function(data) {
-                    $('#created-tools-table-container').html(data);
-                }
-            });
-        }
-
-        $(document).ready(function() {
-            loadCreatedToolsTable();
-
-            $(document).on('submit', '#formulario-buscar', function(event) {
-                event.preventDefault();
-                var query = $(this).find('input[name="q"]').val();
-                loadCreatedToolsTable(query);
-            });
-        });
 
         $(document).on('click', '#agregar-formulario', function() {
             var row = $(this).closest('tr');
@@ -64,7 +42,7 @@
             });
         });
 
-        $('form').submit(function(event) {
+        $('#formulario-contenedor-individual form').submit(function(event) {
             event.preventDefault();
             var formData = {
                 guideNumber: $('#id_guideNumber').val(),
@@ -104,6 +82,28 @@
                 }
             });
         });
+
+        // Función para manejar la búsqueda y actualizar la tabla
+        function handleSearch(event) {
+            event.preventDefault();
+            var query = $(this).find('input[name="q"]').val();
+            $.ajax({
+                url: window.location.pathname,
+                data: { q: query },
+                success: function(data) {
+                    // Extraer la tabla actualizada del HTML devuelto
+                    var newTable = $(data).find('#created-item-table-container table');
+                    $('#created-item-table-container table').replaceWith(newTable);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error en la búsqueda:", xhr.responseText);
+                    alert('Hubo un error al realizar la búsqueda: ' + xhr.responseText);
+                }
+            });
+        }
+
+        // Asignar el manejador de eventos solo al formulario de búsqueda
+        $('.formulario-buscar').submit(handleSearch);
     });
 </script>
 
@@ -143,7 +143,7 @@
                 <a class="link-top-form" href="{% url 'tool_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">
-                <div class="formulario-contenedor-individual">
+                <div id="formulario-contenedor-individual">
                     <form method="post" action="{% url 'add_tool' %}" enctype="multipart/form-data" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
@@ -188,12 +188,53 @@
                         </div>
                     </form>
                 </div>
-                <div class="tabla-creacion" id="added-tools-table-container">
+                <div class="tabla-creacion" id="added-items-table-container">
                     <h2 class="titulo-primario">Añadidos</h2>
                 </div>
                 <button id="save-all-btn">Guardar Todos</button>
             </div>
-            <div class="tabla-creacion" id="created-tools-table-container">
+            <div class="tabla-creacion" id="created-item-table-container">
+                <h2 class="titulo-primario">Creados</h2>
+                <div class="buscar">
+                    <form class="formulario-buscar" method="get" action=".">
+                        <div class="cuadro-busqueda">
+                            <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                        </div>
+                        <div class="btn-busqueda-elemento">
+                            <button type="submit" class="btn buscar-btn">Buscar</button>
+                        </div>
+                    </form>
+                </div>
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Nombre</th>
+                            <th>Imágen</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tool in tool %}
+                            <tr>
+                                <td>{{ tool.idTool }}</td>
+                                <td>{{ tool.name }}</td>
+                                <td>
+                                    {% if tool.image %}
+                                        <img src="{{ tool.image.url }}" alt="{{ tool.name }}" style="width: 50px; height: 50px;">
+                                    {% else %}
+                                        No image
+                                    {% endif %}
+                                </td>
+                                <td><button id="agregar-formulario" data-tool-id="{{ tool.idTool }}"><img class="icono-btn" src="../../static/img/anadir.png" alt=""></button></td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4">No hay Herramientas disponibles.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>

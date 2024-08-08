@@ -149,7 +149,7 @@ class PpeForm(forms.ModelForm):
     guideNumber = forms.CharField(widget=forms.TextInput(attrs={
         "class": "input",
         "type": "text",
-        "placeholder": "Ingrese la el número de guía",
+        "placeholder": "Ingrese el número de guía",
         "id": "id_guideNumber"
     }))
     

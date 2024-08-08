@@ -331,7 +331,7 @@ def add_ppe(request):
                 unitCost=unitCost,
                 date=creationDate
             )
-            
+            messages.success(request, 'Se añadió EPP correctamente.')
             return redirect('add_ppe')
     else:
         form = PpeForm()
@@ -436,17 +436,13 @@ def total_ppe_stock(request):
 
 #EQUIMENT
 @login_required
-def Equipments(request):
+def add_equipment(request):
     query = request.GET.get('q', '')
     if query:
-        Equipments = Equipment.objects.filter(name__icontains=query)
+        equipment = Equipment.objects.filter(name__icontains=query)
     else:
-        Equipments = Equipment.objects.all()
-    
-    context = {'equipment': Equipments, 'query': query}
-    return render(request, 'table_created_equipment.html', context)
-@login_required
-def add_equipment(request):
+        equipment = Equipment.objects.all()
+
     if request.method == 'POST':
         form = EquipmentForm(request.POST)
         if form.is_valid():
@@ -479,7 +475,13 @@ def add_equipment(request):
             return redirect('add_equipment')
     else:
         form = EquipmentForm()
-    return render(request, 'add_equipment.html', {'form': form})
+    
+    context = {
+        'form': form,
+        'equipment': equipment,
+        'query': query
+    }
+    return render(request, 'add_equipment.html', context)
 
 def get_equipment_data(request):
     equipment_id = request.GET.get('id')
@@ -660,17 +662,6 @@ def total_equipment_stock(request):
     return JsonResponse({'total_stock': total_stock})
 
 #MATERIAL
-@login_required
-def Materials(request):
-    query = request.GET.get('q', '')
-    if query:
-        material = Material.objects.filter(name__icontains=query)
-    else:
-        material = Material.objects.all()
-    
-    context = {'material': material, 'query': query}
-    return render(request, 'table_created_material.html', context)
-
 def get_material_data(request):
     material_id = request.GET.get('id')
     material = get_object_or_404(Material, idMaterial=material_id)
@@ -806,6 +797,12 @@ def total_cost_material(request):
 @login_required
 def add_material(request):
     if request.method == 'POST':
+        query = request.GET.get('q', '')
+        if query:
+            material = Ppe.objects.filter(name__icontains=query)
+        else:
+            material = Ppe.objects.all()
+
         form = MaterialForm(request.POST)
         if form.is_valid():
             # Obtener datos del formulario y convertirlos a los tipos correctos
@@ -834,11 +831,17 @@ def add_material(request):
                 unitCost=unitCost,
                 date=creationDate
             )
-            
+            messages.success(request, 'Se añadió material correctamente.')
             return redirect('add_material')
     else:
         form = MaterialForm()
-    return render(request, 'add_material.html', {'form': form})
+
+    context = {
+        'form': form,
+        'material': material,
+        'query': query
+    }
+    return render(request, 'add_material.html', context)
 
 @login_required
 def delete_material(request, material_name):
@@ -896,17 +899,6 @@ def total_material_stock(request):
     return JsonResponse({'total_stock': total_stock})
 
 #TOOLS
-@login_required
-def Tools(request):
-    query = request.GET.get('q', '')
-    if query:
-        tool = Tool.objects.filter(name__icontains=query)
-    else:
-        tool = Tool.objects.all()
-    
-    context = {'tool': tool, 'query': query}
-    return render(request, 'table_created_tools.html', context)
-
 def get_tool_data(request):
     tool_id = request.GET.get('id')
     tool = get_object_or_404(Tool, idTool=tool_id)
@@ -922,33 +914,32 @@ def get_tool_data(request):
     return JsonResponse(data)
 @login_required
 def add_tool(request):
+    query = request.GET.get('q', '')
+    if query:
+        tool = Tool.objects.filter(name__icontains=query)
+    else:
+        tool = Tool.objects.all()
+
     if request.method == 'POST':
         form = ToolForm(request.POST, request.FILES)
         if form.is_valid():
             guideNumber = form.cleaned_data['guideNumber']
             creationDate = form.cleaned_data.get('creationDate')
-            print(f"Creation Date: {creationDate}")  # Añade esto para depuración
             name = form.cleaned_data['name']
             unitCost = Decimal(form.cleaned_data['unitCost'])
             quantity = int(form.cleaned_data['quantity'])
             stock = int(form.cleaned_data['stock'])
             level = int(form.cleaned_data['level'])
             
-            tool, created = Tool.objects.get_or_create(idTool=guideNumber, defaults={
-                'name': name,
-                'unitCost': unitCost,
-                'quantity': quantity,
-                'stock': stock,
-                'level': level,
-                'creationDate': creationDate
-            })
+            tool, created = Tool.objects.get_or_create(name=name)
             
-            if not created:
-                # Update existing tool
-                tool.quantity += quantity
-                tool.stock = stock
-                tool.unitCost = ((tool.unitCost * tool.quantity) + (unitCost * quantity)) / (tool.quantity + quantity)
-                tool.save()
+            # Actualizar la cantidad y el costo unitario del Ppe
+            total_cost = (tool.unitCost * Decimal(tool.quantity)) + (unitCost * quantity)
+            total_quantity = tool.quantity + quantity
+            tool.unitCost = total_cost / total_quantity
+            tool.quantity = total_quantity
+            tool.stock = stock
+            tool.save()
             
             # Create the stock update record
             ToolStockUpdate.objects.create(
@@ -957,15 +948,17 @@ def add_tool(request):
                 unitCost=unitCost,
                 date=creationDate
             )
-            
+            messages.success(request, 'Se añadió materiales correctamente.')
             return redirect('add_tool')
-        else:
-            # Print form errors for debugging
-            print(form.errors)
-            return JsonResponse({'status': 'error', 'message': form.errors})
     else:
         form = ToolForm()
-    return render(request, 'add_tool.html', {'form': form})
+
+    context = {
+        'form': form,
+        'tool': tool,
+        'query': query
+    }
+    return render(request, 'add_tool.html', context)
 
 @csrf_exempt
 def save_all_tools(request):
@@ -1811,7 +1804,30 @@ def confirm_equipment_loan(request):
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
-##MATERIALLOAN
+#MATERIALLOAN
+@login_required
+def material_loan_list(request):
+    query = request.GET.get('q', '')
+    dni_query = request.GET.get('dni', '')
+
+    if query and dni_query:
+        # Filtrar por nombre y DNI
+        ppe_loans = MaterialLoan.objects.filter(
+            worker__name__icontains=query,
+            worker__dni__icontains=dni_query
+        )
+    elif query:
+        # Filtrar solo por nombre
+        ppe_loans = MaterialLoan.objects.filter(worker__name__icontains=query)
+    elif dni_query:
+        # Filtrar solo por DNI
+        ppe_loans = MaterialLoan.objects.filter(worker__dni__icontains=dni_query)
+    else:
+        # No hay filtros aplicados
+        ppe_loans = MaterialLoan.objects.all()
+
+    return render(request, 'material_loan_list.html', {'ppe_loans': ppe_loans, 'query': query, 'dni_query': dni_query})
+
 login_required
 def add_material_loan(request):
     materials = Material.objects.all()
@@ -2110,14 +2126,26 @@ def confirm_material_loan(request):
 #PPELOAN
 @login_required
 def ppe_loan_list(request):
-    query = request.GET.get('q')
-    if query:
-        ppe_loans = PpeLoan.objects.filter(worker__name_icontains=query)
+    query = request.GET.get('q', '')
+    dni_query = request.GET.get('dni', '')
+
+    if query and dni_query:
+        # Filtrar por nombre y DNI
+        ppe_loans = PpeLoan.objects.filter(
+            worker__name__icontains=query,
+            worker__dni__icontains=dni_query
+        )
+    elif query:
+        # Filtrar solo por nombre
+        ppe_loans = PpeLoan.objects.filter(worker__name__icontains=query)
+    elif dni_query:
+        # Filtrar solo por DNI
+        ppe_loans = PpeLoan.objects.filter(worker__dni__icontains=dni_query)
     else:
+        # No hay filtros aplicados
         ppe_loans = PpeLoan.objects.all()
-    print(f"Número de préstamos: {ppe_loans.count()}")
-    print(f"Préstamos: {list(ppe_loans)}")
-    return render(request, 'ppe_loan_list.html', {'ppe_loans': ppe_loans, 'query': query})
+
+    return render(request, 'ppe_loan_list.html', {'ppe_loans': ppe_loans, 'query': query, 'dni_query': dni_query})
 
 @login_required
 def add_ppe_loan(request):

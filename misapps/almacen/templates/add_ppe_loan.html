@@ -444,11 +444,10 @@
                     </table>
                 </div>
             </div>
-            <div class="tabla-creacion" id="view-given-ppe-table-container">
-
             </div>
             <button id="give-btn">Entregar</button>
             <button id="volver-btn" onclick="location.href='{% url 'home' %}'">Salir</button>
+            <div class="tabla-creacion" id="view-given-ppe-table-container"></div>
         </div>
     </section>
 </section>
@@ -505,6 +504,21 @@
 
     #give-btn:hover, #volver-btn:hover {
         background-color: #34495e;
+    }
+
+    .add-to-pre-delivery {
+        border-radius: 4px;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #494949;
+ 
+    }
+
+    .add-to-pre-delivery:hover {
+        background-color: #5e5e5e;
     }
 </style>
 

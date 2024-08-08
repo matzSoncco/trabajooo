@@ -76,32 +76,6 @@
             addedEquipment.push(formData);
             loadAddedEquipmentTable();
         });
-
-        $('#save-all-btn').click(function() {
-            if (addedEquipment.length === 0) {
-                alert('No hay Equipos para guardar.');
-                return;
-            }
-            $.ajax({
-                url: "{% url 'save_all_equipment' %}",
-                method: 'POST',
-                data: JSON.stringify(addedEquipment),
-                contentType: 'application/json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        alert('Equipos guardados exitosamente.');
-                        addedEquipment = [];
-                        loadAddedEquipmentTable();
-                    } else {
-                        alert('Hubo un error al guardar los Equipos: ' + response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error al guardar Equipos:", xhr.responseText);
-                    alert('Hubo un error al guardar los Equipos: ' + xhr.responseText);
-                }
-            });
-        });
     });
 </script>
 
@@ -189,6 +163,61 @@
 
                 </div>
                 <button id="save-all-btn">Guardar Todos</button>
+                {% if messages %} 
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>  
+                    <script>
+                        $(document).ready(function() {
+                            $('#save-all-btn').click(function() {
+                                console.log('Save All button clicked'); // Verifica si el botón es clickeado
+                                if (addedEquipment.length === 0) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Advertencia',
+                                        text: 'No hay Equipos para guardar.',
+                                        confirmButtonText: 'Aceptar'
+                                    });
+                                    return;
+                                }
+
+                                $.ajax({
+                                    url: "{% url 'save_all_equipment' %}",
+                                    method: 'POST',
+                                    data: JSON.stringify(addedEquipment),
+                                    contentType: 'application/json',
+                                    success: function(response) {
+                                        console.log('AJAX success:', response); // Verifica la respuesta de AJAX
+                                        if (response.status === 'success') {
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Éxito',
+                                                text: 'Equipos guardados exitosamente.',
+                                                confirmButtonText: 'Aceptar'
+                                            });
+                                            addedEquipment = [];
+                                            loadAddedEquipmentTable();
+                                        } else {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: 'Hubo un error al guardar los Equipos: ' + response.message,
+                                                confirmButtonText: 'Aceptar'
+                                            });
+                                        }
+                                    },
+                                    error: function(xhr, status, error) {
+                                        console.log('AJAX error:', error); // Verifica el error de AJAX
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: 'Hubo un error al guardar los Equipos: ' + xhr.responseText,
+                                            confirmButtonText: 'Aceptar'
+                                        });
+                                    }
+                                });
+                            });
+                        });
+                    </script>
+                {% endif %}
             </div>
             <div class="tabla-creacion" id="created-equipment-table-container">
                 

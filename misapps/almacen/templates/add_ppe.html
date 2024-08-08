@@ -5,106 +5,106 @@
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function() {
-        var addedPpe = [];
+$(document).ready(function() {
+    var addedPpe = [];
 
-        function loadAddedPpeTable() {
-            let html = '<table><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
-            addedPpe.forEach(function(ppe) {
-                html += `<tr>
-                            <td>${ppe.guideNumber}</td>
-                            <td>${ppe.name}</td>
-                            <td>${ppe.unitCost}</td>
-                            <td>${ppe.quantity}</td>
-                            <td>${ppe.stock}</td>
-                         </tr>`;
-            });
-            html += '</tbody></table>';
-            $('#added-ppe-table-container').html(html);
-        }
+    function loadAddedPpeTable() {
+        let html = '<table><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
+        addedPpe.forEach(function(ppe) {
+            html += `<tr>
+                        <td>${ppe.guideNumber}</td>
+                        <td>${ppe.name}</td>
+                        <td>${ppe.unitCost}</td>
+                        <td>${ppe.quantity}</td>
+                        <td>${ppe.stock}</td>
+                     </tr>`;
+        });
+        html += '</tbody></table>';
+        $('#added-ppe-table-container').html(html);
+    }
 
-        loadAddedPpeTable();
+    $(document).on('click', '#agregar-formulario', function() {
+        var row = $(this).closest('tr');
+        var ppeId = row.find('td:first').text();
         
-        function loadCreatedPpeTable(query = '') {
-            $.ajax({
-                url: "{% url 'table_created_ppe' %}",
-                data: { q: query },
-                success: function(data) {
-                    $('#created-ppe-table-container').html(data);
-                }
-            });
-        }
-
-        $(document).ready(function() {
-            loadCreatedPpeTable();
-
-            $(document).on('submit', '#formulario-buscar', function(event) {
-                event.preventDefault();
-                var query = $(this).find('input[name="q"]').val();
-                loadCreatedPpeTable(query);
-            });
-        });
-
-        $(document).on('click', '#agregar-formulario', function() {
-            var row = $(this).closest('tr');
-            var ppeId = row.find('td:first').text();
-            
-            $.ajax({
-                url: "{% url 'get_ppe_data' %}",
-                data: { id: ppeId },
-                success: function(data) {
-                    $('#id_guideNumber').val(data.guideNumber);
-                    $('#id_creationDate').val(data.creationDate);
-                    $('#id_name').val(data.name);
-                    $('#id_unitCost').val(data.unitCost);
-                    $('#id_quantity').val(data.quantity);
-                    $('#id_stock').val(data.stock);
-                }
-            });
-        });
-
-        $('form').submit(function(event) {
-            event.preventDefault();
-            var formData = {
-                guideNumber: $('#id_guideNumber').val(),
-                creationDate: $('#id_creationDate').val(),
-                name: $('#id_name').val(),
-                unitCost: parseFloat($('#id_unitCost').val()),
-                quantity: parseInt($('#id_quantity').val()),
-                stock: parseInt($('#id_stock').val())
-            };
-            addedPpe.push(formData);
-            loadAddedPpeTable();
-        });
-
-        $('#save-all-btn').click(function() {
-            if (addedPpe.length === 0) {
-                alert('No hay EPPs para guardar.');
-                return;
+        $.ajax({
+            url: "{% url 'get_ppe_data' %}",
+            data: { id: ppeId },
+            success: function(data) {
+                $('#id_guideNumber').val(data.guideNumber);
+                $('#id_creationDate').val(data.creationDate);
+                $('#id_name').val(data.name);
+                $('#id_unitCost').val(data.unitCost);
+                $('#id_quantity').val(data.quantity);
+                $('#id_stock').val(data.stock);
             }
-            $.ajax({
-                url: "{% url 'save_all_ppe' %}",
-                method: 'POST',
-                data: JSON.stringify(addedPpe),
-                contentType: 'application/json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        alert('EPPs guardados exitosamente.');
-                        addedPpe = [];
-                        loadAddedPpeTable();
-                    } else {
-                        alert('Hubo un error al guardar los EPPs: ' + response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error al guardar EPPs:", xhr.responseText);
-                    alert('Hubo un error al guardar los EPPs: ' + xhr.responseText);
-                }
-            });
         });
     });
-</script>
 
+    // Modificado para ser más específico
+    $('.formulario-contenedor-individual form').submit(function(event) {
+        event.preventDefault();
+        var formData = {
+            guideNumber: $('#id_guideNumber').val(),
+            creationDate: $('#id_creationDate').val(),
+            name: $('#id_name').val(),
+            unitCost: parseFloat($('#id_unitCost').val()),
+            quantity: parseInt($('#id_quantity').val()),
+            stock: parseInt($('#id_stock').val())
+        };
+        addedPpe.push(formData);
+        loadAddedPpeTable();
+    });
+
+    $('#save-all-btn').click(function() {
+        if (addedPpe.length === 0) {
+            alert('No hay EPPs para guardar.');
+            return;
+        }
+        $.ajax({
+            url: "{% url 'save_all_ppe' %}",
+            method: 'POST',
+            data: JSON.stringify(addedPpe),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    alert('EPPs guardados exitosamente.');
+                    addedPpe = [];
+                    loadAddedPpeTable();
+                } else {
+                    alert('Hubo un error al guardar los EPPs: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error al guardar EPPs:", xhr.responseText);
+                alert('Hubo un error al guardar los EPPs: ' + xhr.responseText);
+            }
+        });
+    });
+
+    // Función para manejar la búsqueda y actualizar la tabla
+    function handleSearch(event) {
+        event.preventDefault();
+        var query = $(this).find('input[name="q"]').val();
+        $.ajax({
+            url: window.location.pathname,
+            data: { q: query },
+            success: function(data) {
+                // Extraer la tabla actualizada del HTML devuelto
+                var newTable = $(data).find('#created-ppe-table-container table');
+                $('#created-ppe-table-container table').replaceWith(newTable);
+            },
+            error: function(xhr, status, error) {
+                console.error("Error en la búsqueda:", xhr.responseText);
+                alert('Hubo un error al realizar la búsqueda: ' + xhr.responseText);
+            }
+        });
+    }
+
+    // Asignar el manejador de eventos solo al formulario de búsqueda
+    $('.formulario-buscar').submit(handleSearch);
+});
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -191,7 +191,49 @@
                 <button id="save-all-btn">Guardar Todos</button>
             </div>
             <div class="tabla-creacion" id="created-ppe-table-container">
-                
+                <h2 class="titulo-primario">Creados</h2>
+                <div class="buscar">
+                    <form class="formulario-buscar" method="get" action="{% url 'add_ppe' %}">
+                        <div class="cuadro-busqueda">
+                            <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                        </div>
+                        <div class="btn-busqueda-elemento">
+                            <button type="submit" id="buscar-tabla">Buscar</button>
+                        </div>
+                    </form>
+                </div>                
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Nombre</th>
+                            <th>Unidad</th>
+                            <th>Imágen</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ppe in epp %}
+                            <tr>
+                                <td>{{ ppe.idPpe }}</td>
+                                <td>{{ ppe.name }}</td>
+                                <td>{{ ppe.unit.name }}</td>
+                                <td>
+                                    {% if ppe.image %}
+                                        <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}" style="width: 50px; height: 50px;">
+                                    {% else %}
+                                        No image
+                                    {% endif %}
+                                </td>
+                                <td><button id="agregar-formulario" data-ppe-id="{{ ppe.idPpe }}"><img class="icono-btn" src="../../static/img/anadir.png" alt=""></button></td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4">No hay EPPs disponibles.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>

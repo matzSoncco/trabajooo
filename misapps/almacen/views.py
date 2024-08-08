@@ -107,17 +107,6 @@ def update_ppe_duration(request):
     return JsonResponse({'success': True})
 
 #PPE
-@login_required
-def PersonalProtectionEquipment(request):
-    query = request.GET.get('q', '')
-    if query:
-        epp = Ppe.objects.filter(name__icontains=query)
-    else:
-        epp = Ppe.objects.all()
-    
-    context = {'epp': epp, 'query': query}
-    return render(request, 'table_created_ppe.html', context)
-
 def get_ppe_data(request):
     ppe_id = request.GET.get('id')
     ppe = get_object_or_404(Ppe, idPpe=ppe_id)
@@ -307,6 +296,12 @@ def add_new_unit(request):
 
 @login_required
 def add_ppe(request):
+    query = request.GET.get('q', '')  # Obtener el parámetro de búsqueda
+    if query:
+        epp = Ppe.objects.filter(name__icontains=query)
+    else:
+        epp = Ppe.objects.all()
+    
     if request.method == 'POST':
         form = PpeForm(request.POST)
         if form.is_valid():
@@ -340,7 +335,13 @@ def add_ppe(request):
             return redirect('add_ppe')
     else:
         form = PpeForm()
-    return render(request, 'add_ppe.html', {'form': form})
+    
+    context = {
+        'form': form,
+        'epp': epp,
+        'query': query
+    }
+    return render(request, 'add_ppe.html', context)
 
 @login_required
 def delete_ppe(request, ppe_name):

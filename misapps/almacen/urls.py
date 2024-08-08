@@ -14,7 +14,6 @@ urlpatterns = [
     path('add_new_unit/', views.add_new_unit, name='add_new_unit'),
     path('get_ppe_data/', views.get_ppe_data, name='get_ppe_data'),
     path('save_all_ppe/', views.save_all_ppe, name='save_all_ppe'),
-    path('ppe/create/table/', views.PersonalProtectionEquipment, name='table_created_ppe'),
     path('ppe/cost/ppe/', views.total_cost_ppe, name='total_ppe_cost_table'),
     path('ppe/cost/equip/', views.total_cost_equip, name='total_equip_cost_table'),
     path('ppe/cost/material/', views.total_cost_material, name='total_mat_cost_table'),

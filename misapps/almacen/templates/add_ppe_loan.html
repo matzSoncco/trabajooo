@@ -5,6 +5,7 @@
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script>
     function getCookie(name) {
@@ -211,11 +212,15 @@
             });
 
             if (!allRenewalChecked) {
-                alert('Todos los checkboxes de renovación deben estar marcados para confirmar.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Todos los checkboxes de renovación deben estar marcados para confirmar.'
+                });
                 return;
             }
 
-            ppeToAssign = [];
+            let ppeToAssign = [];
             $('#popup-table tbody tr').each(function() {
                 let row = $(this);
                 let ppeId = row.attr('data-ppe-id');
@@ -254,32 +259,32 @@
         }
 
         function sendDataToServer(ppeToAssign) {
-            if (typeof csrftoken === 'undefined') {
-                console.error('CSRF token no definido');
-                return;
-            }
-
             $.ajax({
-                url: '{% url "confirm_ppe_loan" %}',
-                method: 'POST',
-                data: JSON.stringify({ ppe_loans: ppeToAssign }),
+                url: '{% url "confirm_ppe_loan" %}', 
+                type: 'POST',
                 contentType: 'application/json',
-                headers: {
-                    'X-CSRFToken': csrftoken
-                },
+                data: JSON.stringify({ ppe_loans: ppeToAssign }),
                 success: function(response) {
                     if (response.success) {
-                        alert('Préstamos confirmados exitosamente.');
-                        $('#popup').hide();
-                        updatePreDeliveryTable();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Los préstamos se han confirmado correctamente.'
+                        });
                     } else {
-                        let errorMessages = response.errors.map(error => error.error).join('\n');
-                        alert('Errores al confirmar los préstamos:\n' + errorMessages);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.errors.map(error => error.error).join(', ')
+                        });
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error en la llamada AJAX:", status, error);
-                    alert('Error al confirmar los préstamos: ' + error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Se produjo un error al procesar la solicitud.'
+                    });
                 }
             });
         }
@@ -364,7 +369,7 @@
                     {% endfor %}
                 </ul>
                 {% endif %}
-                <a class="link-top-form" href="{% url 'ppe_loan_list' %}">Ver tabla</a>
+                <button id="volver-btn" onclick="location.href='{% url 'ppe_loan_list' %}'">Ver tabla</button>
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual" >
@@ -443,7 +448,7 @@
 
             </div>
             <button id="give-btn">Entregar</button>
-            <button id="volver-btn">Salir</button>
+            <button id="volver-btn" onclick="location.href='{% url 'home' %}'">Salir</button>
         </div>
     </section>
 </section>
@@ -466,4 +471,42 @@
     <button type="button" id="confirm-btn">Confirmar</button>
     <button id="cancel-btn">Cancelar</button>
 </div>
+<style>
+    #give-btn {
+        border: 2px solid #2c3e50;
+        border-radius: 4px;
+        color: white;
+        font-size: 16px;
+        border-top: 1px solid #2c3e50;
+        font-weight: bold;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+        background-color: #2c3e50;
+        margin-top: 10px; /* Margen superior */
+        margin-left: 10px; /* Margen izquierdo */
+    }
+
+    #volver-btn {
+        border: 2px solid #2c3e50;
+        border-radius: 4px;
+        color: white;
+        font-size: 16px;
+        border-top: 1px solid #2c3e50;
+        font-weight: bold;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+        background-color: #2c3e50;
+        transform: scale(0.98);
+        margin-top: 10px; /* Margen superior */
+        margin-left: 10px; /* Margen izquierdo */
+    }
+
+    #give-btn:hover, #volver-btn:hover {
+        background-color: #34495e;
+    }
+</style>
+
+
 {% endblock %}

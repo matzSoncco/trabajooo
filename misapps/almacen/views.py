@@ -474,7 +474,7 @@ def add_equipment(request):
                 unitCost=unitCost,
                 date=creationDate
             )
-            
+            messages.success(request, 'Se añadió equipos correctamente.')
             return redirect('add_equipment')
     else:
         form = EquipmentForm()

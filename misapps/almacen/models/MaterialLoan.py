@@ -5,7 +5,7 @@ from django.utils import timezone
 
 class MaterialLoan(models.Model):
     idMaterialLoan = models.AutoField(primary_key=True, editable=False)
-    worker = models.ForeignKey(Worker, on_delete=models.CASCADE, related_name='tool_loans', null=True)
+    worker = models.ForeignKey(Worker, on_delete=models.CASCADE, related_name='material_loans', null=True)
     workerPosition = models.CharField(max_length=100, null=True)
     workerDni = models.CharField(max_length=8, null=True)
     loanDate = models.DateField(default=timezone.now)

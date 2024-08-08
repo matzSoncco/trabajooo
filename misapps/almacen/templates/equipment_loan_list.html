@@ -34,7 +34,7 @@
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
             <div class="foto-perfil"><img src="../../../static/img/perfil.png" alt=""></div>
-            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+            <div class="nombre-perfil"><span>{{ user.first_name }} {{ user.last_name }}</span></div>
         </div>
         <div class="menu-items-lateral">
             <nav class="navegacion-lateral">
@@ -55,11 +55,11 @@
     </aside>
     <section class="contendor-lateral-derecho">
         <div class="titulo-pagina">
-            <h2>Tabla de Materiales asignados</h2>
-            <button type="button" id="volver-btn" onclick="location.href='{% url 'add_material_loan' %}'">Volver</button>
+            <h2>Tabla de Equipos asignados</h2>
+            <button type="button" id="volver-btn" onclick="location.href='{% url 'add_equipment_loan' %}'">Volver</button>
         </div>
         <div class="buscar">
-            <form class="formulario-buscar" id="search-form" method="get" action="{% url 'material_loan_list' %}">
+            <form class="formulario-buscar" id="search-form" method="get" action="{% url 'equipment_loan_list' %}">
                 <div class="cuadro-busqueda">
                     <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o DNI">
                 </div>
@@ -75,7 +75,7 @@
                         <th>DNI</th>
                         <th>Nombres</th>
                         <th>Apellidos</th>
-                        <th>Material</th>
+                        <th>Equipos</th>
                         <th>Cantidad</th>
                         <th>Fecha de préstamo</th>
                     </tr>
@@ -86,13 +86,13 @@
                         <td>{{ loan.worker.dni }}</td>
                         <td>{{ loan.worker.name }}</td>
                         <td>{{ loan.worker.surname }}</td>
-                        <td>{{ loan.material.name }}</td>
+                        <td>{{ loan.equipment.name }}</td>
                         <td>{{ loan.loanAmount }}</td>
                         <td>{{ loan.loanDate }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4">No hay Materiales asignados.</td>
+                        <td colspan="6">No hay Equipos asignados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -28,7 +28,6 @@ urlpatterns = [
     path('ppe/total_ppe_stock/', views.total_ppe_stock, name='total_ppe_stock'),
 
     #EQUIPOS
-    path('equipment/', views.equipment_list, name='equipment_list'),
     path('get_equipment_data/', views.get_equipment_data, name='get_equipment_data'),
     path('equipment/total/add', views.equipment_total_add, name='equipment_total_add'),
     path('save_all_equipment/', views.save_all_equipment, name='save_all_equipment'),
@@ -40,7 +39,6 @@ urlpatterns = [
     path('equipment/total_equipment_stock/', views.total_equipment_stock, name='total_equipment_stock'),
 
     #MATERIALES
-    path('material/', views.material_list, name='material_list'),
     path('material/add/', views.add_material, name='add_material'),
     path('get_material_data/', views.get_material_data, name='get_material_data'),
     path('material/total/add', views.material_total_add, name='material_total_add'),

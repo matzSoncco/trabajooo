@@ -1619,7 +1619,6 @@ def confirm_tool_loan(request):
 def equipment_loan_list(request):
     query = request.GET.get('q', '')
     dni_query = request.GET.get('dni', '')
-    user = request.user
 
     if query and dni_query:
         # Filtrar por nombre y DNI
@@ -1641,7 +1640,6 @@ def equipment_loan_list(request):
         'equipment_loans': equipment_loans,
         'query': query,
         'dni_query': dni_query,
-        'user': user
     }
     return render(request, 'equipment_loan_list.html', context)
 

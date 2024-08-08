@@ -48,6 +48,7 @@
                     <thead>
                         <tr>
                             <th>Código de Herramienta</th>
+                            <th>Orden de Trabajo</th>
                             <th>Nombre de Herramienta</th>
                             <th>Cantidad del Préstamo</th>
                             <th>Devolución</th>
@@ -59,6 +60,7 @@
                         {% for loan in tool_loans %}
                         <tr>
                             <td>{{ loan.tool.idTool }}</td>
+                            <td>{{ loan.workOrder }}</td>
                             <td>{{ loan.tool.name }}</td>
                             <td>{{ loan.loanAmount }}</td>
                             <td><input type="checkbox" name="returned_{{ loan.idToolLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
@@ -77,14 +79,11 @@
     
 </section>
 <style>
-    /* Estilos del título de la página */
     .titulo-pagina h2 {
         margin-bottom: 20px;
         font-size: 24px;
         color: #333;
     }
-
-    /* Estilos del formulario de búsqueda */
     form {
         margin-bottom: 20px;
     }
@@ -102,7 +101,6 @@
         background-color: #233445;
     }
 
-    /* Estilos de la tabla */
     .tabla {
         width: 100%;
         border-collapse: collapse;
@@ -127,8 +125,6 @@
     .tabla tr:hover {
         background-color: #f1f1f1;
     }
-
-    /* Estilos del botón de actualización */
     button[type="submit"] {
         padding: 10px 20px;
         background-color: #28a745;

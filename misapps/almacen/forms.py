@@ -251,7 +251,7 @@ class EquipmentForm(forms.ModelForm):
     name = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'input',
         'type': 'text',
-        'placeholder': 'Ingrese nombre del equipo'
+        'placeholder': 'Nombre del equipo'
     }))
 
     stock = forms.IntegerField(widget=forms.NumberInput(attrs={
@@ -364,7 +364,7 @@ class MaterialForm(forms.ModelForm):
     name = forms.CharField(widget=forms.TextInput(attrs={
         "class": "input",
         "type": "text",
-        "placeholder": "Ingrese el nombre del EPP",
+        "placeholder": "Nombre del material",
     }))
 
     unitCost = forms.FloatField(widget=forms.NumberInput(attrs={
@@ -482,7 +482,7 @@ class ToolForm(forms.ModelForm):
     name = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'input',
         'type': 'text',
-        'placeholder': 'Ingrese nombre del equipo'
+        'placeholder': 'Nombre de la herramienta'
     }))
 
     stock = forms.IntegerField(widget=forms.NumberInput(attrs={
@@ -649,6 +649,63 @@ class ToolLoanForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "Herramienta a asignar...",
+    }))
+
+    loanDate = forms.DateField(widget=forms.DateInput(attrs={
+        "class": "input",
+        "type": "date",
+    }))
+
+    returnLoanDate = forms.DateField(widget=forms.DateInput(attrs={
+        "class": "input",
+        "type": "date",
+    }))
+
+    loanAmount = forms.IntegerField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Cantidad a asignar"
+    }))
+
+    workOrder = forms.IntegerField(widget=forms.NumberInput(attrs={
+        "class": "input",
+        "type": "number",
+        "placeholder": "Código de orden de trabajo"
+    }))
+
+    worker = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "Nombre del trabajador",
+    }))
+
+    workerPosition = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "Posición del trabajador",
+        "readonly": "readonly",
+    }))
+
+    workerDni = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "DNI del trabajador",
+    }))
+
+    loanStatus = forms.BooleanField(widget=forms.CheckboxInput(attrs={
+        "class": "input",
+        "type": "checkbox",
+    }))
+
+    class Meta:
+        model = ToolLoan
+        fields = ['tool' , 'loanDate', 'loanAmount', 'worker', 'workerPosition', 'workerDni', 'returnLoanDate', 'workOrder', 'loanStatus']
+
+class EquipmentLoanForm(forms.ModelForm):
+    equipment = forms.CharField(widget=forms.TextInput(attrs={
+        "class": "input",
+        "type": "text",
+        "placeholder": "Equipo a asignar",
     }))
 
     loanDate = forms.DateField(widget=forms.DateInput(attrs={

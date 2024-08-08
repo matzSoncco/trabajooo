@@ -9,11 +9,10 @@
         var addedPpe = [];
 
         function loadAddedPpeTable() {
-            let html = '<table><thead><tr><th>N° de Guía</th><th>Fecha</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
+            let html = '<table><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
             addedPpe.forEach(function(ppe) {
                 html += `<tr>
                             <td>${ppe.guideNumber}</td>
-                            <td>${ppe.creationDate}</td>
                             <td>${ppe.name}</td>
                             <td>${ppe.unitCost}</td>
                             <td>${ppe.quantity}</td>

@@ -5,6 +5,7 @@
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script>
     function getCookie(name) {
@@ -125,7 +126,11 @@
         // Handle "Entregar" button click
         $('#give-btn').on('click', function() {
             if (addedItems.length === 0) {
-                alert('No hay herramientas para asignar.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Advertencia',
+                    text: 'No hay herramientas para asignar.'
+                });
                 return;
             }
 
@@ -140,7 +145,7 @@
             };
 
             $.ajax({
-                url: '/confirm_tool_loan/',  // Update this URL to match your Django URL configuration
+                url: '{% url "confirm_tool_loan" %}',  // Actualiza esta URL para que coincida con la configuración de tu URL en Django
                 method: 'POST',
                 data: JSON.stringify(formData),
                 contentType: 'application/json',
@@ -149,16 +154,29 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('Asignación de herramientas completada con éxito.');
-                        addedItems.length = 0;  // Clear the array
-                        updateGivenItemsTable();
-                        clearForm();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Asignación de herramientas completada con éxito.'
+                        }).then(() => {
+                            addedItems.length = 0;  // Limpiar el array
+                            updateGivenItemsTable();
+                            clearForm();
+                        });
                     } else {
-                        alert('Error al asignar herramientas: ' + response.error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al asignar herramientas: ' + response.error
+                        });
                     }
                 },
                 error: function() {
-                    alert('Error al procesar la asignación de herramientas.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al procesar la asignación de herramientas.'
+                    });
                 }
             });
         });

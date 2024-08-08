@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect
 from decimal import Decimal
 from datetime import datetime, timedelta
 from django.http import HttpResponseRedirect
-from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout
 from django.utils import timezone
@@ -34,11 +33,12 @@ from .models.Equipment import Equipment
 from .models.EquipmentLoan import EquipmentLoan
 from .models.Worker import Worker
 from .models.Material import Material
+from .models.MaterialLoan import MaterialLoan
 from .models.Tool import Tool
 from .models.History import History
 from .models.Unit import Unit
 from .models.PpeStockUpdate import PpeStockUpdate
-from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm, ToolLoanForm, ToolLoanSearchForm, EquipmentLoanForm
+from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm, ToolLoanForm, ToolLoanSearchForm, EquipmentLoanForm, MaterialLoanForm
 
 logger = logging.getLogger(__name__)
 
@@ -1380,7 +1380,7 @@ def process_tool_loan(loan):
                         returnLoanDate=new_expiration_date,
                         loanAmount=quantity,
                         tool=tool,
-                        loanStatus=True
+                        loanStatus=False
                     )
                     new_loan.save()
                     tool.quantity -= quantity
@@ -1486,7 +1486,7 @@ def confirm_tool_loan(request):
                             returnLoanDate=return_loan_date,
                             loanAmount=quantity,
                             tool=tool,
-                            loanStatus=True,
+                            loanStatus=False,
                             workOrder=work_order
                         )
                         new_loan.save()
@@ -1648,7 +1648,7 @@ def process_equipment_loan(loan):
             new_expiration_date = loan_date + timedelta(days=equipment.duration)
 
             # Verificar si ya existe un préstamo activo
-            active_loan = ToolLoan.objects.filter(
+            active_loan = EquipmentLoan.objects.filter(
                 equipment=equipment,
                 worker=worker,
                 loanDate__lte=loan_date,
@@ -1668,7 +1668,7 @@ def process_equipment_loan(loan):
                     active_loan.save()
                 else:
                     # Crear un nuevo préstamo
-                    new_loan = ToolLoan(
+                    new_loan = EquipmentLoan(
                         worker=worker,
                         workerPosition=worker_position,
                         workerDni=worker_dni,
@@ -1676,7 +1676,7 @@ def process_equipment_loan(loan):
                         returnLoanDate=new_expiration_date,
                         loanAmount=quantity,
                         equipment=equipment,
-                        loanStatus=True
+                        loanStatus=False
                     )
                     new_loan.save()
                     equipment.quantity -= quantity
@@ -1686,7 +1686,7 @@ def process_equipment_loan(loan):
 
             return {'success': True, 'message': f'Préstamo para {equipment_name} procesado con éxito'}
 
-        except Tool.DoesNotExist:
+        except Equipment.DoesNotExist:
             return {'success': False, 'error': f'Herramienta {equipment_name} no encontrada'}
         except Worker.DoesNotExist:
             return {'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'}
@@ -1782,7 +1782,7 @@ def confirm_equipment_loan(request):
                             returnLoanDate=return_loan_date,
                             loanAmount=quantity,
                             equipment=equipment,
-                            loanStatus=True,
+                            loanStatus=False,
                             workOrder=work_order
                         )
                         new_loan.save()
@@ -1813,6 +1813,303 @@ def confirm_equipment_loan(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+##MATERIALLOAN
+login_required
+def add_material_loan(request):
+    materials = Material.objects.all()
+    if request.method == 'POST':
+        form = (request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Préstamo de material añadido con éxito.')
+            return redirect('add_material_loan')
+        else:
+            messages.error(request, 'Por favor, corrija los errores en el formulario.')
+    else:
+        form = ToolLoanForm()
+    
+    return render(request, 'add_material_loan.html', {'form': form, 'materials': materials})
+
+@require_http_methods(["GET", "POST"])
+def material_loan_form(request):
+    if request.method == 'POST':
+        form = MaterialLoanForm(request.POST)
+        if form.is_valid():
+            # No guardamos el formulario aún, solo obtenemos los datos limpios
+            cleaned_data = form.cleaned_data
+            
+            # Obtenemos el trabajador
+            worker_name = cleaned_data['worker']
+            try:
+                worker = Worker.objects.get(name=worker_name)
+            except Worker.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Trabajador no encontrado'
+                }, status=400)
+
+            # Obtenemos la Herramienta
+            material_name = cleaned_data['material']
+            try:
+                material = Material.objects.get(name=material_name)
+            except Material.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Material no encontrado'
+                }, status=400)
+
+            # Construimos la respuesta JSON
+            response_data = {
+                'success': True,
+                'data': {
+                    'worker': worker.name,
+                    'workerPosition': cleaned_data['workerPosition'],
+                    'workerDni': worker.dni,
+                    'loanStatus': material.loanStatus,
+                    'loanDate': cleaned_data['loanDate'].strftime('%Y-%m-%d'),
+                    'returnLoanDate': cleaned_data['returnLoanDate'].strftime('%Y-%m-%d'),
+                    'material': material.name,
+                    'quantity': cleaned_data['loanAmount'],
+                    # Agrega aquí cualquier otro campo que necesites
+                }
+            }
+            return JsonResponse(response_data)
+        else:
+            # Si el formulario no es válido, devolvemos los errores
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            }, status=400)
+    else:
+        # Para solicitudes GET, simplemente devolvemos un mensaje
+        return JsonResponse({
+            'success': True,
+            'message': 'Use POST to submit form data'
+        })
+    
+@require_GET
+def check_material_availability(request):
+    material_name = request.GET.get('material_name')
+
+    try:
+        material = Material.objects.get(name=material_name)
+        quantity = material.quantity
+
+        can_assign = quantity > 0
+        message = '' if can_assign else 'No hay suficiente cantidad disponible.'
+
+        response = {
+            'can_assign': can_assign,
+            'available': quantity,
+            'message': message
+        }
+    except Tool.DoesNotExist:
+        response = {
+            'can_assign': False,
+            'available': 0,
+            'message': 'Herramienta no encontrada.'
+        }
+
+    return JsonResponse(response)
+
+def process_material_loan(loan):
+    try:
+        material_name = loan.get('name')
+        worker_data = loan.get('worker', {})
+        worker_name = worker_data.get('name')
+        worker_position = worker_data.get('position')
+        worker_dni = worker_data.get('dni')
+        loan_date_str = loan.get('loanDate')
+        quantity = int(loan.get('quantity'))
+        is_renewal = loan.get('isRenewal', False)
+        is_assigned = loan.get('isAssigned', False)
+
+        # Verificar y convertir la fecha del préstamo
+        try:
+            loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return {'success': False, 'error': 'Fecha de préstamo no válida'}
+
+        if worker_dni is None or worker_dni.strip() == "":
+            return {'success': False, 'error': 'DNI del trabajador no proporcionado'}
+
+        try:
+            material = Material.objects.get(name=material_name)
+            worker = Worker.objects.get(dni=worker_dni)
+
+            # Calcular la nueva fecha de expiración (si aplica)
+            new_expiration_date = loan_date + timedelta(days=material.duration)
+
+            # Verificar si ya existe un préstamo activo
+            active_loan = MaterialLoan.objects.filter(
+                material=material,
+                worker=worker,
+                loanDate__lte=loan_date,
+                returnLoanDate__gte=loan_date
+            ).first()
+
+            if active_loan and not (is_renewal or is_assigned):
+                return {
+                    'success': False,
+                    'error': f'Ya existe un préstamo activo para {material_name} asignado a {worker_name}'
+                }
+
+            if material.quantity >= quantity:
+                if active_loan and (is_renewal or is_assigned):
+                    # Actualizar el préstamo existente
+                    active_loan.returnLoanDate = new_expiration_date
+                    active_loan.save()
+                else:
+                    # Crear un nuevo préstamo
+                    new_loan = MaterialLoan(
+                        worker=worker,
+                        workerPosition=worker_position,
+                        workerDni=worker_dni,
+                        loanDate=loan_date,
+                        returnLoanDate=new_expiration_date,
+                        loanAmount=quantity,
+                        material=material,
+                        loanStatus=False
+                    )
+                    new_loan.save()
+                    material.quantity -= quantity
+                    material.save()
+            else:
+                return {'success': False, 'error': 'Cantidad insuficiente disponible'}
+
+            return {'success': True, 'message': f'Préstamo para {material_name} procesado con éxito'}
+
+        except Tool.DoesNotExist:
+            return {'success': False, 'error': f'Material {material_name} no encontrada'}
+        except Worker.DoesNotExist:
+            return {'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'}
+
+    except Exception as e:
+        print(f"Error procesando préstamo: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
+        return {'success': False, 'error': str(e)}
+    
+@csrf_exempt
+def confirm_material_loan(request):
+    if request.method == 'POST':
+        try:
+            # Parsear los datos JSON
+            data = json.loads(request.body)
+            print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
+
+            # Obtener los datos del formulario
+            work_order = data.get('workOrder')
+            loan_date_str = data.get('loanDate')
+            return_loan_date_str = data.get('returnLoanDate')
+            worker_dni = data.get('workerDni')
+            worker_name = data.get('worker')
+            worker_position = data.get('workerPosition')
+            manager = data.get('manager', '')
+            
+            # Extraer datos generales
+            work_order = data.get('workOrder')
+            loan_date_str = data.get('loanDate')
+            return_loan_date_str = data.get('returnLoanDate')
+            worker_dni = data.get('workerDni')
+            worker_name = data.get('worker')
+            worker_position = data.get('workerPosition')
+            material_loans = data.get('material_loans', [])
+
+            responses = []
+
+            # Verificar la presencia de la fecha de retorno
+            if not return_loan_date_str:
+                responses.append({'success': False, 'error': 'Falta la fecha de retorno'})
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            # Verificar y convertir las fechas
+            try:
+                loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                responses.append({'success': False, 'error': 'Fecha de préstamo o retorno no válida'})
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            if worker_dni is None or worker_dni.strip() == "":
+                responses.append({'success': False, 'error': 'DNI del trabajador no proporcionado'})
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            try:
+                worker = Worker.objects.get(dni=worker_dni)
+            except Worker.DoesNotExist:
+                responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            # Validar y convertir fechas
+            try:
+                loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                return JsonResponse({'success': False, 'error': 'Fechas de préstamo o devolución no válidas'}, status=400)
+            
+            if not material_loans:
+                return JsonResponse({'success': False, 'error': 'No se proporcionaron préstamos de herramientas'}, status=400)
+
+            # Procesar cada préstamo de herramienta
+            for loan in material_loans:
+                try:
+                    material_name = loan.get('name')
+                    quantity = int(loan.get('quantity'))
+
+                    if not material_name or not quantity:
+                        responses.append({'success': False, 'error': 'Datos de herramienta incompletos'})
+                        continue
+
+                    # Buscar la herramienta y el trabajador
+                    material = Material.objects.get(name=material_name)
+                    worker = Worker.objects.get(dni=worker_dni)
+
+                    # Verificar cantidad disponible
+                    if material.quantity >= quantity:
+                        # Crear un nuevo préstamo de herramienta
+                        new_loan = MaterialLoan(
+                            worker=worker,
+                            workerPosition=worker_position,
+                            workerDni=worker_dni,
+                            loanDate=loan_date,
+                            returnLoanDate=return_loan_date,
+                            loanAmount=quantity,
+                            material=material,
+                            loanStatus=False,
+                            workOrder=work_order
+                        )
+                        new_loan.save()
+
+                        # Actualizar cantidad de herramienta
+                        material.quantity -= quantity
+                        material.save()
+
+                        responses.append({'success': True, 'message': f'Préstamo para {material_name} procesado con éxito'})
+                    else:
+                        responses.append({'success': False, 'error': f'Cantidad insuficiente disponible para {material_name}'})
+
+                except Tool.DoesNotExist:
+                    responses.append({'success': False, 'error': f'Herramienta {material_name} no encontrada'})
+                except Worker.DoesNotExist:
+                    responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
+                except Exception as e:
+                    print(f"Error procesando préstamo de herramienta: {str(e)}")
+                    responses.append({'success': False, 'error': str(e)})
+
+            if any(not r['success'] for r in responses):
+                return JsonResponse({'success': False, 'errors': responses}, status=400)
+
+            return JsonResponse({'success': True, 'messages': responses})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Error al decodificar JSON'}, status=400)
+        except Exception as e:
+            print(f"Error general: {str(e)}")
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
 #PPELOAN
 @login_required
 def ppe_loan_list(request):

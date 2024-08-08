@@ -278,6 +278,13 @@ def add_new_unit(request):
         new_unit_name = data.get('new_unit')
         if new_unit_name:
             unit, created = Unit.objects.get_or_create(name=new_unit_name)
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(unit),
+                object_name=unit.name,
+                action='Created',
+                user=request.user,
+                timestamp=timezone.now()
+            )
             if created:
                 return JsonResponse({'success': True, 'unit': unit.name})
             else:
@@ -315,7 +322,13 @@ def add_ppe(request):
             ppe.quantity = total_quantity
             ppe.stock = stock
             ppe.save()
-            
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(ppe),
+                object_name=ppe.name,
+                action='Add',
+                user=request.user,
+                timestamp=timezone.now()
+            )
             # Crear el registro de actualización de stock
             PpeStockUpdate.objects.create(
                 ppe=ppe,
@@ -456,6 +469,13 @@ def add_equipment(request):
             equipment.stock = stock
             equipment.save()
             
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(equipment),
+                object_name=equipment.name,
+                action='Add',
+                user=request.user,
+                timestamp=timezone.now()
+            )
             # Crear el registro de actualización de stock
             EquipmentStockUpdate.objects.create(
                 equipment=equipment,
@@ -505,6 +525,13 @@ def save_all_equipment(request):
                 equipment.stock = stock
                 equipment.save()
                 
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(equipment),
+                    object_name=equipment.name,
+                    action='Created',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
                 EquipmentStockUpdate.objects.create(
                     equipment=equipment,
                     quantity=quantity,
@@ -684,6 +711,14 @@ def save_all_material(request):
                 material.stock = stock
                 material.save()
                 
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(material),
+                    object_name=material.name,
+                    action='Add',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+
                 PpeStockUpdate.objects.create(
                     material=material,
                     quantity=quantity,
@@ -816,6 +851,14 @@ def add_material(request):
             material.stock = stock
             material.save()
             
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(material),
+                object_name=material.name,
+                action='Created',
+                user=request.user,
+                timestamp=timezone.now()
+            )
+
             # Crear el registro de actualización de stock
             PpeStockUpdate.objects.create(
                 material=material,
@@ -933,6 +976,14 @@ def add_tool(request):
             tool.stock = stock
             tool.save()
             
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(tool),
+                object_name=tool.name,
+                action='Created',
+                user=request.user,
+                timestamp=timezone.now()
+            )
+
             # Create the stock update record
             ToolStockUpdate.objects.create(
                 tool=tool,
@@ -970,6 +1021,14 @@ def save_all_tools(request):
                 tool.stock = stock
                 tool.save()
                 
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(tool),
+                    object_name=tool.name,
+                    action='Created',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+
                 ToolStockUpdate.objects.create(
                     tool=tool,
                     quantity=quantity,
@@ -1139,6 +1198,14 @@ def return_view(request):
             checkbox_name = f'returned_{loan.idToolLoan}'
             loan.loanStatus = checkbox_name in request.POST
             loan.save()
+
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(tool_loans),
+                object_name=tool_loans.name,
+                action='Return',
+                user=request.user,
+                timestamp=timezone.now()
+            )
         return HttpResponseRedirect(request.path_info)
 
     return render(request, 'return.html', {
@@ -1189,6 +1256,13 @@ def delete_worker(request, id):
 
     if request.method == 'POST':
         workers.delete()
+        History.objects.create(
+            content_type=ContentType.objects.get_for_model(workers),
+            object_name=workers.name,
+            action='Delete',
+            user=request.user,
+            timestamp=timezone.now()
+        )
         return redirect('worker_list')
     else:
         return render(request, 'delete_worker.html', {'workers': workers})
@@ -1202,6 +1276,13 @@ def modify_worker(request, id):
         form = WorkerForm(request.POST, instance=workers)
         if form.is_valid():
             form.save()
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(workers),
+                object_name=workers.name,
+                action='Modified',
+                user=request.user,
+                timestamp=timezone.now()
+            )
             return redirect('worker_list')
     else:
         return render(request, 'modify_worker.html', {'form': form})
@@ -1495,6 +1576,14 @@ def confirm_tool_loan(request):
                             workOrder=work_order
                         )
                         new_loan.save()
+
+                        History.objects.create(
+                            content_type=ContentType.objects.get_for_model(ToolLoan),
+                            object_name=ToolLoan.name,
+                            action='Loan Created',
+                            user=request.user,
+                            timestamp=timezone.now()
+                        )
 
                         # Actualizar cantidad de herramienta
                         tool.quantity -= quantity
@@ -1821,6 +1910,13 @@ def confirm_equipment_loan(request):
                             workOrder=work_order
                         )
                         new_loan.save()
+                        History.objects.create(
+                            content_type=ContentType.objects.get_for_model(EquipmentLoan),
+                            object_name=EquipmentLoan.name,
+                            action='Loan Created',
+                            user=request.user,
+                            timestamp=timezone.now()
+                        )
 
                         # Actualizar cantidad de herramienta
                         equipment.quantity -= quantity
@@ -2138,6 +2234,14 @@ def confirm_material_loan(request):
                             workOrder=work_order
                         )
                         new_loan.save()
+
+                        History.objects.create(
+                            content_type=ContentType.objects.get_for_model(MaterialLoan),
+                            object_name=MaterialLoan.name,
+                            action='Loan Created',
+                            user=request.user,
+                            timestamp=timezone.now()
+                        )
 
                         # Actualizar cantidad de herramienta
                         material.quantity -= quantity
@@ -2508,6 +2612,13 @@ def confirm_ppe_loan(request):
                                     confirmed=True
                                 )
                                 new_loan.save()
+                                History.objects.create(
+                                    content_type=ContentType.objects.get_for_model(PpeLoan),
+                                    object_name=PpeLoan.name,
+                                    action='Loan Created',
+                                    user=request.user,
+                                    timestamp=timezone.now()
+                                )
                                 ppe.quantity -= quantity
                                 ppe.save()
                         else:
@@ -2648,6 +2759,13 @@ def delete_ppe_loan(request, id):
     
     if request.method == 'POST':
         ppe_loans.delete()
+        History.objects.create(
+            content_type=ContentType.objects.get_for_model(PpeLoan),
+            object_name=PpeLoan.name,
+            action='Loan Delete',
+            user=request.user,
+            timestamp=timezone.now()
+        )
         return redirect('ppe_loan_list')
     else:
         return render(request, 'delete_ppe_loan.html', {'ppe_loans': ppe_loans})
@@ -2661,6 +2779,13 @@ def modify_ppe_loan(request, id):
         if form.is_valid():
             form.instance.status = True
             form.save()
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(PpeLoan),
+                object_name=PpeLoan.name,
+                action='Loan Modified',
+                user=request.user,
+                timestamp=timezone.now()
+            )
             return redirect('ppe_loan_list')
     else:
         return render(request, 'modify_ppe_loan.html', {'form': form})

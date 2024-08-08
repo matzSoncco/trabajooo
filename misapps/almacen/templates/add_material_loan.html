@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Asignar Equipos{% endblock %}
+{% block title %}Asignar Herramientas{% endblock %}
 
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script>
     function getCookie(name) {
@@ -58,45 +59,45 @@
         });
         const addedItems = [];
 
-        // Add equipment to form when "Añadir" button is clicked
+        // Add material to form when "Añadir" button is clicked
         $(document).on('click', '#add-to-form', function() {
-            let equipmentName = $(this).data('equipment-name');
-            $('#id_equipment').val(equipmentName);
+            let materialName = $(this).data('material-name');
+            $('#id_material').val(materialName);
         });
 
         // Handle form submission
         $('#loan-form').on('submit', function(e) {
             e.preventDefault();
-            const equipmentName = $('#id_equipment').val();
+            const materialName = $('#id_material').val();
             const quantity = $('#id_loanAmount').val();
 
-            // Check equipment availability
+            // Check material availability
             $.ajax({
-                url: '/check_equipment_availability/',  // Update this URL to match your Django URL configuration
+                url: '/check_material_availability/',  // Update this URL to match your Django URL configuration
                 method: 'GET',
-                data: { equipment_name: equipmentName },
+                data: { material_name: materialName },
                 success: function(response) {
                     if (response.can_assign && response.available >= quantity) {
-                        addItemToTable(equipmentName, quantity);
+                        addItemToTable(materialName, quantity);
                         clearForm();
                     } else {
-                        alert('No hay suficiente cantidad disponible de este equipo.');
+                        alert('No hay suficiente cantidad disponible de este material.');
                     }
                 },
                 error: function() {
-                    alert('Error al verificar la disponibilidad del equipo.');
+                    alert('Error al verificar la disponibilidad del material.');
                 }
             });
         });
 
-        function addItemToTable(equipmentName, quantity) {
-            addedItems.push({ name: equipmentName, quantity: quantity });
+        function addItemToTable(material, quantity) {
+            addedItems.push({ name: materialName, quantity: quantity });
             updateGivenItemsTable();
         }
 
         function updateGivenItemsTable() {
             const tableHtml = `
-                <h2 class="titulo-primario">Equipos a asignar</h2>
+                <h2 class="titulo-primario">Materiales a asignar</h2>
                 <table class="tabla">
                     <thead>
                         <tr>
@@ -118,14 +119,18 @@
         }
 
         function clearForm() {
-            $('#id_equipment').val('');
+            $('#id_material').val('');
             $('#id_loanAmount').val('');
         }
 
         // Handle "Entregar" button click
         $('#give-btn').on('click', function() {
             if (addedItems.length === 0) {
-                alert('No hay equipos para asignar.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Advertencia',
+                    text: 'No hay materiales para asignar.'
+                });
                 return;
             }
 
@@ -136,11 +141,11 @@
                 workerDni: $('#id_workerDni').val(),
                 worker: $('#id_worker').val(),
                 workerPosition: $('#id_workerPosition').val(),
-                equipment_loans: addedItems
+                materiales_loans: addedItems
             };
 
             $.ajax({
-                url: '/confirm_equipment_loan/',  // Update this URL to match your Django URL configuration
+                url: '{% url "confirm_material_loan" %}',  // Actualiza esta URL para que coincida con la configuración de tu URL en Django
                 method: 'POST',
                 data: JSON.stringify(formData),
                 contentType: 'application/json',
@@ -149,16 +154,29 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('Asignación de equipos completada con éxito.');
-                        addedItems.length = 0;  // Clear the array
-                        updateGivenItemsTable();
-                        clearForm();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Asignación de materiales completada con éxito.'
+                        }).then(() => {
+                            addedItems.length = 0;  // Limpiar el array
+                            updateGivenItemsTable();
+                            clearForm();
+                        });
                     } else {
-                        alert('Error al asignar equipos: ' + response.error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al asignar materiales: ' + response.error
+                        });
                     }
                 },
                 error: function() {
-                    alert('Error al procesar la asignación de equipos.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al procesar la asignación de materiales.'
+                    });
                 }
             });
         });
@@ -197,7 +215,7 @@
         <div class="contenedor-formulario">
             <div id="loan-message"></div>
             <div class="top-form">
-                <h2 class="titulo-primario">Asignar Equipos</h2>
+                <h2 class="titulo-primario">Asignar Herramientas</h2>
                 {% if messages %}
                 <ul class="messages">
                     {% for message in messages %}
@@ -209,7 +227,7 @@
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual" >
-                    <form id="loan-form" method="post" action="{% url 'add_equipment_loan' %}" enctype="application/json" class="box">
+                    <form id="loan-form" method="post" action="{% url 'add_material_loan' %}" enctype="application/json" class="box">
                         {% csrf_token %}
 
                         <div class="fila-form">
@@ -218,8 +236,8 @@
                                 {{ form.workOrder }}
                             </div>
                             <div class="campo">
-                                <label for="id_equipment" class="label">Equipo</label>
-                                {{ form.equipment }}
+                                <label for="id_material" class="label">Herramienta</label>
+                                {{ form.material }}
                             </div>
                         </div>
                         
@@ -263,7 +281,7 @@
                     </form>
                 </div>
                 <div class="tabla-creacion" id="added-items-table-container">
-                    <h2 class="titulo-primario">Equipos en base de datos</h2>
+                    <h2 class="titulo-primario">Herramientas en base de datos</h2>
                     <table class="tabla">
                         <thead>
                             <tr>
@@ -273,17 +291,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for item in equipments %}
+                            {% for item in materials %}
                             <tr>
                                 <td>{{ item.name }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>
-                                    <button id="add-to-form" class="" data-equipment-id="{{ item.id }}" data-equipment-name="{{ item.name }}" data-equipment-quantity="1">Añadir</button>
+                                    <button id="add-to-form" class="" data-material-id="{{ item.id }}" data-material-name="{{ item.name }}" data-material-quantity="1">Añadir</button>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3">No hay Equipos disponibles.</td>
+                                <td colspan="3">No hay Herramientas disponibles.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

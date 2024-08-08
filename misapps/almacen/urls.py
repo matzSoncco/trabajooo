@@ -104,6 +104,12 @@ urlpatterns = [
     path('confirm_equipment_loan/', views.confirm_equipment_loan, name='confirm_equipment_loan'),
     path('check_equipment_availability/', views.check_equipment_availability, name='check_equipment_availability'),
 
+    #ASIGNACIONES DE MATERIALES
+    path('add_material_loan/', views.add_material_loan, name='add_material_loan'),
+    path('material_loan_form/', views.material_loan_form, name='material_loan_form'),
+    path('confirm_material_loan/', views.confirm_material_loan, name='confirm_material_loan'),
+    path('check_material_availability/', views.check_material_availability, name='check_material_availability'),
+
     #USUARIOS
     path('register_admin/', register_admin, name='register_admin'),
     path('admin_list/', views.user_list, name='table_user'),

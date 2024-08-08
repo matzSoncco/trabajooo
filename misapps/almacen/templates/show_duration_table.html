@@ -23,22 +23,6 @@
     $(document).ready(function() {
         console.log('Documento listo');
 
-        // Función para cargar la tabla de EPPs añadidos
-        function loadDurationPpe() {
-            $.ajax({
-                url: "{% url 'table_duration_ppe' %}",
-                success: function(data) {
-                    $('#duration-table-container').html(data);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error de AJAX al cargar la tabla:", status, error);
-                }
-            });
-        }
-
-        // Cargar las tablas al cargar la página
-        loadDurationPpe();
-
         // Manejar el evento click para todos los botones de guardar duración
         $(document).on('click', '.save-duration-btn', function(e) {
             e.preventDefault(); // Prevenir cualquier acción por defecto del botón
@@ -111,7 +95,34 @@
             <h2>Tabla de duracion de EPP</h2>
         </div>
         <div class="tabla-creacion" id="duration-table-container">
-            <!-- Aquí se cargará la tabla de duración de EPPs -->
+            <table class="tabla" id="duration-table">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Nombre</th>
+                        <th>Duracion</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ppe in epp %}
+                        <tr data-ppe-id="{{ ppe.idPpe }}">
+                            <td>{{ ppe.idPpe }}</td>
+                            <td>{{ ppe.name }}</td>
+                            <td class="editable-duration" contenteditable="true">{{ ppe.duration }}</td>
+                            <td>
+                                <div class="botones-acciones">
+                                    <button class="tbl-btn save-duration-btn"><img class="icono-btn" src="../../../static/img/disquete.png" alt=""></button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No hay EPPs disponibles.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>            
         </div>
     </section>
 </section>

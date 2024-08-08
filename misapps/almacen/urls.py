@@ -19,11 +19,9 @@ urlpatterns = [
     path('ppe/cost/material/', views.total_cost_material, name='total_mat_cost_table'),
     path('ppe/cost/tool/', views.total_cost_tool, name='total_tool_cost_table'),
     path('ppe/cost/table/', views.cost_summary_view, name='total_cost_table'),
-    path('ppe/duration/table/', views.show_duration, name='table_duration_ppe'),
     path('update-ppe-duration/', views.update_ppe_duration, name='update_ppe_duration'),
     path('ppe/show/table/', views.set_duration, name='show_duration_table'),
     path('ppe/add/', views.add_ppe, name='add_ppe'),
-    path('ppe/add/table/', views.show_added_ppe, name='table_added_ppe'),
     path('ppe/<str:name>/modify/', views.modify_ppe, name='modify_ppe'),
     path('ppe/<str:name>/modify_add/', views.modify_ppe_add, name='modify_ppe_add'),
     path('ppe/<str:ppe_name>/delete/', views.delete_ppe, name='delete_ppe'),
@@ -89,12 +87,14 @@ urlpatterns = [
 
     #ASIGNACIONES DE HERRAMIENTAS
     path('return/', views.return_view, name='return'),
+    path('tool_loan_list/', views.tool_loan_list, name='tool_loan_list'),
     path('add_tool_loan/', views.add_tool_loan, name='add_tool_loan'),
     path('tool_loan_form/', views.tool_loan_form, name='tool_loan_form'),
     path('confirm_tool_loan/', views.confirm_tool_loan, name='confirm_tool_loan'),
     path('check_tool_availability/', views.check_tool_availability, name='check_tool_availability'),
 
     #ASIGNACIONES DE EQUIPOS
+    path('equipment_loan_list/', views.equipment_loan_list, name='equipment_loan_list'),
     path('add_equipment_loan/', views.add_equipment_loan, name='add_equipment_loan'),
     path('equipment_loan_form/', views.equipment_loan_form, name='equipment_loan_form'),
     path('confirm_equipment_loan/', views.confirm_equipment_loan, name='confirm_equipment_loan'),

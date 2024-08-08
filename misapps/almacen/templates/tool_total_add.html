@@ -7,7 +7,7 @@
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
             <div class="foto-perfil"><img src="../../static/img/perfil.png" alt=""></div>
-            <div class="nombre-perfil"><span>Nombre del almacenero</span></div>
+            <div class="nombre-perfil"><span>{{ user.first_name }} {{ user.last_name }}</span></div>
         </div>
         <div class="menu-items-lateral">
             <nav class="navegacion-lateral">
@@ -18,10 +18,10 @@
                     <a class="navbar-brand" href="{% url 'table_user' %}">Personal Almacenero</a>
                 </div>
                 <div class="item-lateral">
-                    <a class="navbar-brand" href="{% url 'worker_list' %}">Trabajadores</a>
+                    <a class="navbar-brand" href="{% url 'create_worker' %}">Trabajadores</a>
                 </div>
                 <div class="item-lateral">
-                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de Herramientas</a>
+                    <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
                 </div>
             </nav>
         </div>

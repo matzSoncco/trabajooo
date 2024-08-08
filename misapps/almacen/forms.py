@@ -554,18 +554,6 @@ class ToolStockUpdateForm(forms.ModelForm):
         model = ToolStockUpdate
         fields = ['tool', 'quantity', 'unitCost', 'stock']
 
-class ToolLoanSearchForm(forms.Form):
-    work_order = forms.IntegerField(label='Orden de Trabajo', required=False)
-    worker_dni = forms.CharField(label='DNI del Trabajador', max_length=8, required=False)
-
-    def clean(self):
-        cleaned_data = super().clean()
-        work_order = cleaned_data.get('work_order')
-        worker_dni = cleaned_data.get('worker_dni')
-
-        if not work_order and not worker_dni:
-            raise forms.ValidationError('Por favor, ingrese al menos un criterio de búsqueda.')
-
 class WorkerForm(forms.ModelForm):
     dni = forms.CharField(widget=forms.TextInput(attrs={
         "class": "input",

@@ -38,7 +38,7 @@ from .models.Tool import Tool
 from .models.History import History
 from .models.Unit import Unit
 from .models.PpeStockUpdate import PpeStockUpdate
-from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm, ToolLoanForm, ToolLoanSearchForm, EquipmentLoanForm, MaterialLoanForm
+from .forms import AdminSignUpForm, PpeForm, MaterialForm, WorkerForm, EquipmentForm, ToolForm, PpeLoanForm, Ppe, CreatePpeForm, CreateMaterialForm, CreateEquipmentForm, CreateToolForm, PpeStockUpdateForm, ToolLoanForm, EquipmentLoanForm, MaterialLoanForm
 
 logger = logging.getLogger(__name__)
 

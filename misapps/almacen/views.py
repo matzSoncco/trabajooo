@@ -1178,7 +1178,7 @@ def total_tool_stock(request):
     return JsonResponse({'total_stock': total_stock})
 
 @login_required
-def return_view(request):
+def return_tool_view(request):
     tool_loans = ToolLoan.objects.all()  # Mostrar todos los ToolLoan por defecto
 
     # Manejo de la búsqueda
@@ -1200,19 +1200,54 @@ def return_view(request):
             loan.save()
 
             History.objects.create(
-                content_type=ContentType.objects.get_for_model(tool_loans),
-                object_name=tool_loans.name,
+                content_type=ContentType.objects.get_for_model(loan),  # Obtener el ContentType para cada objeto loan
+                object_name=loan.tool.name,  # Acceder al nombre de la herramienta a través de la relación FK
                 action='Return',
                 user=request.user,
                 timestamp=timezone.now()
             )
         return HttpResponseRedirect(request.path_info)
 
-    return render(request, 'return.html', {
+    return render(request, 'return_tool.html', {
         'tool_loans': tool_loans,
         'show_debtors': 'view_debtors' in request.GET,
     })
 
+@login_required
+def return_equipment_view(request):
+    equipment_loans = EquipmentLoan.objects.all()  # Mostrar todos los ToolLoan por defecto
+
+    # Manejo de la búsqueda
+    work_order = request.GET.get('work_order')
+    worker_dni = request.GET.get('worker_dni')
+
+    if work_order:
+        equipment_loans = equipment_loans.filter(workOrder=work_order)
+    elif worker_dni:
+        equipment_loans = equipment_loans.filter(workerDni=worker_dni)
+    elif 'view_debtors' in request.GET:
+        equipment_loans = equipment_loans.filter(loanStatus=False)
+
+    # Manejo del POST para actualizar loanStatus
+    if request.method == 'POST':
+        for loan in equipment_loans:
+            checkbox_name = f'returned_{loan.idEquipmentLoan}'
+            loan.loanStatus = checkbox_name in request.POST
+            loan.save()
+
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(loan),  # Obtener el ContentType para cada objeto loan
+                object_name=loan.equipment.name,  # Acceder al nombre de la herramienta a través de la relación FK
+                action='Return',
+                user=request.user,
+                timestamp=timezone.now()
+            )
+        return HttpResponseRedirect(request.path_info)
+
+    return render(request, 'return_equipment.html', {
+        'equipment_loans': equipment_loans,
+        'show_debtors': 'view_debtors' in request.GET,
+    })
 
 #WORKER
 @login_required

@@ -86,7 +86,7 @@ urlpatterns = [
     path('ppeloan/modify/<int:id>/', views.modify_ppe_loan, name='modify_ppe_loan'),
 
     #ASIGNACIONES DE HERRAMIENTAS
-    path('return/', views.return_view, name='return'),
+    path('return/tool/', views.return_tool_view, name='return_tool'),
     path('tool_loan_list/', views.tool_loan_list, name='tool_loan_list'),
     path('add_tool_loan/', views.add_tool_loan, name='add_tool_loan'),
     path('tool_loan_form/', views.tool_loan_form, name='tool_loan_form'),
@@ -94,6 +94,7 @@ urlpatterns = [
     path('check_tool_availability/', views.check_tool_availability, name='check_tool_availability'),
 
     #ASIGNACIONES DE EQUIPOS
+    path('return/equipment/', views.return_equipment_view, name='return_equipment'),
     path('equipment_loan_list/', views.equipment_loan_list, name='equipment_loan_list'),
     path('add_equipment_loan/', views.add_equipment_loan, name='add_equipment_loan'),
     path('equipment_loan_form/', views.equipment_loan_form, name='equipment_loan_form'),

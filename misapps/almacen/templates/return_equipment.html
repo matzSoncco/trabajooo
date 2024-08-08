@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Devoluciones{% endblock %}
+{% block title %}Devoluciones de Equipos{% endblock %}
 
 {% block content %}
 <section class="principal-general">
@@ -27,10 +27,14 @@
         </div>
     </aside>
     <section class="contendor-lateral-derecho">
+        <nav class="navegacion-link-formularios-top">
+            <a class="link-form" href="{% url 'return_tool'%}">Herramientas</a>
+            <a class="link-form" href="{% url 'return_equipment'%}">Equipos</a>
+        </nav>
         <div class="titulo-pagina">
-            <h2>Devoluciones</h2>
+            <h2>Devoluciones de Equipos</h2>
         </div>
-        <form method="get" action="{% url 'return' %}">
+        <form method="get" action="{% url 'return_equipment' %}">
             <label for="work_order">Orden de Trabajo:</label>
             <input type="text" id="work_order" name="work_order">
     
@@ -41,8 +45,8 @@
             <button type="submit" name="view_debtors" value="1">Ver lista de todos los deudores</button>
         </form>
     
-        {% if tool_loans %}
-            <form method="post" action="{% url 'return' %}">
+        {% if Equipment_loans %}
+            <form method="post" action="{% url 'return_equipment' %}">
                 {% csrf_token %}
                 <table class="tabla">
                     <thead>
@@ -57,13 +61,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for loan in tool_loans %}
+                        {% for equipment in equipments_loans %}
                         <tr>
-                            <td>{{ loan.tool.idTool }}</td>
+                            <td>{{ loan.equipment.idEquipment }}</td>
                             <td>{{ loan.workOrder }}</td>
-                            <td>{{ loan.tool.name }}</td>
+                            <td>{{ loan.equipment.name }}</td>
                             <td>{{ loan.loanAmount }}</td>
-                            <td><input type="checkbox" name="returned_{{ loan.idToolLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
+                            <td><input type="checkbox" name="returned_{{ loan.idEquipmentLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
                             <td>{{ loan.worker.name }}</td>
                             <td>{{ loan.worker.dni }}</td>
                         </tr>

@@ -28,14 +28,15 @@
     </aside>
     <section class="contendor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
-            <a class="link-form" href="{% url 'create_ppe' %}">EPPs</a>
-            <a class="link-form" href="{% url 'create_tool' %}">Herramientas</a>
-            <a class="link-form" href="{% url 'create_equipment' %}">Equipos</a>
-            <a class="link-form" href="{% url 'create_material' %}">Materiales</a>
+            <a class="link-form" href="{% url 'create_ppe' %}">EPP</a>
+            <a class="link-form" href="{% url 'create_tool' %}">HERRAMIENTAS</a>
+            <a class="link-form" href="{% url 'create_equipment' %}">EQUIPOS</a>
+            <a class="link-form" href="{% url 'create_material' %}">MATERIALES</a>
         </nav>
         <div class="contenedor-principal">
             <div class="top-form">
                 <h2 class="titulo-primario">Creación de Equipos</h2>
+                <a class="form-btn ver-obj-btn" href="{% url 'equipment_total' %}">Ver Equipos</a>
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual">
@@ -70,23 +71,6 @@
                     </form>
                 </div>
             </div>            
-        </div>
-        <div class="centrado">
-            <a class="form-btn ver-obj-btn" href="{% url 'equipment_total' %}" style="
-                display: inline-block;
-                padding: 10px 20px;
-                font-size: 16px;
-                color: #fff;
-                background-color: #2c3e50;
-                border: none;
-                border-radius: 5px;
-                text-decoration: none;
-                text-align: center;
-                transition: background-color 0.3s ease;
-                margin-top: 20px;
-            " onmouseover="this.style.backgroundColor='#34495e';" onmouseout="this.style.backgroundColor='#2c3e50';">
-                Ver Equipos
-            </a>
         </div>
     </section>
 </section>

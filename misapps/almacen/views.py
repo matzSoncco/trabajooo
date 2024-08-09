@@ -1348,7 +1348,11 @@ def tool_loan_list(request):
 
 login_required
 def add_tool_loan(request):
-    tools = Tool.objects.all()
+    query = request.GET.get('q', '')
+    if query:
+        tools = Ppe.objects.filter(name__icontains=query)
+    else:
+        tools = Ppe.objects.all()
     if request.method == 'POST':
         form = ToolLoanForm(request.POST)
         if form.is_valid():
@@ -1360,7 +1364,13 @@ def add_tool_loan(request):
     else:
         form = ToolLoanForm()
     
-    return render(request, 'add_tool_loan.html', {'form': form, 'tools': tools})
+    context = {
+        'form': form,
+        'tools': tools,
+        'query': query
+    }
+
+    return render(request, 'add_tool_loan.html', context)
     
 @require_http_methods(["GET", "POST"])
 def tool_loan_form(request):
@@ -1662,7 +1672,11 @@ def equipment_loan_list(request):
 
 login_required
 def add_equipment_loan(request):
-    equipments = Equipment.objects.all()
+    query = request.GET.get('q', '')
+    if query:
+        equipments = Equipment.objects.filter(name__icontains=query)
+    else:
+        equipments = Equipment.objects.all()
     if request.method == 'POST':
         form = EquipmentLoanForm(request.POST)
         if form.is_valid():
@@ -1674,7 +1688,13 @@ def add_equipment_loan(request):
     else:
         form = EquipmentLoanForm()
     
-    return render(request, 'add_equipment_loan.html', {'form': form, 'equipments': equipments})
+    context = {
+        'form': form,
+        'equipments': equipments,
+        'query': query
+    }
+
+    return render(request, 'add_equipment_loan.html', context)
 
 @require_http_methods(["GET", "POST"])
 def equipment_loan_form(request):
@@ -1986,7 +2006,11 @@ def material_loan_list(request):
 
 login_required
 def add_material_loan(request):
-    materials = Material.objects.all()
+    query = request.GET.get('q', '')
+    if query:
+        materials = Ppe.objects.filter(name__icontains=query)
+    else:
+        materials = Ppe.objects.all()
     if request.method == 'POST':
         form = (request.POST)
         if form.is_valid():
@@ -1998,7 +2022,12 @@ def add_material_loan(request):
     else:
         form = ToolLoanForm()
     
-    return render(request, 'add_material_loan.html', {'form': form, 'materials': materials})
+    context = {
+        'form': form,
+        'materials': materials,
+        'query': query
+    }
+    return render(request, 'add_material_loan.html', context)
 
 @require_http_methods(["GET", "POST"])
 def material_loan_form(request):
@@ -2313,7 +2342,11 @@ def ppe_loan_list(request):
 
 @login_required
 def add_ppe_loan(request):
-    ppes = Ppe.objects.all()
+    query = request.GET.get('q', '')
+    if query:
+        ppes = Ppe.objects.filter(name__icontains=query)
+    else:
+        ppes = Ppe.objects.all()
     if request.method == 'POST':
         form = PpeLoanForm(request.POST)
         if form.is_valid():
@@ -2321,7 +2354,13 @@ def add_ppe_loan(request):
             return redirect('add_ppe_loan')
     else:
         form = PpeLoanForm()
-    return render(request, 'add_ppe_loan.html', {'form': form, 'ppes': ppes})
+
+        context = {
+            'form': form,
+            'ppes': ppes,
+            'query': query
+        }
+    return render(request, 'add_ppe_loan.html', context)
 
 @require_http_methods(["GET", "POST"])
 def ppe_loan_form(request):
@@ -2840,10 +2879,9 @@ def login(request):
 def user_list(request):
     query = request.GET.get('q', '')
     if query:
-        admin = User.objects.filter(admin__name_icontains=query)
+        admin = User.objects.filter(first_name__icontains=query)
     else:
         admin = User.objects.all()
-    print(f"Número de usuarios: {admin.count()}")
     return render(request, 'table_user.html', {'admin': admin, 'query': query})
 
 def exit(request):

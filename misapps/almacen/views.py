@@ -1593,7 +1593,6 @@ def confirm_tool_loan(request):
             loan_date_str = data.get('loanDate')
             return_loan_date_str = data.get('returnLoanDate')
             worker_dni = data.get('workerDni')
-            worker_name = data.get('worker')
             worker_position = data.get('workerPosition')
             manager = data.get('manager', '')
             tool_loans = data.get('tool_loans', [])
@@ -1620,6 +1619,7 @@ def confirm_tool_loan(request):
             except Worker.DoesNotExist:
                 responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 return JsonResponse({'success': False, 'errors': responses}, status=400)
+
 
             if not tool_loans:
                 return JsonResponse({'success': False, 'error': 'No se proporcionaron préstamos de herramientas'}, status=400)

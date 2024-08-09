@@ -8,7 +8,7 @@ class Ppe(models.Model):
     quantity = models.IntegerField(null=False, default=0)
     unitCost = models.DecimalField(default=0.0, null=False, max_digits=8, decimal_places=2)
     totalCost = models.DecimalField(default=0.0, null=False, max_digits=10, decimal_places=2, editable=False)
-    guideNumber = models.IntegerField(null=False, default=0)
+    guideNumber = models.CharField(max_length=100)
     stock = models.IntegerField(null=False, default=0)
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
     duration = models.IntegerField(null=False, default=0, editable=True)
@@ -39,4 +39,4 @@ class Ppe(models.Model):
         super(Ppe, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.idPpe} {self.name} {self.quantity} {self.unitCost} {self.totalCost} {self.stock}"
+        return f"{self.idPpe} {self.name} {self.quantity} {self.guideNumber} {self.unitCost} {self.totalCost} {self.stock}"

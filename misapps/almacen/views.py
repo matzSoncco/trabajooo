@@ -458,8 +458,8 @@ def delete_ppe(request, ppe_id):
     return JsonResponse({'status': 'method not allowed'}, status=405)
 
 @login_required
-def modify_ppe(request, ppe_name):
-    ppe = get_object_or_404(Ppe, name=ppe_name)
+def modify_ppe(request, ppe_id):
+    ppe = get_object_or_404(Ppe, idPpe=ppe_id)
 
     if request.method == 'POST':
         form = CreatePpeForm(request.POST, request.FILES, instance=ppe)
@@ -1104,6 +1104,7 @@ def modify_material(request, material_name):
         
         if form.is_valid():
             material = form.save(commit=False)
+            
             material.save()
 
             History.objects.create(

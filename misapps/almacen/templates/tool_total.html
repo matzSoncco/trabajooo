@@ -57,7 +57,7 @@
                         </td>
                         <td>
                             <a href="{% url 'modify_tool' tool.name|urlencode %}" class="form-btn aceptar-btn">Editar</a>
-                            <button type="button" class="delete-tool-btn" 
+                            <button type="button" class="delete-tool-btn" id="delete-tool-btn" 
                                     data-tool-name="{{ tool.name }}" 
                                     data-action-url="{% url 'delete_tool' tool.idTool %}">
                                 Eliminar
@@ -128,5 +128,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
 </script>
 {% endblock %}

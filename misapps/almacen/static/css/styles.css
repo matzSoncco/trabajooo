@@ -242,16 +242,16 @@ body {
 .navegacion-link-formularios-top {
     display: flex;
     justify-content: center;
-    margin-bottom: 2rem;
+    margin-bottom: 10px;
     background-color: var(--card-bg);
-    padding: 1rem;
+    padding: 10px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
 }
 
 .link-form {
-    padding: 0.8rem 1.5rem;
-    margin: 0 0.5rem;
+    padding: 10px 15px;
+    margin: 0 8px;
     background-color: var(--primary-color);
     color: var(--text-light);
     text-decoration: none;
@@ -305,7 +305,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     padding: 20px;
     padding-bottom: 10px;
     background-color: var(--card-bg);
@@ -323,7 +323,6 @@ body {
 }
 
 .ver-obj-btn {
-    padding: 0.8rem 1.5rem;
     background-color: var(--accent-color);
     color: var(--text-color);
     text-decoration: none;
@@ -347,7 +346,7 @@ body {
 .formulario-contenedor-individual {
     background-color: var(--card-bg);
     max-width: 700px;
-    padding: 2rem;
+    padding: 20px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
 }
@@ -355,7 +354,7 @@ body {
 .fila-form {
     display: flex;
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 10px;
 }
 
 .campo {
@@ -376,7 +375,7 @@ select,
 input[type="file"] {
     width: 100%;
     padding: 0.9rem;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #757575;
     border-radius: var(--border-radius);
     transition: var(--transition);
     font-size: 1rem;
@@ -387,7 +386,7 @@ input[type="number"]:focus,
 select:focus,
 input[type="file"]:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+    border: 2px solid rgb(0, 0, 0);
     outline: none;
 }
 
@@ -414,7 +413,7 @@ input[type="file"]:focus {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    margin-top: 2.5rem;
+    margin-top: 15px;
 }
 
 .form-btn {
@@ -431,6 +430,7 @@ input[type="file"]:focus {
 .aceptar-btn {
     background-color: var(--primary-color);
     color: var(--text-light);
+    text-decoration: none;
 }
 
 .cancelar-btn {
@@ -456,7 +456,28 @@ input[type="file"]:focus {
     padding: 20px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    max-height: 530px;
+}
+
+.formulario-especial input[type="text"],
+.formulario-especial input[type="number"],
+.formulario-especial select,
+.formulario-especial input[type="file"],
+.formulario-especial input[type="date"] {
+    width: 100%;
+    padding: 0.9rem;
+    border: 2px solid #757575;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    font-size: 1rem;
+    height: 30px;
+}
+
+.formulario-especial input[type="text"]:focus,
+.formulario-especial input[type="number"]:focus,
+.formulario-especial select:focus,
+.formulario-especial input[type="file"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
 }
 
 .tabla-datos{
@@ -472,13 +493,15 @@ input[type="file"]:focus {
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+    max-height: 300px; /* Ajusta esto según tus necesidades */
+    overflow-y: auto;
 }
 
 .tabla-agregados {
     width: 100%;
     margin: 20px auto;
     padding: 20px;
-    max-height: 450px;
+    max-height: 350px;
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -515,12 +538,6 @@ input[type="file"]:focus {
     background-color: #f5f5f5;
 }
 
-/* Estilos para la segunda tabla (la que muestra solo 4 elementos) */
-.tabla-creacion {
-    max-height: 300px; /* Ajusta esto según tus necesidades */
-    overflow-y: auto;
-}
-
 .tabla {
     width: 100%;
     border-collapse: collapse;
@@ -547,35 +564,41 @@ input[type="file"]:focus {
     background-color: #f1f1f1;
 }
 
-/* Estilos generales para el contenedor de botones */
-.botones-acciones {
+.cuadro-buscar {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: space-between;
 }
 
-/* Estilos para el botón de guardar */
-.tbl-btn {
-    background-color: #e9e9e9; /* Color de fondo gris oscuro */
+.formulario-buscar {
+    display: flex;
+    justify-content: space-between;
+}
+
+.table-btn {
+    padding: 8px 13px;
     border: none;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
+    border-radius: var(--border-radius);
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-weight: 200;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
 }
 
-/* Estilo para el botón al pasar el ratón */
-.tbl-btn:hover {
-    background-color: #797979; /* Color de fondo gris más claro */
-    transform: scale(1.05);
+.btn-accion {
+    background-color:#442e96;
+    color: var(--text-light);
 }
 
-/* Estilo para la imagen dentro del botón */
-.icono-btn {
-    width: 24px; /* Ajusta el tamaño según sea necesario */
-    height: 24px; /* Ajusta el tamaño según sea necesario */
+.btn-accion:hover {
+    background-color: #0c0036;
+}
+
+.tabla-mostrar {
+    width: 100%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
 }

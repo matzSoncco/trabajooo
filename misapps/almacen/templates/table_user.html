@@ -53,41 +53,43 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <div class="contenedor-principal">
             <div class="titulo-pagina">
                 <h2>Tabla de personal Almacenero</h2>
             </div>
-            <div class="buscar">
-                <form class="formulario-buscar" method="get" action=".">
-                    <div class="cuadro-busqueda">
-                        <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
-                    </div>
-                    <div class="btn-busqueda-elemento">
-                        <button type="submit" class="btn buscar-btn">Buscar</button>
-                    </div>
-                </form>
-            </div>
-            <table class="tabla" id="duration-table">
-                <thead>
-                    <tr>
-                        <th>Usuario</th>
-                        <th>Nombres</th>
-                        <th>Apellidos</th>
-                        <th>Email</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in admin %}
+            <div class="tabla-mostrar">
+                <div class="buscar">
+                    <form class="formulario-buscar" method="get" action=".">
+                        <div class="cuadro-busqueda">
+                            <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                        </div>
+                        <div class="btn-busqueda-elemento">
+                            <button class="form-btn aceptar-btn" type="submit" class="btn buscar-btn">Buscar</button>
+                        </div>
+                    </form>
+                </div>
+                <table class="tabla" id="duration-table">
+                    <thead>
                         <tr>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.first_name }}</td>
-                            <td>{{ user.last_name }}</td>
-                            <td>{{ user.email }}</td>
+                            <th>Usuario</th>
+                            <th>Nombres</th>
+                            <th>Apellidos</th>
+                            <th>Email</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for user in admin %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.first_name }}</td>
+                                <td>{{ user.last_name }}</td>
+                                <td>{{ user.email }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
 </section>

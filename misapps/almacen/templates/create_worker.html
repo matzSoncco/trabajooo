@@ -26,55 +26,64 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <div class="contenedor-principal">
             <div class="top-form">
+                {% if messages %}
+                <ul class="messages" style="display: none;">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
                 <h2 class="titulo-primario">Agregar Trabajador a la Base de Datos</h2>
-                <a class="ver-tabla-btn" href="{% url 'worker_list' %}">Tabla de Trabajadores</a>
+                <a class="form-btn ver-obj-btn" href="{% url 'worker_list' %}">Tabla de Trabajadores</a>
             </div>
             <div class="centrado">
-                <form method="post" action="{% url 'create_worker' %}" enctype="multipart/form-data" class="box">
-                    {% csrf_token %}
-                    <div class="fila-form">
-                        <div class="campo">
-                            <label for="id_dni" class="label">DNI:</label>
-                            {{ form.dni }}
+                <div class="formulario-contenedor-individual">
+                    <form method="post" action="{% url 'create_worker' %}" enctype="multipart/form-data" class="box">
+                        {% csrf_token %}
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_dni" class="label">DNI:</label>
+                                {{ form.dni }}
+                            </div>
+                            <div class="campo">
+                                <label for="id_contractDate" class="label">Fecha de contrato:</label>
+                                {{ form.contractDate }}
+                            </div>
                         </div>
-                        <div class="campo">
-                            <label for="id_contractDate" class="label">Fecha de contrato:</label>
-                            {{ form.contractDate }}
-                        </div>
-                    </div>
-
-                    <div class="fila-form">
-                        <div class="campo">
-                            <label for="id_name" class="label">Nombres:</label>
-                            {{ form.name }}
-                        </div>
-                    </div>
-
-                    <div class="fila-form">
-                        <div class="campo">
-                            <label for="id_surname" class="label">Apellidos:</label>
-                            {{ form.surname }}
-                        </div>
-                    </div>
     
-                    <div class="fila-form">
-                        <div class="campo">
-                            <label for="id_position" class="label">Cargo:</label>
-                            {{ form.position }}
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_name" class="label">Nombres:</label>
+                                {{ form.name }}
+                            </div>
                         </div>
-                        <div class="campo">
-                            <label for="id_workerStatus" class="label">Estado:</label>
-                            {{ form.workerStatus }}
+    
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_surname" class="label">Apellidos:</label>
+                                {{ form.surname }}
+                            </div>
                         </div>
-                    </div>  
-                    <div class="campo-botones">
-                        <button class="form-btn aceptar-btn" type="submit">Agregar Trabajador</button>
-                        <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
-                    </div>
-                </form>
+        
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_position" class="label">Cargo:</label>
+                                {{ form.position }}
+                            </div>
+                            <div class="campo">
+                                <label for="id_workerStatus" class="label">Estado:</label>
+                                {{ form.workerStatus }}
+                            </div>
+                        </div>  
+                        <div class="campo-botones">
+                            <button class="form-btn aceptar-btn" type="submit">Agregar Trabajador</button>
+                            <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </section>

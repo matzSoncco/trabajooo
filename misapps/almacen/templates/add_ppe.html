@@ -137,8 +137,15 @@ $(document).ready(function() {
         </nav>
         <div class="contenedor-principal">
             <div class="top-form">
+                {% if messages %}
+                <ul class="messages" style="display: none;">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
                 <h2 class="titulo-primario">Añadir Equipos de Protección Personal </h2>
-                <a class="link-top-form" href="{% url 'ppe_total_add' %}">Ver tabla</a>
+                <a class="form-btn ver-obj-btn" href="{% url 'ppe_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">
                 <div class="form-table-div">
@@ -150,10 +157,11 @@ $(document).ready(function() {
                                     <label for="id_guideNumber" class="label">N° de Guía</label>
                                     {{ form.guideNumber }}
                                 </div>
-                                <div class="campo">
-                                    <label for="id_creationDate" class="label">Fecha</label>
-                                    {{ form.creationDate }}
-                                </div>
+                            </div>
+
+                            <div class="campo">
+                                <label for="id_creationDate" class="label">Fecha</label>
+                                {{ form.creationDate }}
                             </div>
             
                             <div class="fila-form">
@@ -199,14 +207,14 @@ $(document).ready(function() {
                 </div>
             </div>
             <div class="tabla-creacion" id="created-item-table-container">
-                <h2 class="titulo-primario">Creados</h2>
-                <div class="buscar">
+                <div class="cuadro-buscar">
+                    <h2 class="titulo-primario">Creados</h2>
                     <form class="formulario-buscar" method="get" action="{% url 'add_ppe' %}">
                         <div class="cuadro-busqueda">
                             <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
                         </div>
                         <div class="btn-busqueda-elemento">
-                            <button type="submit" id="buscar-tabla">Buscar</button>
+                            <button class="form-btn aceptar-btn" type="submit" id="buscar-tabla">Buscar</button>
                         </div>
                     </form>
                 </div>                
@@ -233,7 +241,7 @@ $(document).ready(function() {
                                         No image
                                     {% endif %}
                                 </td>
-                                <td><button id="agregar-formulario" data-ppe-id="{{ ppe.idPpe }}"><img class="icono-btn" src="../../static/img/anadir.png" alt=""></button></td>
+                                <td><button class="table-btn btn-accion" id="agregar-formulario" data-ppe-id="{{ ppe.idPpe }}">Ingresar</button></td>
                             </tr>
                         {% empty %}
                             <tr>

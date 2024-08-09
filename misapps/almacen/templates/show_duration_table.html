@@ -24,7 +24,7 @@
         console.log('Documento listo');
 
         // Manejar el evento click para todos los botones de guardar duración
-        $(document).on('click', '.save-duration-btn', function(e) {
+        $(document).on('click', '#save-duration-btn', function(e) {
             e.preventDefault(); // Prevenir cualquier acción por defecto del botón
             
             console.log('Botón clickeado'); // Para verificar si el evento se está capturando
@@ -90,11 +90,11 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <div class="titulo-pagina">
             <h2>Tabla de duracion de EPP</h2>
         </div>
-        <div class="tabla-creacion" id="duration-table-container">
+        <div class="tabla-mostrar" id="duration-table-container">
             <table class="tabla" id="duration-table">
                 <thead>
                     <tr>
@@ -112,7 +112,7 @@
                             <td class="editable-duration" contenteditable="true">{{ ppe.duration }}</td>
                             <td>
                                 <div class="botones-acciones">
-                                    <button class="tbl-btn save-duration-btn"><img class="icono-btn" src="../../../static/img/disquete.png" alt=""></button>
+                                    <button class="table-btn btn-accion" id="save-duration-btn">Guardar</button>
                                 </div>
                             </td>
                         </tr>

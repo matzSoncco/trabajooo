@@ -27,6 +27,22 @@
     const csrftoken = getCookie('csrftoken');
 
     $(document).ready(function() {
+        $('#search-form').on('submit', function(event) {
+            event.preventDefault(); // Evita el envío del formulario de manera tradicional
+
+            $.ajax({
+                url: $(this).attr('action'), // Usa la URL del formulario
+                type: 'GET',
+                data: $(this).serialize(), // Obtiene los datos del formulario
+                success: function(data) {
+                    $('#added-item-table-container').html($(data).find('#added-item-table-container').html()); // Actualiza solo la tabla con los resultados
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error('Error:', textStatus, errorThrown);
+                }
+            });
+        });
+
         // Autocomplete para trabajador y DNI
         $("#id_worker").autocomplete({
             source: "{% url 'worker_autocomplete' %}",
@@ -407,8 +423,18 @@
                         </div>
                     </form>
                 </div>
-                <div class="tabla-creacion" id="added-ppe-table-container">
+                <div class="tabla-creacion" id="added-item-table-container">
                     <h2 class="titulo-primario">EPPs en base de datos</h2>
+                    <div class="buscar">
+                        <form id="search-form" class="formulario-buscar" method="get" action=".">
+                            <div class="cuadro-busqueda">
+                                <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                            </div>
+                            <div class="btn-busqueda-elemento">
+                                <button type="submit" class="btn buscar-btn">Buscar</button>
+                            </div>
+                        </form>
+                    </div>
                     <table class="tabla">
                         <thead>
                             <tr>
@@ -425,7 +451,7 @@
                                 <td>{{ ppe.quantity }}</td>
                                 <td>{{ ppe.duration }}</td>
                                 <td>
-                                    <button class="add-to-pre-delivery" data-ppe-id="{{ ppe.id }}" data-ppe-name="{{ ppe.name }}" data-ppe-quantity="1">Añadir</button>
+                                    <button type="button" class="add-to-pre-delivery" data-ppe-id="{{ ppe.id }}" data-ppe-name="{{ ppe.name }}" data-ppe-quantity="1">Añadir</button>
                                 </td>
                             </tr>
                             {% empty %}

@@ -273,8 +273,18 @@
                         </div>
                     </form>
                 </div>
-                <div class="tabla-creacion" id="added-items-table-container">
+                <div class="tabla-creacion" id="added-item-table-container">
                     <h2 class="titulo-primario">Herramientas en base de datos</h2>
+                    <div class="buscar">
+                        <form id="search-form" class="formulario-buscar" method="get" action=".">
+                            <div class="cuadro-busqueda">
+                                <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                            </div>
+                            <div class="btn-busqueda-elemento">
+                                <button type="submit" class="btn buscar-btn">Buscar</button>
+                            </div>
+                        </form>
+                    </div>
                     <table class="tabla">
                         <thead>
                             <tr>
@@ -289,7 +299,7 @@
                                 <td>{{ item.name }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>
-                                    <button id="add-to-form" class="" data-tool-id="{{ item.id }}" data-tool-name="{{ item.name }}" data-tool-quantity="1">Añadir</button>
+                                    <button type="button" id="add-to-form" class="" data-tool-id="{{ item.id }}" data-tool-name="{{ item.name }}" data-tool-quantity="1">Añadir</button>
                                 </td>
                             </tr>
                             {% empty %}

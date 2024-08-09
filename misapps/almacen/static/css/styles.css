@@ -616,3 +616,19 @@ input[type="file"]:focus {
     background-color: var(--secondary-color);
     color: var(--text-light);
 }
+
+.img-thumbnail {
+    width: 150px;  
+    height: 75px; 
+    border-radius: 4px; 
+    border: 1px solid #ddd; 
+    padding: 2px; 
+}
+
+.img-total {
+    width: 150px;  
+    height: 75px; 
+    border-radius: 4px; 
+    border: 1px solid #ddd; 
+    padding: 2px; 
+}

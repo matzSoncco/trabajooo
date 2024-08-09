@@ -3,6 +3,32 @@
 {% block title %}Agregar Trabajador{% endblock %}
 
 {% block content %}
+<script>
+    $(document).ready(function() {
+        $('#search-form').on('submit', function(event) {
+            event.preventDefault(); // Evita el envío del formulario de manera tradicional
+
+            $.ajax({
+                url: $(this).attr('action'), // Usa la URL del formulario
+                type: 'GET',
+                data: $(this).serialize(), // Obtiene los datos del formulario
+                success: function(data) {
+                    $('#table-container').html($(data).find('#table-container').html()); // Actualiza solo la tabla con los resultados
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error('Error:', textStatus, errorThrown);
+                }
+            });
+        });
+    });
+    //para limpiar el formulario cuando se refresque la pagina
+    window.onload = function() {
+        var searchInput = document.querySelector('input[name="q"]');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+    };
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -41,45 +67,47 @@
                         <button type="submit" class="form-btn aceptar-btn">Buscar</button>
                     </div>
                 </form>
-            </div>           
-            <table class="tabla">
-                <thead>
-                    <tr>
-                        <th>DNI</th>
-                        <th>Nombres</th>
-                        <th>Apellidos</th>
-                        <th>Cargo</th>
-                        <th>Fecha de contrato</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for worker in workers %}
+            </div>
+            <div class="centrado" id="table-container">
+                <table class="tabla">
+                    <thead>
                         <tr>
-                            <td>{{ worker.dni }}</td>
-                            <td>{{ worker.name }}</td>
-                            <td>{{ worker.surname }}</td>
-                            <td>{{ worker.position }}</td>
-                            <td>{{ worker.contractDate }}</td>
-                            <td>{% if worker.workerStatus %}Activo{% else %}Inactivo{% endif %}</td>
-                            <td>
-                                <a href="{% url 'modify_worker' worker.name %}" class="form-btn aceptar-btn">Editar</a>
-                                <button type="button" class="form-btn cancelar-btn" id="delete-worker-btn" 
-                                    data-worker-name="{{ worker.name }}"
-                                    data-worker-surname="{{ worker.surname }}"
-                                    data-action-url="{% url 'delete_worker' worker.dni %}">
-                                Eliminar
-                            </button>
-                            </td>
+                            <th>DNI</th>
+                            <th>Nombres</th>
+                            <th>Apellidos</th>
+                            <th>Cargo</th>
+                            <th>Fecha de contrato</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
                         </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="7">No hay trabajadores en la empresa.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for worker in workers %}
+                            <tr>
+                                <td>{{ worker.dni }}</td>
+                                <td>{{ worker.name }}</td>
+                                <td>{{ worker.surname }}</td>
+                                <td>{{ worker.position }}</td>
+                                <td>{{ worker.contractDate }}</td>
+                                <td>{% if worker.workerStatus %}Activo{% else %}Inactivo{% endif %}</td>
+                                <td>
+                                    <a href="{% url 'modify_worker' worker.name %}" class="form-btn aceptar-btn">Editar</a>
+                                    <button type="button" class="form-btn cancelar-btn" id="delete-worker-btn" 
+                                        data-worker-name="{{ worker.name }}"
+                                        data-worker-surname="{{ worker.surname }}"
+                                        data-action-url="{% url 'delete_worker' worker.dni %}">
+                                    Eliminar
+                                </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7">No hay trabajadores en la empresa.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
 </section>

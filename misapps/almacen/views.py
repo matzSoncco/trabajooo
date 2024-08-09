@@ -35,6 +35,7 @@ from .models.EquipmentLoan import EquipmentLoan
 from .models.Worker import Worker
 from .models.Material import Material
 from .models.MaterialLoan import MaterialLoan
+from .models.MaterialStockUpdate import MaterialStockUpdate
 from .models.Tool import Tool
 from .models.History import History
 from .models.Unit import Unit
@@ -890,7 +891,7 @@ def save_all_material(request):
                     timestamp=timezone.now()
                 )
 
-                PpeStockUpdate.objects.create(
+                MaterialStockUpdate.objects.create(
                     material=material,
                     quantity=quantity,
                     unitCost=unitCost,
@@ -2582,7 +2583,7 @@ def confirm_material_loan(request):
 
                         History.objects.create(
                             content_type=ContentType.objects.get_for_model(MaterialLoan),
-                            object_name=MaterialLoan.name,
+                            object_name=material.name,
                             action='Loan Created',
                             user=request.user,
                             timestamp=timezone.now()
@@ -2969,7 +2970,7 @@ def confirm_ppe_loan(request):
                                 new_loan.save()
                                 History.objects.create(
                                     content_type=ContentType.objects.get_for_model(PpeLoan),
-                                    object_name=PpeLoan.name,
+                                    object_name=ppe.name,
                                     action='Loan Created',
                                     user=request.user,
                                     timestamp=timezone.now()

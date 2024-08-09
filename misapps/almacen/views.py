@@ -831,13 +831,13 @@ def total_cost_material(request):
 
 @login_required
 def add_material(request):
-    if request.method == 'POST':
-        query = request.GET.get('q', '')
-        if query:
-            material = Ppe.objects.filter(name__icontains=query)
-        else:
-            material = Ppe.objects.all()
+    query = request.GET.get('q', '')
+    if query:
+        material = Material.objects.filter(name__icontains=query)
+    else:
+        material = Material.objects.all()
 
+    if request.method == 'POST':
         form = MaterialForm(request.POST)
         if form.is_valid():
             # Obtener datos del formulario y convertirlos a los tipos correctos

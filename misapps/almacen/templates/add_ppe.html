@@ -9,7 +9,7 @@ $(document).ready(function() {
     var addedPpe = [];
 
     function loadAddedPpeTable() {
-        let html = '<table><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
+        let html = '<table class="added-item-table"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
         addedPpe.forEach(function(ppe) {
             html += `<tr>
                         <td>${ppe.guideNumber}</td>
@@ -128,67 +128,75 @@ $(document).ready(function() {
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'add_ppe' %}">EPPs</a>
             <a class="link-form" href="{% url 'add_tool'%}">Herramientas</a>
             <a class="link-form" href="{% url 'add_equipment'%}">Equipos</a>
             <a class="link-form" href="{% url 'add_material'%}">Materiales</a>
         </nav>
-        <div class="contenedor-formulario">
+        <div class="contenedor-principal">
             <div class="top-form">
                 <h2 class="titulo-primario">Añadir Equipos de Protección Personal </h2>
                 <a class="link-top-form" href="{% url 'ppe_total_add' %}">Ver tabla</a>
             </div>
             <div class="centrado">
-                <div id="formulario-contenedor-individual">
-                    <form method="post" action="{% url 'add_ppe' %}" enctype="multipart/form-data" class="box">
-                        {% csrf_token %}
-                        <div class="fila-form">
-                            <div class="campo">
-                                <label for="id_guideNumber" class="label">N° de Guía</label>
-                                {{ form.guideNumber }}
+                <div class="form-table-div">
+                    <div id="formulario-contenedor-individual" class="formulario-especial">
+                        <form method="post" action="{% url 'add_ppe' %}" enctype="multipart/form-data" class="box">
+                            {% csrf_token %}
+                            <div class="fila-form">
+                                <div class="campo">
+                                    <label for="id_guideNumber" class="label">N° de Guía</label>
+                                    {{ form.guideNumber }}
+                                </div>
+                                <div class="campo">
+                                    <label for="id_creationDate" class="label">Fecha</label>
+                                    {{ form.creationDate }}
+                                </div>
                             </div>
-                            <div class="campo">
-                                <label for="id_creationDate" class="label">Fecha</label>
-                                {{ form.creationDate }}
+            
+                            <div class="fila-form">
+                                <div class="campo">
+                                    <label for="id_name" class="label">Nombre</label>
+                                    {{ form.name }}
+                                </div>
                             </div>
+            
+                            <div class="fila-form">
+                                <div class="campo">
+                                    <label for="id_unitCost" class="label">Costo Unitario</label>
+                                    {{ form.unitCost }}
+                                </div>
+                                <div class="campo">
+                                    <label for="id_quantity" class="label">Cantidad</label>
+                                    {{ form.quantity }}
+                                </div>
+                            </div>
+    
+                            <div class="campo">
+                                <label for="id_stock" class="label">Stock ideal</label>
+                                {{ form.stock }}
+                            </div>
+            
+                            <div class="campo-botones">
+                                <button class="form-btn aceptar-btn" type="submit">Añadir</button>
+                                <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tabla-datos">
+                        <div class="top-form">
+                            <h2 class="titulo-primario">Añadidos</h2>
+                            <button class="form-btn aceptar-btn" id="save-all-btn">Guardar Todos</button>
                         </div>
-        
-                        <div class="fila-form">
-                            <div class="campo">
-                                <label for="id_name" class="label">Nombre</label>
-                                {{ form.name }}
-                            </div>
-                        </div>
-        
-                        <div class="fila-form">
-                            <div class="campo">
-                                <label for="id_unitCost" class="label">Costo Unitario</label>
-                                {{ form.unitCost }}
-                            </div>
-                            <div class="campo">
-                                <label for="id_quantity" class="label">Cantidad</label>
-                                {{ form.quantity }}
-                            </div>
-                        </div>
+                        <div class="tabla-agregados">
+                            <div id="added-items-table-container">
 
-                        <div class="campo">
-                            <label for="id_stock" class="label">Stock ideal</label>
-                            {{ form.stock }}
+                            </div>
                         </div>
-        
-                        <div class="campo-botones">
-                            <button class="form-btn aceptar-btn" type="submit">Añadir</button>
-                            <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-                <h2 class="titulo-primario">Añadidos</h2>
-                <div class="tabla-creacion" id="added-items-table-container">
-
-                </div>
-                <button id="save-all-btn">Guardar Todos</button>
             </div>
             <div class="tabla-creacion" id="created-item-table-container">
                 <h2 class="titulo-primario">Creados</h2>

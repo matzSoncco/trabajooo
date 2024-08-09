@@ -2878,6 +2878,7 @@ def confirm_ppe_loan(request):
             print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
             ppe_loans = data.get('ppe_loans', [])
             responses = []
+            created_or_updated_loans = []
 
             for loan in ppe_loans:
                 try:
@@ -2909,26 +2910,29 @@ def confirm_ppe_loan(request):
                         # Calcular la nueva fecha de expiración
                         new_expiration_date = loan_date + timedelta(days=ppe.duration)
 
-                        # Verificar si ya existe un préstamo activo
-                        active_loan = PpeLoan.objects.filter(
-                            ppe=ppe,
-                            worker=worker,
-                            loanDate__lte=loan_date,
-                            expirationDate__gte=loan_date
-                        ).first()
+                        # Verificar si ya existe un préstamo activo (solo para renovaciones)
+                        active_loan = None
+                        if is_renewal:
+                            active_loan = PpeLoan.objects.filter(
+                                ppe=ppe,
+                                worker=worker,
+                                loanDate__lte=loan_date,
+                                expirationDate__gte=loan_date
+                            ).first()
 
-                        if active_loan and not (is_renewal or is_assigned):
+                        if is_renewal and not active_loan:
                             responses.append({
                                 'success': False, 
-                                'error': f'Ya existe un préstamo activo para {ppe_name} asignado a {worker_name}'
+                                'error': f'No se encontró un préstamo activo para renovar {ppe_name} asignado a {worker_name}'
                             })
                             continue
 
-                        if ppe.quantity >= quantity:
-                            if active_loan and (is_renewal or is_assigned):
+                        if ppe.quantity >= quantity or is_renewal:
+                            if active_loan and is_renewal:
                                 # Actualizar el préstamo existente
                                 active_loan.expirationDate = new_expiration_date
                                 active_loan.save()
+                                created_or_updated_loans.append(active_loan)
                             else:
                                 # Crear un nuevo préstamo
                                 new_loan = PpeLoan(
@@ -2942,17 +2946,19 @@ def confirm_ppe_loan(request):
                                     confirmed=True
                                 )
                                 new_loan.save()
+                                created_or_updated_loans.append(new_loan)
                                 History.objects.create(
                                     content_type=ContentType.objects.get_for_model(PpeLoan),
                                     object_name=ppe.name,
-                                    action='Loan Created',
+                                    action='Loan Created' if not is_assigned else 'Loan Assigned',
                                     user=request.user,
                                     timestamp=timezone.now()
                                 )
-                                ppe.quantity -= quantity
-                                ppe.save()
+                                if not is_renewal:
+                                    ppe.quantity -= quantity
+                                    ppe.save()
                         else:
-                            responses.append({'success': False, 'error': 'Cantidad insuficiente disponible'})
+                            responses.append({'success': False, 'error': f'Cantidad insuficiente disponible para {ppe_name}'})
                             continue
 
                     except Ppe.DoesNotExist:
@@ -2970,13 +2976,27 @@ def confirm_ppe_loan(request):
             if any(not r['success'] for r in responses):
                 return JsonResponse({'success': False, 'errors': responses}, status=400)
 
-            return JsonResponse({'success': True, 'messages': responses})
+            # Serializar los préstamos creados o actualizados
+            serialized_loans = [
+                {
+                    'worker_dni': loan.workerDni,
+                    'worker_name': loan.worker.name,
+                    'worker_surname': loan.worker.surname,
+                    'ppe_name': loan.ppe.name,
+                    'loan_amount': loan.loanAmount,
+                    'loan_date': loan.loanDate.strftime('%Y-%m-%d'),
+                    'expiration_date': loan.expirationDate.strftime('%Y-%m-%d')
+                }
+                for loan in created_or_updated_loans
+            ]
+
+            return JsonResponse({'success': True, 'messages': responses, 'created_loans': serialized_loans})
 
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'error': 'Error al decodificar JSON'}, status=400)
         except Exception as e:
             print(f"Error general: {str(e)}")
-            print(f"Traceback: {traceback.format_exc()}")  # Imprime el traceback completo
+            print(f"Traceback: {traceback.format_exc()}")
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

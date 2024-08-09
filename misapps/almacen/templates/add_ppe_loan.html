@@ -171,7 +171,8 @@
                         if (isAssigned) {
                             let renewalCheckbox = $('<input>').attr({
                                 type: 'checkbox',
-                                class: 'renewal-checkbox'
+                                class: 'renewal-checkbox',
+                                'data-ppe-name': ppe.name
                             });
                             renewalCell.append(renewalCheckbox);
                         }
@@ -197,6 +198,9 @@
                             });
                         }
                         row.append(expirationDateCell);
+
+                        // Agregar un atributo data para isAssigned
+                        row.attr('data-is-assigned', isAssigned);
                     },
                     error: function() {
                         alert('Error al verificar la asignación del EPP.');
@@ -275,11 +279,28 @@
         }
 
         function sendDataToServer(ppeToAssign) {
+            // Preparar los datos para enviar al servidor
+            let ppe_loans = ppeToAssign.map(ppe => {
+                let row = $(`#popup-table tbody tr[data-ppe-id="${ppe.id}"]`);
+                return {
+                    name: ppe.name,
+                    quantity: ppe.quantity,
+                    worker: {
+                        name: $('#id_workerName').val(),
+                        position: $('#id_workerPosition').val(),
+                        dni: $('#id_workerDni').val()
+                    },
+                    loanDate: $('#id_loanDate').val(),
+                    isAssigned: row.attr('data-is-assigned') === 'true',
+                    isRenewal: row.find('.renewal-checkbox').is(':checked')
+                };
+            });
+
             $.ajax({
-                url: '{% url "confirm_ppe_loan" %}', 
+                url: '{% url "confirm_ppe_loan" %}',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ ppe_loans: ppeToAssign }),
+                data: JSON.stringify({ ppe_loans: ppe_loans }),
                 success: function(response) {
                     if (response.success) {
                         Swal.fire({
@@ -288,6 +309,13 @@
                             text: 'Los préstamos se han confirmado correctamente.'
                         }).then(() => {
                             $('#popup, #popup-overlay').hide(); // Ocultar el popup y el overlay
+                            
+                            // Actualizar la tabla o redirigir a la página de lista de préstamos
+                            if (response.created_loans && response.created_loans.length > 0) {
+                                updateLoanTable(response.created_loans);
+                            } else {
+                                window.location.href = '{% url "ppe_loan_list" %}';
+                            }
                         });
                     } else {
                         Swal.fire({

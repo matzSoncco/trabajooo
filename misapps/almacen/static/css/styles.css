@@ -653,3 +653,21 @@ input[type="file"]:focus {
     max-height: 250px; /* Ajusta el tamaño de la previsualización */
     display: block;
 }
+
+.devoluciones {
+    display: flex;
+    justify-content: space-between;
+}
+
+.buscar-dev {
+    display: flex;
+}
+.devoluciones input[type="text"] {
+    width: 250px;
+}
+
+.campo-btn {
+    display: flex;
+    flex-direction: row;
+    align-items: unset;
+}

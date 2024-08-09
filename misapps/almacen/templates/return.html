@@ -26,7 +26,7 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'return'%}">Devoluciones</a>
             <a class="link-form" href="{% url 'return_tool'%}">Herramientas</a>
@@ -35,15 +35,21 @@
         <div class="titulo-pagina">
             <h2>Devoluciones de Herramientas y Equipos</h2>
         </div>
-        <form method="get" action="{% url 'return' %}">
-            <label for="work_order">Orden de Trabajo:</label>
-            <input type="text" id="work_order" name="work_order">
-    
-            <label for="worker_dni">DNI del Trabajador:</label>
-            <input type="text" id="worker_dni" name="worker_dni">
-    
-            <button type="submit">Buscar</button>
-            <button type="submit" name="view_debtors" value="1">Ver lista de todos los deudores</button>
+        <form class="devoluciones" method="get" action="{% url 'return' %}">
+            <div class="fila-form">
+                <div class="campo">
+                    <label for="work_order">Orden de Trabajo:</label>
+                    <input type="text" id="work_order" name="work_order" placeholder="Buscar por OT">
+                </div>
+                <div class="campo">
+                    <label for="worker_dni">DNI del Trabajador:</label>
+                    <input type="text" id="worker_dni" name="worker_dni" placeholder="Buscar por DNI de encargado">
+                </div>
+            </div>
+            <div class="fila-form">
+                <button type="submit">Buscar</button>
+                <button type="submit" name="view_debtors" value="1">Ver lista de todos los deudores</button>
+            </div>
         </form>
     
         {% if tool_loans or equipment_loans %}

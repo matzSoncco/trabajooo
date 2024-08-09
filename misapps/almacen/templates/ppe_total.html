@@ -27,55 +27,49 @@
         </div>
     </aside>
     <section class="contendor-lateral-derecho">
-        <div class="contenedor-principal">
-            <div class="top-form">
-                <h2 class="titulo-primario">Listado de EPPs</h2>
-            </div>
-            <div class="centrado">
-                <div class="table-container">
-                    <table class="tabla">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Nombre</th>
-                                <th>Unidad</th>
-                                <th>Imagen</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ppe in ppes %}
-                            <tr>
-                                <td>{{ ppe.idPpe }}</td>
-                                <td>{{ ppe.name }}</td>
-                                <td>{{ ppe.unit }}</td>
-                                <td>
-                                    {% if ppe.image %}
-                                    <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}" class="img-thumbnail">
-                                    {% else %}
-                                    No Image
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'modify_ppe' ppe.name %}" class="form-btn aceptar-btn">Editar</a>
-                                    <button type="button" class="custom-btn custom-btn-danger" 
-                                            data-action="delete" 
-                                            data-ppe-name="{{ ppe.name }}" 
-                                            data-action-url="{% url 'delete_ppe' ppe.name %}">
-                                        Eliminar
-                                    </button>
-                                </td>
-                                
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4">No se encontraron EPPs.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="titulo-pagina">
+            <h2>Listado de EPPs</h2>
+        </div>
+        <div class="tabla-creacion" id="duration-table-container">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Unidad</th>
+                        <th>Imagen</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ppe in ppes %}
+                    <tr>
+                        <td>{{ ppe.idPpe }}</td>
+                        <td>{{ ppe.name }}</td>
+                        <td>{{ ppe.unit }}</td>
+                        <td>
+                            {% if ppe.image %}
+                            <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}" class="img-total">
+                            {% else %}
+                            No Image
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'modify_ppe' ppe.idPpe %}" class="form-btn aceptar-btn">Editar</a>
+                            <button type="button" class="delete-ppe-btn" 
+                                    data-ppe-name="{{ ppe.name }}" 
+                                    data-action-url="{% url 'delete_ppe' ppe.idPpe %}">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No se encontraron EPPs.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         <div class="centrado">
             <a class="form-btn ver-obj-btn" href="{% url 'create_ppe' %}" style="
@@ -97,157 +91,60 @@
     </section>
 </section>
 
-<!-- Modal -->
-<div id="customDeleteModal" class="custom-modal">
-    <div class="custom-modal-content">
-        <div class="custom-modal-header">
-            <span class="custom-modal-close">&times;</span>
-            <h2>Confirmar eliminación</h2>
-        </div>
-        <div class="custom-modal-body">
-            ¿Estás seguro de que deseas eliminar el EPP <span id="ppeName"></span>?
-        </div>
-        <div class="custom-modal-footer">
-            <form method="post" id="deleteForm">
-                {% csrf_token %}
-                <button type="submit" class="custom-btn custom-btn-danger">Eliminar</button>
-                <button type="button" class="custom-btn custom-btn-secondary" id="cancelDelete">Cancelar</button>
-            </form>
-        </div>
-    </div>
-</div>
-<style>
-    .custom-modal {
-        display: none; /* Oculto por defecto */
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4); /* Fondo oscuro */
-    }
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    /* Contenido del modal */
-    .custom-modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 5px;
-    }
-
-    /* Encabezado del modal */
-    .custom-modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .custom-modal-close {
-        color: #aaa;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .custom-modal-close:hover,
-    .custom-modal-close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    /* Cuerpo del modal */
-    .custom-modal-body {
-        margin: 15px 0;
-    }
-
-    /* Pie del modal */
-    .custom-modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    /* Botones del modal */
-    .custom-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .custom-btn-danger {
-        background-color: #d9534f;
-        color: white;
-    }
-
-    .custom-btn-danger:hover {
-        background-color: #c9302c;
-    }
-
-    .custom-btn-secondary {
-        background-color: #5bc0de;
-        color: white;
-    }
-
-    .custom-btn-secondary:hover {
-        background-color: #31b0d5;
-    }
-</style>
 <script>
-    // Función para abrir el modal
-    function openDeleteModal(ppeName, actionUrl) {
-        const modal = document.getElementById('customDeleteModal');
-        const ppeNameSpan = document.getElementById('ppeName');
-        const deleteForm = document.getElementById('deleteForm');
-        
-        ppeNameSpan.textContent = ppeName;
-        deleteForm.action = actionUrl;
+document.addEventListener('DOMContentLoaded', function () {
+    // Selecciona todos los botones de eliminación
+    const deleteButtons = document.querySelectorAll('.delete-ppe-btn');
 
-        modal.style.display = 'block';
-    }
-
-    // Cerrar el modal cuando se hace clic en el botón de cerrar
-    document.querySelector('.custom-modal-close').addEventListener('click', function () {
-        document.getElementById('customDeleteModal').style.display = 'none';
-    });
-
-    // Cerrar el modal cuando se hace clic en el botón de cancelar
-    document.getElementById('cancelDelete').addEventListener('click', function () {
-        document.getElementById('customDeleteModal').style.display = 'none';
-    });
-
-    // Cerrar el modal cuando se hace clic fuera del modal
-    window.onclick = function (event) {
-        if (event.target === document.getElementById('customDeleteModal')) {
-            document.getElementById('customDeleteModal').style.display = 'none';
-        }
-    };
-
-    // Configura el botón de eliminación
-    document.querySelectorAll('[data-action="delete"]').forEach(button => {
+    deleteButtons.forEach(button => {
         button.addEventListener('click', function () {
             const ppeName = this.getAttribute('data-ppe-name');
             const actionUrl = this.getAttribute('data-action-url');
-            openDeleteModal(ppeName, actionUrl);
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: `Estás a punto de eliminar el EPP ${ppeName}. Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(actionUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ confirm: 'yes' })
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: `El EPP ${ppeName} ha sido eliminado.`,
+                                icon: 'success'
+                            }).then(() => {
+                                // Redirige a la página de lista de EPPs después de eliminar
+                                window.location.href = "{% url 'ppe_total' %}";
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error',
+                                'Hubo un problema al eliminar el EPP. Por favor, inténtalo de nuevo.',
+                                'error'
+                            );
+                        }
+                    });
+                }
+            });
         });
     });
-    const deleteModal = document.getElementById('deleteModal');
-    deleteModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const ppeName = button.getAttribute('data-ppe-name');
-        const modalBody = deleteModal.querySelector('.modal-body #ppeName');
-        modalBody.textContent = ppeName;
-
-        const deleteForm = document.getElementById('deleteForm');
-        // Construye la URL de eliminación correctamente
-        deleteForm.action = "{% url 'delete_ppe' 'placeholder' %}".replace('placeholder', encodeURIComponent(ppeName));
-    });
+});
 </script>
-  
+
 {% endblock %}

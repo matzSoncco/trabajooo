@@ -22,16 +22,16 @@ urlpatterns = [
     path('update-ppe-duration/', views.update_ppe_duration, name='update_ppe_duration'),
     path('ppe/show/table/', views.set_duration, name='show_duration_table'),
     path('ppe/add/', views.add_ppe, name='add_ppe'),
-    path('ppe/<str:name>/modify/', views.modify_ppe, name='modify_ppe'),
+    path('ppe/<str:ppe_id>/modify/', views.modify_ppe, name='modify_ppe'),
     path('ppe/<str:name>/modify_add/', views.modify_ppe_add, name='modify_ppe_add'),
-    path('ppe/<str:ppe_name>/delete/', views.delete_ppe, name='delete_ppe'),
+    path('ppe/<str:ppe_id>/delete_ppe', views.delete_ppe, name='delete_ppe'),
     path('ppe/total_ppe_stock/', views.total_ppe_stock, name='total_ppe_stock'),
 
     #EQUIPOS
     path('get_equipment_data/', views.get_equipment_data, name='get_equipment_data'),
     path('equipment/total/add', views.equipment_total_add, name='equipment_total_add'),
     path('save_all_equipment/', views.save_all_equipment, name='save_all_equipment'),
-    path('equipment/<str:equipment_name>/delete/', views.delete_equipment, name='delete_equipment'),
+    path('equipment/<str:equipment_id>/delete/', views.delete_equipment, name='delete_equipment'),
     path('equipment/<str:name>/modify/', views.modify_equipment, name='modify_equipment'),
     path('equipment/create/', views.create_equipment, name='create_equipment'),
     path('equipment/total/', views.equipment_total, name='equipment_total'),
@@ -46,7 +46,7 @@ urlpatterns = [
     path('material/create/', views.create_material, name='create_material'),
     path('material/total/', views.material_total, name='material_total'),
     path('material/<str:material_name>/modify/', views.modify_material, name='modify_material'),
-    path('material/<str:material_name>/delete/', views.delete_material, name='delete_material'),
+    path('material/<str:material_id>/delete/', views.delete_material, name='delete_material'),
     path('materials/total_material_stock/', views.total_material_stock, name='total_material_stock'),
 
     #HERRAMIENTAS
@@ -57,15 +57,15 @@ urlpatterns = [
     path('tool/total/add', views.tool_total_add, name='tool_total_add'),
     path('tool/create/', views.create_tool, name='create_tool'),
     path('tool/total/', views.tool_total, name='tool_total'),
-    path('tool/<str:tool_name>/delete/', views.delete_tool, name='delete_tool'),
+    path('tool/<str:tool_id>/delete/', views.delete_tool, name='delete_tool'),
     path('tool/<str:name>/modify/', views.modify_tool, name='modify_tool'),
     path('tool/total_tool_stock/', views.total_tool_stock, name='total_tool_list'),
 
     #TRABAJADORES
     path('worker/', views.worker_list, name='worker_list'),
     path('worker/create/', views.create_worker, name='create_worker'),
-    path('worker/delete/<int:id>/', views.delete_worker, name='delete_worker'),
-    path('worker/modify/<int:id>/', views.modify_worker, name='modify_worker'),
+    path('worker/<str:worker_id>/delete/', views.delete_worker, name='delete_worker'),
+    path('worker/<str:name>/modify/', views.modify_worker, name='modify_worker'),
 
     path('worker_autocomplete/', views.worker_autocomplete, name='worker_autocomplete'),
     path('dni_autocomplete/', views.dni_autocomplete, name='dni_autocomplete'),

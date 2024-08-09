@@ -87,8 +87,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             {% for message in messages %}
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Éxito',
+                    icon: "{% if message.tags == 'success' %}success{% else %}error{% endif %}",
+                    title: "{% if message.tags == 'success' %}Éxito{% else %}Error{% endif %}",
                     text: "{{ message }}",
                     confirmButtonText: 'Aceptar'
                 });

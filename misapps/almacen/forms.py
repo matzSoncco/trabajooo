@@ -459,12 +459,6 @@ class CreateToolForm(forms.ModelForm):
         "type": "text",
         "placeholder": "Ingrese el nombre de la Herramienta"
     }))
-
-    serialNumber = forms.IntegerField(widget=forms.NumberInput(attrs={
-        "class": "input",
-        "type": "number",
-        "placeholder": "Ingrese el número de serie"
-    }))
     
     level = forms.ChoiceField(choices=Equipment.LEVELS, widget=forms.Select(attrs={
         "class": "input"
@@ -472,7 +466,7 @@ class CreateToolForm(forms.ModelForm):
 
     class Meta:
         model = Tool
-        fields = ['name', 'serialNumber', 'image', 'level']
+        fields = ['name', 'image', 'level']
         widgets = {
             'image': forms.FileInput(attrs={
                 "class": "input",

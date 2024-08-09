@@ -29,13 +29,6 @@
     <section class="contenedor-lateral-derecho">
         <div class="contenedor-principal">
             <div class="top-form">
-                {% if messages %}
-                <ul class="messages" style="display: none;">
-                    {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
                 <h2 class="titulo-primario">Agregar Trabajador a la Base de Datos</h2>
                 <a class="form-btn ver-obj-btn" href="{% url 'worker_list' %}">Tabla de Trabajadores</a>
             </div>
@@ -94,14 +87,19 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             {% for message in messages %}
+                let iconType = 'success'; // Asumimos éxito por defecto
+                if ('{{ message.tags }}' === 'error') {
+                    iconType = 'error'; // Cambia a error si el mensaje tiene la etiqueta 'error'
+                }
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Éxito',
-                    text: "{{ message }}",
+                    icon: iconType,
+                    title: iconType === 'success' ? 'Éxito' : 'Error',
+                    text: "{{ message|escapejs }}", // Escapa el mensaje para evitar problemas con caracteres especiales
                     confirmButtonText: 'Aceptar'
                 });
             {% endfor %}
         });
     </script>
 {% endif %}
+
 {% endblock %}

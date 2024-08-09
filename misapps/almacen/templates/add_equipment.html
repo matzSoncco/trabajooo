@@ -4,60 +4,120 @@
 
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    $(document).ready(function() {
-        var addedEquipment = [];
+$(document).ready(function() {
+    var addedEquipment = [];
 
-        function loadAddedEquipmentTable() {
-            let html = '<table><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
-            addedEquipment.forEach(function(equipment) {
-                html += `<tr>
-                            <td>${equipment.guideNumber}</td>
-                            <td>${equipment.name}</td>
-                            <td>${equipment.unitCost}</td>
-                            <td>${equipment.quantity}</td>
-                            <td>${equipment.stock}</td>
-                         </tr>`;
+    function loadAddedEquipmentTable() {
+        let html = '<table class="added-item-table"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
+        addedEquipment.forEach(function(equipment) {
+            html += `<tr>
+                        <td>${equipment.guideNumber}</td>
+                        <td>${equipment.name}</td>
+                        <td>${equipment.unitCost}</td>
+                        <td>${equipment.quantity}</td>
+                        <td>${equipment.stock}</td>
+                     </tr>`;
+        });
+        html += '</tbody></table>';
+        $('#added-item-table-container').html(html);
+    }
+
+    $(document).on('click', '#agregar-formulario', function() {
+        var row = $(this).closest('tr');
+        var equipmentId = row.find('td:first').text();
+        
+        $.ajax({
+            url: "{% url 'get_equipment_data' %}",
+            data: { id: equipmentId },
+            success: function(data) {
+                $('#id_guideNumber').val(data.guideNumber);
+                $('#id_creationDate').val(data.creationDate);
+                $('#id_name').val(data.name);
+                $('#id_unitCost').val(data.unitCost);
+                $('#id_quantity').val(data.quantity);
+                $('#id_stock').val(data.stock);
+            }
+        });
+    });
+
+    $('#formulario-contenedor-individual').submit(function(event) {
+        event.preventDefault();
+        var guideNumber = $('#id_guideNumber').val().trim();
+        var creationDate = $('#id_creationDate').val().trim();
+        var name = $('#id_name').val().trim();
+        var unitCost = parseFloat($('#id_unitCost').val());
+        var quantity = parseInt($('#id_quantity').val());
+        var stock = parseInt($('#id_stock').val());
+
+        // Validaciones de campos
+        if (!guideNumber || !name || !creationDate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Todos los campos deben estar completos.',
+                confirmButtonText: 'Aceptar'
             });
-            html += '</tbody></table>';
-            $('#added-item-table-container').html(html);
+            return;
+        }
+        if (quantity <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'La cantidad debe ser mayor que 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        if (unitCost <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El costo unitario debe ser mayor que 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        if (stock <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El stock ideal debe ser mayor que 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        if (guideNumber <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El Número guia no puede ser 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
         }
 
-        $(document).on('click', '#agregar-formulario', function() {
-            var row = $(this).closest('tr');
-            var equipmentId = row.find('td:first').text();
-            
-            $.ajax({
-                url: "{% url 'get_equipment_data' %}",
-                data: { id: equipmentId },
-                success: function(data) {
-                    $('#id_guideNumber').val(data.guideNumber);
-                    $('#id_creationDate').val(data.creationDate);
-                    $('#id_name').val(data.name);
-                    $('#id_unitCost').val(data.unitCost);
-                    $('#id_quantity').val(data.quantity);
-                    $('#id_stock').val(data.stock);
-                }
-            });
-        });
+        var formData = {
+            guideNumber: guideNumber,
+            creationDate: creationDate,
+            name: name,
+            unitCost: unitCost,
+            quantity: quantity,
+            stock: stock
+        };
+        addedEquipment.push(formData);
+        loadAddedEquipmentTable();
+    });
 
-        $('#formulario-contenedor-individual').submit(function(event) {
-            event.preventDefault();
-            var formData = {
-                guideNumber: $('#id_guideNumber').val(),
-                creationDate: $('#id_creationDate').val(),
-                name: $('#id_name').val(),
-                unitCost: parseFloat($('#id_unitCost').val()),
-                quantity: parseInt($('#id_quantity').val()),
-                stock: parseInt($('#id_stock').val())
-            };
-            addedEquipment.push(formData);
-            loadAddedEquipmentTable();
-        });
-
-        $('#save-all-btn').click(function() {
+    $('#save-all-btn').click(function() {
             if (addedEquipment.length === 0) {
-                alert('No hay equipos para guardar.');
+                Swal.fire({
+                icon: 'warning',
+                title: 'No hay equipos para guardar',
+                text: 'No se han agregado elementos para guardar.',
+                confirmButtonText: 'Aceptar'
+            });
                 return;
             }
             $.ajax({
@@ -67,42 +127,68 @@
                 contentType: 'application/json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        alert('Equipos guardados exitosamente.');
+                        Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: 'Equipos guardados exitosamente.',
+                        confirmButtonText: 'Aceptar'
+                    });
                         addedEquipment = [];
-                        loadaddedEquipmentTable();
+                        loadAddedEquipmentTable();
                     } else {
-                        alert('Hubo un error al guardar los equipos: ' + response.message);
+                        Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Hubo un error al guardar los equipos: ' + response.message,
+                        confirmButtonText: 'Aceptar'
+                    });
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error al guardar equipos:", xhr.responseText);
-                    alert('Hubo un error al guardar los equipos: ' + xhr.responseText);
+                    Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                        text: 'Hubo un error al guardar los equipos: ' + xhr.responseText,
+                    confirmButtonText: 'Aceptar'
+                });
                 }
             });
         });
 
-        // Función para manejar la búsqueda y actualizar la tabla
-        function handleSearch(event) {
+            function handleSearch(event) {
             event.preventDefault();
             var query = $(this).find('input[name="q"]').val();
             $.ajax({
                 url: window.location.pathname,
                 data: { q: query },
                 success: function(data) {
-                    // Extraer la tabla actualizada del HTML devuelto
-                    var newTable = $(data).find('#created-item-table-container table');
+                        var newTable = $(data).find('#created-item-table-container table');
                     $('#created-item-table-container table').replaceWith(newTable);
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error en la búsqueda:", xhr.responseText);
-                    alert('Hubo un error al realizar la búsqueda: ' + xhr.responseText);
+                    Swal.fire({
+                    icon: 'error',
+                    title: 'Error en la búsqueda',
+                        text: 'Hubo un error al realizar la búsqueda: ' + xhr.responseText,
+                    confirmButtonText: 'Aceptar'
+                });
                 }
             });
         }
 
-        // Asignar el manejador de eventos solo al formulario de búsqueda
-        $('.formulario-buscar').submit(handleSearch);
-    });
+            $('.formulario-buscar').submit(handleSearch);
+
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                icon: '{% if message.tags == "error" %}error{% else %}success{% endif %}',
+                title: '{% if message.tags == "error" %}Error{% else %}Éxito{% endif %}',
+                text: "{{ message }}",
+                confirmButtonText: 'Aceptar'
+            });
+        {% endfor %}
+    {% endif %}
+});
 </script>
 
 <section class="principal-general">

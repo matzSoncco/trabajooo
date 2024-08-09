@@ -38,7 +38,7 @@
                 <thead>
                     <tr>
                         <th>Nombre</th>
-                        <th>Número de Serie</th>
+                        <th>Nivel</th>
                         <th>Imagen</th>
                         <th>Acciones</th>
                     </tr>
@@ -47,7 +47,7 @@
                     {% for tool in tools %}
                     <tr>
                         <td>{{ tool.name }}</td>
-                        <td>{{ tool.serialNumber }}</td>
+                        <td>{{ tool.level }}</td>
                         <td>
                             {% if tool.image %}
                             <img src="{{ tool.image.url }}" alt="{{ tool.name }}" class="img-total">
@@ -56,8 +56,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'modify_tool' tool.name %}" class="form-btn aceptar-btn">Editar</a>
-                            <button type="button" class="form-btn cancelar-btn" id="delete-tool-btn" 
+                            <a href="{% url 'modify_tool' tool.name|urlencode %}" class="form-btn aceptar-btn">Editar</a>
+                            <button type="button" class="delete-tool-btn" 
                                     data-tool-name="{{ tool.name }}" 
                                     data-action-url="{% url 'delete_tool' tool.idTool %}">
                                 Eliminar

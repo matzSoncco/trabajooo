@@ -4,6 +4,7 @@
 
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
     var addedPpe = [];
@@ -41,16 +42,69 @@ $(document).ready(function() {
         });
     });
 
-    // Modificado para ser más específico
     $('#formulario-contenedor-individual form').submit(function(event) {
         event.preventDefault();
+        var guideNumber = $('#id_guideNumber').val().trim();
+        var creationDate = $('#id_creationDate').val().trim();
+        var name = $('#id_name').val().trim();
+        var unitCost = parseFloat($('#id_unitCost').val());
+        var quantity = parseInt($('#id_quantity').val());
+        var stock = parseInt($('#id_stock').val());
+
+        // Validaciones de campos
+        if (!guideNumber || !name || !creationDate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Todos los campos deben estar completos.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        if (quantity <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'La cantidad debe ser mayor que 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        if (unitCost <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El costo unitario debe ser mayor que 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        if (stock <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El stock ideal debe ser mayor que 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        if (guideNumber <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El Número guia no puede ser 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
         var formData = {
-            guideNumber: $('#id_guideNumber').val(),
-            creationDate: $('#id_creationDate').val(),
-            name: $('#id_name').val(),
-            unitCost: parseFloat($('#id_unitCost').val()),
-            quantity: parseInt($('#id_quantity').val()),
-            stock: parseInt($('#id_stock').val())
+            guideNumber: guideNumber,
+            creationDate: creationDate,
+            name: name,
+            unitCost: unitCost,
+            quantity: quantity,
+            stock: stock
         };
         addedPpe.push(formData);
         loadAddedPpeTable();
@@ -58,7 +112,12 @@ $(document).ready(function() {
 
     $('#save-all-btn').click(function() {
         if (addedPpe.length === 0) {
-            alert('No hay EPPs para guardar.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'No hay EPPs para guardar',
+                text: 'No se han agregado elementos para guardar.',
+                confirmButtonText: 'Aceptar'
+            });
             return;
         }
         $.ajax({
@@ -68,21 +127,34 @@ $(document).ready(function() {
             contentType: 'application/json',
             success: function(response) {
                 if (response.status === 'success') {
-                    alert('EPPs guardados exitosamente.');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: 'EPPs guardados exitosamente.',
+                        confirmButtonText: 'Aceptar'
+                    });
                     addedPpe = [];
                     loadAddedPpeTable();
                 } else {
-                    alert('Hubo un error al guardar los EPPs: ' + response.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Hubo un error al guardar los EPPs: ' + response.message,
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Error al guardar EPPs:", xhr.responseText);
-                alert('Hubo un error al guardar los EPPs: ' + xhr.responseText);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un error al guardar los EPPs: ' + xhr.responseText,
+                    confirmButtonText: 'Aceptar'
+                });
             }
         });
     });
 
-    // Función para manejar la búsqueda y actualizar la tabla
     function handleSearch(event) {
         event.preventDefault();
         var query = $(this).find('input[name="q"]').val();
@@ -90,19 +162,32 @@ $(document).ready(function() {
             url: window.location.pathname,
             data: { q: query },
             success: function(data) {
-                // Extraer la tabla actualizada del HTML devuelto
                 var newTable = $(data).find('#created-item-table-container table');
                 $('#created-item-table-container table').replaceWith(newTable);
             },
             error: function(xhr, status, error) {
-                console.error("Error en la búsqueda:", xhr.responseText);
-                alert('Hubo un error al realizar la búsqueda: ' + xhr.responseText);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en la búsqueda',
+                    text: 'Hubo un error al realizar la búsqueda: ' + xhr.responseText,
+                    confirmButtonText: 'Aceptar'
+                });
             }
         });
     }
 
-    // Asignar el manejador de eventos solo al formulario de búsqueda
     $('.formulario-buscar').submit(handleSearch);
+
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                icon: '{% if message.tags == "error" %}error{% else %}success{% endif %}',
+                title: '{% if message.tags == "error" %}Error{% else %}Éxito{% endif %}',
+                text: "{{ message }}",
+                confirmButtonText: 'Aceptar'
+            });
+        {% endfor %}
+    {% endif %}
 });
 </script>
 <section class="principal-general">

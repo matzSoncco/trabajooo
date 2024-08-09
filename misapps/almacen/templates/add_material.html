@@ -4,12 +4,13 @@
 
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         var addedMaterial = [];
 
         function loadAddedMaterialTable() {
-            let html = '<table><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
+            let html = '<table class="added-item-table"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
             addedMaterial.forEach(function(material) {
                 html += `<tr>
                             <td>${material.guideNumber}</td>
@@ -43,13 +44,67 @@
 
         $('#formulario-contenedor-individual').submit(function(event) {
             event.preventDefault();
+            var guideNumber = $('#id_guideNumber').val().trim();
+            var creationDate = $('#id_creationDate').val().trim();
+            var name = $('#id_name').val().trim();
+            var unitCost = parseFloat($('#id_unitCost').val());
+            var quantity = parseInt($('#id_quantity').val());
+            var stock = parseInt($('#id_stock').val());
+
+            // Validaciones de campos
+            if (!guideNumber || !name || !creationDate) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Todos los campos deben estar completos.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+            if (quantity <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'La cantidad debe ser mayor que 0.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+            if (unitCost <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El costo unitario debe ser mayor que 0.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+            if (stock <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El stock ideal debe ser mayor que 0.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+            if (guideNumber <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El Número guia no puede ser 0.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
             var formData = {
-                guideNumber: $('#id_guideNumber').val(),
-                creationDate: $('#id_creationDate').val(),
-                name: $('#id_name').val(),
-                unitCost: parseFloat($('#id_unitCost').val()),
-                quantity: parseInt($('#id_quantity').val()),
-                stock: parseInt($('#id_stock').val())
+                guideNumber: guideNumber,
+                creationDate: creationDate,
+                name: name,
+                unitCost: unitCost,
+                quantity: quantity,
+                stock: stock
             };
             console.log("Datos del formulario:", formData);
             addedMaterial.push(formData);
@@ -58,7 +113,12 @@
 
         $('#save-all-btn').click(function() {
             if (addedMaterial.length === 0) {
-                alert('No hay Materiales para guardar.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No hay Materiales para guardar',
+                    text: 'No se han agregado elementos para guardar.',
+                    confirmButtonText: 'Aceptar'
+                });
                 return;
             }
             $.ajax({
@@ -68,21 +128,34 @@
                 contentType: 'application/json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        alert('Materiales guardados exitosamente.');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Materiales guardados exitosamente.',
+                            confirmButtonText: 'Aceptar'
+                        });
                         addedMaterial = [];
                         loadAddedMaterialTable();
                     } else {
-                        alert('Hubo un error al guardar los Materiales: ' + response.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Hubo un error al guardar los Materiales: ' + response.message,
+                            confirmButtonText: 'Aceptar'
+                        });
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error al guardar Materiales:", xhr.responseText);
-                    alert('Hubo un error al guardar los Materiales: ' + xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Hubo un error al guardar los Materiales: ' + xhr.responseText,
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             });
         });
 
-        // Función para manejar la búsqueda y actualizar la tabla
         function handleSearch(event) {
             event.preventDefault();
             var query = $(this).find('input[name="q"]').val();
@@ -90,18 +163,20 @@
                 url: window.location.pathname,
                 data: { q: query },
                 success: function(data) {
-                    // Extraer la tabla actualizada del HTML devuelto
                     var newTable = $(data).find('#created-item-table-container table');
                     $('#created-item-table-container table').replaceWith(newTable);
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error en la búsqueda:", xhr.responseText);
-                    alert('Hubo un error al realizar la búsqueda: ' + xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en la búsqueda',
+                        text: 'Hubo un error al realizar la búsqueda: ' + xhr.responseText,
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             });
         }
 
-        // Asignar el manejador de eventos solo al formulario de búsqueda
         $('.formulario-buscar').submit(handleSearch);
     });
 </script>

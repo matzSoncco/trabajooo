@@ -1534,17 +1534,8 @@ def confirm_tool_loan(request):
             loan_date_str = data.get('loanDate')
             return_loan_date_str = data.get('returnLoanDate')
             worker_dni = data.get('workerDni')
-            worker_name = data.get('worker')
             worker_position = data.get('workerPosition')
             manager = data.get('manager', '')
-            
-            # Extraer datos generales
-            work_order = data.get('workOrder')
-            loan_date_str = data.get('loanDate')
-            return_loan_date_str = data.get('returnLoanDate')
-            worker_dni = data.get('workerDni')
-            worker_name = data.get('worker')
-            worker_position = data.get('workerPosition')
             tool_loans = data.get('tool_loans', [])
 
             responses = []
@@ -1572,13 +1563,6 @@ def confirm_tool_loan(request):
                 responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 return JsonResponse({'success': False, 'errors': responses}, status=400)
 
-            # Validar y convertir fechas
-            try:
-                loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
-                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
-            except (ValueError, TypeError):
-                return JsonResponse({'success': False, 'error': 'Fechas de préstamo o devolución no válidas'}, status=400)
-            
             if not tool_loans:
                 return JsonResponse({'success': False, 'error': 'No se proporcionaron préstamos de herramientas'}, status=400)
 
@@ -1594,7 +1578,6 @@ def confirm_tool_loan(request):
 
                     # Buscar la herramienta y el trabajador
                     tool = Tool.objects.get(name=tool_name)
-                    worker = Worker.objects.get(dni=worker_dni)
 
                     # Verificar cantidad disponible
                     if tool.quantity >= quantity:
@@ -1612,9 +1595,10 @@ def confirm_tool_loan(request):
                         )
                         new_loan.save()
 
+                        # Crear historial
                         History.objects.create(
                             content_type=ContentType.objects.get_for_model(ToolLoan),
-                            object_name=ToolLoan.name,
+                            object_name=tool.name,  # Usar el nombre de la herramienta
                             action='Loan Created',
                             user=request.user,
                             timestamp=timezone.now()
@@ -1630,8 +1614,6 @@ def confirm_tool_loan(request):
 
                 except Tool.DoesNotExist:
                     responses.append({'success': False, 'error': f'Herramienta {tool_name} no encontrada'})
-                except Worker.DoesNotExist:
-                    responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 except Exception as e:
                     print(f"Error procesando préstamo de herramienta: {str(e)}")
                     responses.append({'success': False, 'error': str(e)})
@@ -1931,7 +1913,7 @@ def confirm_equipment_loan(request):
                     # Verificar cantidad disponible
                     if equipment.quantity >= quantity:
                         # Crear un nuevo préstamo de herramienta
-                        new_loan = Equipment(
+                        new_loan = EquipmentLoan(
                             worker=worker,
                             workerPosition=worker_position,
                             workerDni=worker_dni,
@@ -1945,7 +1927,7 @@ def confirm_equipment_loan(request):
                         new_loan.save()
                         History.objects.create(
                             content_type=ContentType.objects.get_for_model(EquipmentLoan),
-                            object_name=EquipmentLoan.name,
+                            object_name=equipment.name,
                             action='Loan Created',
                             user=request.user,
                             timestamp=timezone.now()

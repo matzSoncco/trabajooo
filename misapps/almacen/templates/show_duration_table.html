@@ -19,6 +19,7 @@
     }
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         console.log('Documento listo');
@@ -35,6 +36,17 @@
             
             console.log('PPE ID:', ppeId);
             console.log('Nueva duración:', newDuration);
+            
+            // Validar que la duración no sea negativa
+            if (isNaN(newDuration) || parseFloat(newDuration) < 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'La duración no puede ser un número negativo.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return; // Salir de la función para evitar el envío del formulario
+            }
 
             $.ajax({
                 url: "{% url 'update_ppe_duration' %}",
@@ -46,15 +58,30 @@
                 },
                 success: function(response) {
                     console.log("Respuesta del servidor:", response);
-                    if (response.success) {
-                        alert('Duración actualizada con éxito');
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Duración establecida correctamente.',
+                            confirmButtonText: 'Aceptar'
+                        });
                     } else {
-                        alert('Error al actualizar la duración: ' + (response.error || 'Error desconocido'));
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al actualizar la duración: ' + (response.message || 'Error desconocido'),
+                            confirmButtonText: 'Aceptar'
+                        });
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error("Error de AJAX:", status, error);
-                    alert('Error de conexión: ' + error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'Hubo un error al conectar: ' + error,
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             });
         });
@@ -67,6 +94,7 @@
         });
     });
 </script>
+
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -92,15 +120,15 @@
     </aside>
     <section class="contenedor-lateral-derecho">
         <div class="titulo-pagina">
-            <h2>Tabla de duracion de EPP</h2>
+            <h2>Tabla de duración de EPP</h2>
         </div>
         <div class="tabla-mostrar" id="duration-table-container">
             <table class="tabla" id="duration-table">
                 <thead>
                     <tr>
-                        <th>Codigo</th>
+                        <th>Código</th>
                         <th>Nombre</th>
-                        <th>Duracion</th>
+                        <th>Duración</th>
                         <th>Acción</th>
                     </tr>
                 </thead>

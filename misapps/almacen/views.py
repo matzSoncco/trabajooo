@@ -98,17 +98,37 @@ def cost_summary_view(request):
 
     return render(request, 'total_cost_table.html', context)
 
-@require_POST
+@csrf_exempt
+@login_required
 def update_ppe_duration(request):
-    ppe_id = request.POST.get('ppe_id')
-    new_duration = request.POST.get('duration')
-    
-    ppe = get_object_or_404(Ppe, idPpe=ppe_id)
-    ppe.duration = new_duration
-    ppe.save()
-    
-    return JsonResponse({'success': True})
-
+    if request.method == 'POST':
+        try:
+            # Obtener el ID y la nueva duración del PPE
+            ppe_id = request.POST.get('ppe_id')
+            new_duration = request.POST.get('duration')
+            
+            # Usar el campo correcto para obtener el PPE
+            ppe = Ppe.objects.get(idPpe=ppe_id)
+            
+            # Actualizar la duración del PPE
+            ppe.duration = new_duration
+            ppe.save()
+            
+            # Registrar la acción en el historial
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(ppe),
+                object_name=ppe.name,
+                action='Actualizar Duración',
+                user=request.user,
+                timestamp=timezone.now()
+            )
+            
+            return JsonResponse({'status': 'success'})
+        except Ppe.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'PPE no encontrado'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'invalid method'})
 #PPE
 def get_ppe_data(request):
     ppe_id = request.GET.get('id')
@@ -457,7 +477,7 @@ def modify_ppe(request, ppe_name):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(ppe),
                 object_name=ppe.name, 
-                action='Modified',
+                action='Modificar',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -493,7 +513,7 @@ def modify_ppe_add(request, name):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(ppe),
                 object_name=ppe.name, 
-                action='Modified',
+                action='Modificar',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -786,7 +806,7 @@ def modify_equipment(request, name):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(equipment),
                 object_name=equipment.name, 
-                action='Modified',
+                action='Modificar',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1088,7 +1108,7 @@ def modify_material(request, material_name):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(material),
                 object_name=material.name, 
-                action='Modified',
+                action='Modificar',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1381,7 +1401,7 @@ def modify_tool(request, tool_name):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(tool),
                 object_name=tool.name, 
-                action='Modified',
+                action='Modificar',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1546,6 +1566,18 @@ def create_worker(request):
     if request.method == 'POST':
         form = WorkerForm(request.POST)
         if form.is_valid():
+            dni = form.cleaned_data.get('dni')
+            name = form.cleaned_data.get('name')
+            surname = form.cleaned_data.get('surname')
+
+            if Worker.objects.filter(dni=dni).exists():
+                messages.error(request, 'Ya existe un trabajador con este DNI.')
+                return render(request, 'create_worker.html', {'form': form})
+
+            if Worker.objects.filter(name=name, surname=surname).exists():
+                messages.error(request, 'Ya existe un trabajador con este nombre y apellido.')
+                return render(request, 'create_worker.html', {'form': form})
+
             worker = form.save()
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(worker),
@@ -1555,7 +1587,7 @@ def create_worker(request):
                 timestamp=timezone.now()
             )
             messages.success(request, 'Trabajador creado con éxito')
-            return redirect('create_worker')  # Redirects to the same page to show the popup
+            return redirect('create_worker')
         else:
             messages.error(request, 'Hubo un error al crear el trabajador. Por favor, revisa el formulario.')
             return render(request, 'create_worker.html', {'form': form})
@@ -1570,7 +1602,7 @@ def delete_worker(request, worker_id):
         try:
             data = json.loads(request.body)
             if data.get('confirm') == 'yes':
-                worker = get_object_or_404(Worker, idMaterial=worker_id)
+                worker = get_object_or_404(Worker, dni=worker_id)
                 worker_name = worker.name
                 worker.delete()
                 History.objects.create(
@@ -1600,7 +1632,7 @@ def modify_worker(request, name):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(worker),
                 object_name=worker.name, 
-                action='Modified',
+                action='Modificar',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -3105,7 +3137,7 @@ def modify_ppe_loan(request, id):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(PpeLoan),
                 object_name=PpeLoan.name,
-                action='Loan Modified',
+                action='Modificar Asignacion',
                 user=request.user,
                 timestamp=timezone.now()
             )

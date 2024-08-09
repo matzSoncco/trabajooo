@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+ {% extends 'base.html' %}
 
 {% block title %}Asignar Equipos{% endblock %}
 
@@ -72,7 +72,8 @@
                 });
             }
         });
-        const addedItems = [];
+
+        let addedItems = [];
 
         // Add equipment to form when "Añadir" button is clicked
         $(document).on('click', '#add-to-form', function() {
@@ -118,13 +119,15 @@
                         <tr>
                             <th>Nombre</th>
                             <th>Cantidad</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${addedItems.map(item => `
+                        ${addedItems.map((item, index) => `
                             <tr>
                                 <td>${item.name}</td>
                                 <td>${item.quantity}</td>
+                                <td><button class="quitar-btn" data-index="${index}">Quitar</button></td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -132,6 +135,13 @@
             `;
             $('#view-given-items-table-container').html(tableHtml);
         }
+
+        // Eliminar elementos de la lista de pre-entrega
+        $(document).on('click', '.quitar-btn', function() {
+            let index = $(this).data('index');
+            addedItems.splice(index, 1);
+            updateGivenItemsTable();
+        });
 
         function clearForm() {
             $('#id_equipment').val('');
@@ -203,7 +213,7 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'add_ppe_loan' %}">EPPs</a>
             <a class="link-form" href="{% url 'add_tool_loan' %}">Herramientas</a>
@@ -214,7 +224,7 @@
             <div id="loan-message"></div>
             <div class="top-form">
                 <h2 class="titulo-primario">Asignar Equipos</h2>
-                <a class="link-top-form" href="{% url 'equipment_loan_list' %}">Ver tabla</a>
+                <a class="form-btn ver-obj-btn" href="{% url 'equipment_loan_list' %}">Ver tabla</a>
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual" >
@@ -267,7 +277,6 @@
 
                         <div class="campo-botones">
                             <button id="agregar-a-tabla-pre" class="form-btn aceptar-btn" type="submit">Agregar</button>
-                            <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
                         </div>
                     </form>
                 </div>
@@ -279,7 +288,7 @@
                                 <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
                             </div>
                             <div class="btn-busqueda-elemento">
-                                <button type="submit" class="btn buscar-btn">Buscar</button>
+                                <button type="submit" class="form-btn aceptar-btn">Buscar</button>
                             </div>
                         </form>
                     </div>
@@ -297,7 +306,7 @@
                                 <td>{{ item.name }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>
-                                    <button type="button" id="add-to-form" class="" data-equipment-id="{{ item.id }}" data-equipment-name="{{ item.name }}" data-equipment-quantity="1">Añadir</button>
+                                    <button class="table-btn btn-accion" type="button" id="add-to-form" class="" data-equipment-id="{{ item.id }}" data-equipment-name="{{ item.name }}" data-equipment-quantity="1">Añadir</button>
                                 </td>
                             </tr>
                             {% empty %}
@@ -309,11 +318,13 @@
                     </table>
                 </div>
             </div>
-            <div class="tabla-creacion" id="view-given-items-table-container">
+            <div class="tabla-agregados">
+                <button class="form-btn aceptar-btn" id="give-btn">Entregar</button>
+                <button class="form-btn cancelar-btn" id="volver-btn" onclick="location.href='{% url 'home' %}'">Salir</button>
+                <div id="view-given-items-table-container">
 
+                </div>
             </div>
-            <button id="give-btn">Entregar</button>
-            <button id="volver-btn">Salir</button>
         </div>
     </section>
 </section>

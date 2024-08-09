@@ -73,7 +73,8 @@
                 });
             }
         });
-        const addedItems = [];
+
+        let addedItems = [];
 
         // Add material to form when "Añadir" button is clicked
         $(document).on('click', '#add-to-form', function() {
@@ -119,13 +120,15 @@
                         <tr>
                             <th>Nombre</th>
                             <th>Cantidad</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${addedItems.map(item => `
+                        ${addedItems.map((item, index) => `
                             <tr>
                                 <td>${item.name}</td>
                                 <td>${item.quantity}</td>
+                                <td><button class="quitar-btn" data-index="${index}">Quitar</button></td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -133,6 +136,13 @@
             `;
             $('#view-given-items-table-container').html(tableHtml);
         }
+
+        // Eliminar elementos de la lista de pre-entrega
+        $(document).on('click', '.quitar-btn', function() {
+            let index = $(this).data('index');
+            addedItems.splice(index, 1);
+            updateGivenItemsTable();
+        });
 
         function clearForm() {
             $('#id_material').val('');
@@ -231,8 +241,8 @@
         <div class="contenedor-formulario">
             <div id="loan-message"></div>
             <div class="top-form">
-                <h2 class="titulo-primario">Asignar Herramientas</h2>
-                <a class="link-top-form" href="{% url 'material_loan_list' %}">Ver tabla</a>
+                <h2 class="titulo-primario">Asignar Materiales</h2>
+                <a class="form-btn ver-obj-btn" href="{% url 'material_loan_list' %}">Ver tabla</a>
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual" >
@@ -245,7 +255,7 @@
                                 {{ form.workOrder }}
                             </div>
                             <div class="campo">
-                                <label for="id_material" class="label">Herramienta</label>
+                                <label for="id_material" class="label">Material</label>
                                 {{ form.material }}
                             </div>
                         </div>
@@ -285,19 +295,18 @@
 
                         <div class="campo-botones">
                             <button id="agregar-a-tabla-pre" class="form-btn aceptar-btn" type="submit">Agregar</button>
-                            <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
                         </div>
                     </form>
                 </div>
                 <div class="tabla-creacion" id="added-item-table-container">
-                    <h2 class="titulo-primario">Herramientas en base de datos</h2>
+                    <h2 class="titulo-primario">Materiales en base de datos</h2>
                     <div class="buscar">
                         <form class="formulario-buscar" method="get" action=".">
                             <div class="cuadro-busqueda">
                                 <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
                             </div>
                             <div class="btn-busqueda-elemento">
-                                <button type="submit" class="btn buscar-btn">Buscar</button>
+                                <button type="submit" class="form-btn aceptar-btn">Buscar</button>
                             </div>
                         </form>
                     </div>
@@ -315,7 +324,7 @@
                                 <td>{{ item.name }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>
-                                    <button type="button" id="add-to-form" class="" data-material-id="{{ item.id }}" data-material-name="{{ item.name }}" data-material-quantity="1">Añadir</button>
+                                    <button class="table-btn btn-accion" type="button" id="add-to-form" class="" data-material-id="{{ item.id }}" data-material-name="{{ item.name }}" data-material-quantity="1">Añadir</button>
                                 </td>
                             </tr>
                             {% empty %}
@@ -327,11 +336,13 @@
                     </table>
                 </div>
             </div>
-            <div class="tabla-creacion" id="view-given-items-table-container">
+            <div class="tabla-agregados">
+                <button class="form-btn aceptar-btn" id="give-btn">Entregar</button>
+                <button class="form-btn cancelar-btn" id="volver-btn" onclick="location.href='{% url 'home' %}'">Salir</button>
+                <div id="view-given-items-table-container">
 
+                </div>
             </div>
-            <button id="give-btn">Entregar</button>
-            <button id="volver-btn">Salir</button>
         </div>
     </section>
 </section>

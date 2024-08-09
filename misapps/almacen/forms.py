@@ -129,7 +129,7 @@ class PpeForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "Ingrese el nombre del EPP",
-        "id": "id_name"
+        "readonly": "readonly",
     }))
 
     unitCost = forms.FloatField(widget=forms.NumberInput(attrs={
@@ -251,7 +251,8 @@ class EquipmentForm(forms.ModelForm):
     name = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'input',
         'type': 'text',
-        'placeholder': 'Nombre del equipo'
+        'placeholder': 'Nombre del equipo',
+        "readonly": "readonly",
     }))
 
     stock = forms.IntegerField(widget=forms.NumberInput(attrs={
@@ -365,6 +366,7 @@ class MaterialForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "Nombre del material",
+        "readonly": "readonly",
     }))
 
     unitCost = forms.FloatField(widget=forms.NumberInput(attrs={
@@ -482,7 +484,8 @@ class ToolForm(forms.ModelForm):
     name = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'input',
         'type': 'text',
-        'placeholder': 'Nombre de la herramienta'
+        'placeholder': 'Nombre de la herramienta',
+        "readonly": "readonly",
     }))
 
     stock = forms.IntegerField(widget=forms.NumberInput(attrs={
@@ -595,7 +598,8 @@ class PpeLoanForm(forms.ModelForm):
     ppe = forms.CharField(widget=forms.TextInput(attrs={
         "class": "input",
         "type": "text",
-        "placeholder": "Epp a asignar...",
+        "placeholder": "EPP a asignar",
+        "readonly": "readonly",
     }))
 
     loanDate = forms.DateField(widget=forms.DateInput(attrs={
@@ -636,7 +640,8 @@ class ToolLoanForm(forms.ModelForm):
     tool = forms.CharField(widget=forms.TextInput(attrs={
         "class": "input",
         "type": "text",
-        "placeholder": "Herramienta a asignar...",
+        "placeholder": "Herramienta a asignar",
+        "readonly": "readonly",
     }))
 
     loanDate = forms.DateField(widget=forms.DateInput(attrs={
@@ -694,6 +699,7 @@ class EquipmentLoanForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "Equipo a asignar",
+        "readonly": "readonly",
     }))
 
     loanDate = forms.DateField(widget=forms.DateInput(attrs={

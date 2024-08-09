@@ -26,11 +26,14 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <div class="titulo-pagina">
             <h2>Listado de Material</h2>
         </div>
-        <div class="tabla-creacion" id="duration-table-container">
+        <div class="tabla-mostrar">
+            <div class="centrado">
+                <a class="form-btn ver-obj-btn" href="{% url 'create_material' %}">Volver</a>
+            </div>
             <table class="tabla">
                 <thead>
                     <tr>
@@ -54,7 +57,7 @@
                         </td>
                         <td>
                             <a href="{% url 'modify_material' material.name %}" class="form-btn aceptar-btn">Editar</a>
-                            <button type="button" class="delete-material-btn" 
+                            <button type="button" class="form-btn cancelar-btn" id="delete-material-btn" 
                                     data-material-name="{{ material.name }}" 
                                     data-action-url="{% url 'delete_material' material.idMaterial %}">
                                 Eliminar
@@ -69,31 +72,13 @@
                 </tbody>
             </table>
         </div>
-        <div class="centrado">
-            <a class="form-btn ver-obj-btn" href="{% url 'create_material' %}" style="
-                display: inline-block;
-                padding: 10px 20px;
-                font-size: 16px;
-                color: #fff;
-                background-color: #2c3e50;
-                border: none;
-                border-radius: 5px;
-                text-decoration: none;
-                text-align: center;
-                transition: background-color 0.3s ease;
-                margin-top: 20px;
-            " onmouseover="this.style.backgroundColor='#34495e';" onmouseout="this.style.backgroundColor='#2c3e50';">
-                Volver
-            </a>
-        </div>
     </section>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Selecciona todos los botones de eliminación
-    const deleteButtons = document.querySelectorAll('.delete-material-btn');
+    const deleteButtons = document.querySelectorAll('#delete-material-btn');
 
     deleteButtons.forEach(button => {
         button.addEventListener('click', function () {

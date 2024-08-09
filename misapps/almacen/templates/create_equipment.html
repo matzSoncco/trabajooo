@@ -26,7 +26,7 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'create_ppe' %}">EPP</a>
             <a class="link-form" href="{% url 'create_tool' %}">HERRAMIENTAS</a>
@@ -35,6 +35,13 @@
         </nav>
         <div class="contenedor-principal">
             <div class="top-form">
+                {% if messages %}
+                <ul class="messages" style="display: none;">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
                 <h2 class="titulo-primario">Creación de Equipos</h2>
                 <a class="form-btn ver-obj-btn" href="{% url 'equipment_total' %}">Ver Equipos</a>
             </div>

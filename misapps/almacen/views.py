@@ -1459,9 +1459,9 @@ login_required
 def add_tool_loan(request):
     query = request.GET.get('q', '')
     if query:
-        tools = Ppe.objects.filter(name__icontains=query)
+        tools = Tool.objects.filter(name__icontains=query)
     else:
-        tools = Ppe.objects.all()
+        tools = Tool.objects.all()
     if request.method == 'POST':
         form = ToolLoanForm(request.POST)
         if form.is_valid():
@@ -2093,9 +2093,9 @@ login_required
 def add_material_loan(request):
     query = request.GET.get('q', '')
     if query:
-        materials = Ppe.objects.filter(name__icontains=query)
+        materials = Material.objects.filter(name__icontains=query)
     else:
-        materials = Ppe.objects.all()
+        materials = Material.objects.all()
     if request.method == 'POST':
         form = (request.POST)
         if form.is_valid():
@@ -2105,7 +2105,7 @@ def add_material_loan(request):
         else:
             messages.error(request, 'Por favor, corrija los errores en el formulario.')
     else:
-        form = ToolLoanForm()
+        form = MaterialLoanForm()
     
     context = {
         'form': form,

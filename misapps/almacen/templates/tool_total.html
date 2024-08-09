@@ -26,11 +26,14 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <div class="titulo-pagina">
             <h2>Listado de Herramientas</h2>
         </div>
-        <div class="tabla-creacion" id="duration-table-container">
+        <div class="tabla-mostrar">
+            <div class="centrado">
+                <a class="form-btn ver-obj-btn" href="{% url 'create_tool' %}">Volver</a>
+            </div>
             <table class="tabla">
                 <thead>
                     <tr>
@@ -54,7 +57,7 @@
                         </td>
                         <td>
                             <a href="{% url 'modify_tool' tool.name %}" class="form-btn aceptar-btn">Editar</a>
-                            <button type="button" class="delete-tool-btn" 
+                            <button type="button" class="form-btn cancelar-btn" id="delete-tool-btn" 
                                     data-tool-name="{{ tool.name }}" 
                                     data-action-url="{% url 'delete_tool' tool.idTool %}">
                                 Eliminar
@@ -69,23 +72,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="centrado">
-            <a class="form-btn ver-obj-btn" href="{% url 'create_tool' %}" style="
-                display: inline-block;
-                padding: 10px 20px;
-                font-size: 16px;
-                color: #fff;
-                background-color: #2c3e50;
-                border: none;
-                border-radius: 5px;
-                text-decoration: none;
-                text-align: center;
-                transition: background-color 0.3s ease;
-                margin-top: 20px;
-            " onmouseover="this.style.backgroundColor='#34495e';" onmouseout="this.style.backgroundColor='#2c3e50';">
-                Volver
-            </a>
-        </div>
     </section>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -93,7 +79,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Selecciona todos los botones de eliminación
-    const deleteButtons = document.querySelectorAll('.delete-tool-btn');
+    const deleteButtons = document.querySelectorAll('#delete-tool-btn');
 
     deleteButtons.forEach(button => {
         button.addEventListener('click', function () {

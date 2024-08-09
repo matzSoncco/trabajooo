@@ -79,20 +79,20 @@
         let ppe_loans = [];
 
         function updatePreDeliveryTable() {
-            let tableHtml = '<table><tr><th>Nombre del EPP</th><th>Cantidad</th><th>Trabajador</th><th>Acción</th></tr>';
+            let tableHtml = '<table class="tabla"><tr><th>Nombre del EPP</th><th>Cantidad</th><th>Trabajador</th><th>Acción</th></tr>';
             ppe_loans.forEach((ppe, index) => {
                 tableHtml += '<tr>';
                 tableHtml += `<td>${ppe.name}</td>`;
                 tableHtml += `<td>${ppe.quantity}</td>`;
                 tableHtml += `<td>${ppe.worker}</td>`;
-                tableHtml += `<td><button class="remove-from-pre-delivery" data-index="${index}">Eliminar</button></td>`;
+                tableHtml += `<td><button class="quitar-btn" id="remove-from-pre-delivery" data-index="${index}">Quitar</button></td>`;
                 tableHtml += '</tr>';
             });
             tableHtml += '</table>';
             $('#view-given-ppe-table-container').html(tableHtml);
         }
 
-        $(document).on('click', '.add-to-pre-delivery', function() {
+        $(document).on('click', '#add-to-pre-delivery', function() {
             let ppeName = $(this).data('ppe-name');
             $("#id_ppe").val(ppeName);
         });
@@ -136,7 +136,7 @@
         });
 
         // Eliminar elementos de la lista de pre-entrega
-        $(document).on('click', '.remove-from-pre-delivery', function() {
+        $(document).on('click', '#remove-from-pre-delivery', function() {
             let index = $(this).data('index');
             ppe_loans.splice(index, 1);
             updatePreDeliveryTable();
@@ -206,7 +206,7 @@
                 popupTableBody.append(row);
             });
 
-            $('#popup').show();
+            $('#popup, #popup-overlay').show();
         }
 
         $("#give-btn").click(function() {
@@ -286,6 +286,8 @@
                             icon: 'success',
                             title: 'Éxito',
                             text: 'Los préstamos se han confirmado correctamente.'
+                        }).then(() => {
+                            $('#popup, #popup-overlay').hide(); // Ocultar el popup y el overlay
                         });
                     } else {
                         Swal.fire({
@@ -305,9 +307,8 @@
             });
         }
 
-
-        $('#cancel-btn').click(function() {
-            $('#popup').hide();
+        $('#cancel-btn').on('click', function() {
+            $('#popup, #popup-overlay').hide();
         });
 
         $(document).on('change', '.renewal-checkbox', function() {
@@ -317,32 +318,97 @@
     });
 </script>
 <style>
-    #popup {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 20px;
-        border: 1px solid #ccc;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        z-index: 1000;
-    }
+/* Estilos generales para el popup */
+#popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 800px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    z-index: 1000;
+    display: none; /* Oculto por defecto */
+}
 
-    #popup table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+/* Estilos del encabezado del popup */
+#popup h3 {
+    margin-top: 0;
+    font-size: 1.5em;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
 
-    #popup th, #popup td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
+/* Estilos de la tabla en el popup */
+#popup-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
 
-    #popup th {
-        background-color: #f2f2f2;
-    }
+#popup-table th,
+#popup-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#popup-table th {
+    background-color: #f4f4f4;
+    color: #333;
+    font-weight: bold;
+}
+
+#popup-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#popup-table td {
+    color: #555;
+}
+
+/* Estilos para los botones */
+#confirm-btn,
+#cancel-btn {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+
+#confirm-btn:hover,
+#cancel-btn:hover {
+    background-color: #0056b3;
+}
+
+#cancel-btn {
+    background-color: #6c757d;
+}
+
+#cancel-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Estilos adicionales para el fondo del popup */
+#popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none; /* Oculto por defecto */
+}
 </style>
 <section class="principal-general">
     <aside class="menu-lateral">
@@ -367,7 +433,7 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'add_ppe_loan' %}">EPPs</a>
             <a class="link-form" href="{% url 'add_tool_loan' %}">Herramientas</a>
@@ -377,11 +443,18 @@
         <div class="contenedor-formulario">
             <div id="loan-message"></div>
             <div class="top-form">
+                {% if messages %}
+                <ul class="messages" style="display: none;">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
                 <h2 class="titulo-primario">Asignar Equipos de Protección Personal</h2>
-                <button id="volver-btn" onclick="location.href='{% url 'ppe_loan_list' %}'">Ver tabla</button>
+                <button class="form-btn ver-obj-btn" onclick="location.href='{% url 'ppe_loan_list' %}'">Ver tabla</button>
             </div>
             <div class="centrado">
-                <div class="formulario-contenedor-individual" >
+                <div class="formulario-contenedor-individual">
                     <form id="ppe-loan-form" method="post" action="{% url 'add_ppe_loan' %}" enctype="application/json" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
@@ -419,7 +492,6 @@
 
                         <div class="campo-botones">
                             <button id="agregar-a-tabla-pre" class="form-btn aceptar-btn" type="submit">Agregar</button>
-                            <button class="form-btn cancelar-btn" type="button" onclick="location.href='{% url 'home' %}'">Cancelar</button>
                         </div>
                     </form>
                 </div>
@@ -431,7 +503,7 @@
                                 <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
                             </div>
                             <div class="btn-busqueda-elemento">
-                                <button type="submit" class="btn buscar-btn">Buscar</button>
+                                <button type="submit" class="form-btn aceptar-btn">Buscar</button>
                             </div>
                         </form>
                     </div>
@@ -451,26 +523,30 @@
                                 <td>{{ ppe.quantity }}</td>
                                 <td>{{ ppe.duration }}</td>
                                 <td>
-                                    <button type="button" class="add-to-pre-delivery" data-ppe-id="{{ ppe.id }}" data-ppe-name="{{ ppe.name }}" data-ppe-quantity="1">Añadir</button>
+                                    <button class="table-btn btn-accion" type="button" id="add-to-pre-delivery" data-ppe-id="{{ ppe.id }}" data-ppe-name="{{ ppe.name }}" data-ppe-quantity="1">Añadir</button>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3">No hay EPPs disponibles.</td>
+                                <td colspan="4">No hay EPPs disponibles.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
+            <div class="tabla-agregados">
+                <button class="form-btn aceptar-btn" id="give-btn">Entregar</button>
+                <button class="form-btn cancelar-btn" id="volver-btn" onclick="location.href='{% url 'home' %}'">Salir</button>
+                <div id="view-given-ppe-table-container">
+
+                </div>
             </div>
-            <button id="give-btn">Entregar</button>
-            <button id="volver-btn" onclick="location.href='{% url 'home' %}'">Salir</button>
-            <div class="tabla-creacion" id="view-given-ppe-table-container"></div>
         </div>
     </section>
 </section>
-<div id="popup" style="display: none;">
+<div id="popup-overlay"></div>
+<div id="popup">
     <h3>Confirmar entrega de EPPs</h3>
     <table id="popup-table">
         <thead>
@@ -489,57 +565,4 @@
     <button type="button" id="confirm-btn">Confirmar</button>
     <button id="cancel-btn">Cancelar</button>
 </div>
-<style>
-    #give-btn {
-        border: 2px solid #2c3e50;
-        border-radius: 4px;
-        color: white;
-        font-size: 16px;
-        border-top: 1px solid #2c3e50;
-        font-weight: bold;
-        padding: 10px 20px;
-        cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s;
-        background-color: #2c3e50;
-        margin-top: 10px; /* Margen superior */
-        margin-left: 10px; /* Margen izquierdo */
-    }
-
-    #volver-btn {
-        border: 2px solid #2c3e50;
-        border-radius: 4px;
-        color: white;
-        font-size: 16px;
-        border-top: 1px solid #2c3e50;
-        font-weight: bold;
-        padding: 10px 20px;
-        cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s;
-        background-color: #2c3e50;
-        transform: scale(0.98);
-        margin-top: 10px; /* Margen superior */
-        margin-left: 10px; /* Margen izquierdo */
-    }
-
-    #give-btn:hover, #volver-btn:hover {
-        background-color: #34495e;
-    }
-
-    .add-to-pre-delivery {
-        border-radius: 4px;
-        color: white;
-        font-size: 12px;
-        font-weight: bold;
-        padding: 10px 20px;
-        cursor: pointer;
-        background-color: #494949;
- 
-    }
-
-    .add-to-pre-delivery:hover {
-        background-color: #5e5e5e;
-    }
-</style>
-
-
 {% endblock %}

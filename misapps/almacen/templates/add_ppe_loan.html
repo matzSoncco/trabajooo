@@ -280,20 +280,27 @@
 
         function sendDataToServer(ppeToAssign) {
             // Preparar los datos para enviar al servidor
-            let ppe_loans = ppeToAssign.map(ppe => {
-                let row = $(`#popup-table tbody tr[data-ppe-id="${ppe.id}"]`);
-                return {
-                    name: ppe.name,
-                    quantity: ppe.quantity,
+            let ppe_loans = [];
+            
+            $('#popup-table tbody tr').each(function() {
+                let row = $(this);
+                let ppeName = row.find('td:eq(0)').text();
+                let quantity = row.find('td:eq(1)').text();
+                let isAssigned = row.find('td:eq(2)').text() === 'SÍ';
+                let isRenewal = row.find('.renewal-checkbox').is(':checked');
+                
+                ppe_loans.push({
+                    name: ppeName,
+                    quantity: quantity,
                     worker: {
-                        name: $('#id_workerName').val(),
-                        position: $('#id_workerPosition').val(),
-                        dni: $('#id_workerDni').val()
+                        name: $('#id_worker').val().trim(),
+                        position: $('#id_workerPosition').val().trim(),
+                        dni: $('#id_workerDni').val().trim()
                     },
-                    loanDate: $('#id_loanDate').val(),
-                    isAssigned: row.attr('data-is-assigned') === 'true',
-                    isRenewal: row.find('.renewal-checkbox').is(':checked')
-                };
+                    loanDate: $('#id_loanDate').val().trim(),
+                    isAssigned: isAssigned,
+                    isRenewal: isRenewal
+                });
             });
 
             $.ajax({
@@ -308,9 +315,8 @@
                             title: 'Éxito',
                             text: 'Los préstamos se han confirmado correctamente.'
                         }).then(() => {
-                            $('#popup, #popup-overlay').hide(); // Ocultar el popup y el overlay
+                            $('#popup, #popup-overlay').hide();
                             
-                            // Actualizar la tabla o redirigir a la página de lista de préstamos
                             if (response.created_loans && response.created_loans.length > 0) {
                                 updateLoanTable(response.created_loans);
                             } else {

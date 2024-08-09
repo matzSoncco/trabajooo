@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from decimal import Decimal
+from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
@@ -126,18 +127,35 @@ def save_all_ppe(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+
             for item in data:
-                ppe = Ppe.objects.get(name=item['name'])
+                # Validación de campos vacíos o cero
+                if not item.get('name'):
+                    return JsonResponse({'status': 'error', 'message': 'Nombre del EPP es obligatorio.'})
+                if int(item.get('quantity', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Cantidad debe ser mayor que 0.'})
+                if Decimal(item.get('unitCost', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Costo unitario debe ser mayor que 0.'})
+                if int(item.get('stock', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Stock ideal debe ser mayor que 0.'})
+
+                try:
+                    ppe = Ppe.objects.get(name=item['name'])
+                except Ppe.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': f'EPP con nombre {item["name"]} no existe.'})
+
                 quantity = int(item['quantity'])
                 unitCost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
-                
+
+                # Actualización del costo total y cantidad
                 total_cost = (ppe.unitCost * Decimal(ppe.quantity)) + (unitCost * quantity)
                 ppe.quantity += quantity
                 ppe.unitCost = total_cost / ppe.quantity
                 ppe.stock = stock
                 ppe.save()
-                
+
+                # Crear registros de historial y actualización de stock
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(ppe),
                     object_name=ppe.name,
@@ -152,9 +170,13 @@ def save_all_ppe(request):
                     unitCost=unitCost,
                     date=item['creationDate']
                 )
+
             return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Error al decodificar JSON.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
+
     return JsonResponse({'status': 'invalid method'})
 
 @login_required
@@ -256,7 +278,12 @@ def create_ppe(request):
             post_data = request.POST.copy()
             post_data['unit'] = unit.id
             form = CreatePpeForm(post_data, request.FILES)
-        
+
+        # Validar si ya existe un EPP con el mismo nombre
+        existing_ppe = Ppe.objects.filter(name=form.data.get('name')).exists()
+        if existing_ppe:
+            form.add_error('name', 'Ya existe un EPP con este nombre.')
+
         if form.is_valid():
             ppe = form.save(commit=False)
             ppe.save()
@@ -264,7 +291,7 @@ def create_ppe(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(ppe),
                 object_name=ppe.name,
-                action='Created',
+                action='Creado',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -272,10 +299,23 @@ def create_ppe(request):
             messages.success(request, 'EPP creado exitosamente.')
             return redirect('create_ppe')
         else:
-            print("Form is not valid")
-            print(form.errors)
+            # Verifica si ya existe un error específico antes de agregar el mensaje general
+            error_added = False
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == 'name' and 'Ya existe un EPP con este nombre.' in error:
+                        messages.error(request, 'Ya existe un EPP con este nombre.')
+                        error_added = True
+                    else:
+                        messages.error(request, f"Error en el campo '{form[field].label}': {error}")
+                        error_added = True
+
+            # Si no hay errores específicos, agregar mensaje general
+            if not error_added:
+                messages.error(request, 'Error al crear el EPP. Verifique los campos e intente nuevamente.')
     else:
         form = CreatePpeForm()
+
     return render(request, 'create_ppe.html', {'form': form})
 
 @csrf_exempt
@@ -312,7 +352,6 @@ def add_ppe(request):
     if request.method == 'POST':
         form = PpeForm(request.POST)
         if form.is_valid():
-            # Obtener datos del formulario y convertirlos a los tipos correctos
             guideNumber = form.cleaned_data['guideNumber']
             creationDate = form.cleaned_data['creationDate']
             name = form.cleaned_data['name']
@@ -320,32 +359,51 @@ def add_ppe(request):
             quantity = int(form.cleaned_data['quantity'])
             stock = int(form.cleaned_data['stock'])
             
-            # Obtener o crear el objeto Ppe
-            ppe, created = Ppe.objects.get_or_create(name=name)
+            # Validaciones adicionales
+            if unitCost <= 0:
+                form.add_error('unitCost', 'El costo unitario debe ser un número positivo mayor a 0.')
+            if quantity <= 0:
+                form.add_error('quantity', 'La cantidad debe ser un número positivo mayor a 0.')
+            if stock <= 0:
+                form.add_error('stock', 'El stock debe ser un número positivo mayor a 0.')
+            if not Ppe.objects.filter(name=name).exists():
+                form.add_error('name', 'El EPP debe coincidir con un EPP existente.')
             
-            # Actualizar la cantidad y el costo unitario del Ppe
-            total_cost = (ppe.unitCost * Decimal(ppe.quantity)) + (unitCost * quantity)
-            total_quantity = ppe.quantity + quantity
-            ppe.unitCost = total_cost / total_quantity
-            ppe.quantity = total_quantity
-            ppe.stock = stock
-            ppe.save()
-            History.objects.create(
-                content_type=ContentType.objects.get_for_model(ppe),
-                object_name=ppe.name,
-                action='Add Stock',
-                user=request.user,
-                timestamp=timezone.now()
-            )
-            # Crear el registro de actualización de stock
-            PpeStockUpdate.objects.create(
-                ppe=ppe,
-                quantity=quantity,
-                unitCost=unitCost,
-                date=creationDate
-            )
-            messages.success(request, 'Se añadió EPP correctamente.')
-            return redirect('add_ppe')
+            if form.errors:
+                messages.error(request, 'Error al añadir EPP. Verifique los campos e intente nuevamente.')
+            else:
+                ppe, created = Ppe.objects.get_or_create(name=name)
+                
+                total_cost = (ppe.unitCost * Decimal(ppe.quantity)) + (unitCost * quantity)
+                total_quantity = ppe.quantity + quantity
+                ppe.unitCost = total_cost / total_quantity
+                ppe.quantity = total_quantity
+                ppe.stock = stock
+                ppe.save()
+                
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(ppe),
+                    object_name=ppe.name,
+                    action='Add Stock',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+                
+                PpeStockUpdate.objects.create(
+                    ppe=ppe,
+                    quantity=quantity,
+                    unitCost=unitCost,
+                    date=creationDate
+                )
+                
+                messages.success(request, 'Se añadió EPP correctamente.')
+                return redirect('add_ppe')
+
+        else:
+            messages.error(request, 'Error al añadir EPP. Verifique los campos e intente nuevamente.')
+            print("Formulario no válido")
+            print(form.errors)
+
     else:
         form = PpeForm()
     
@@ -379,8 +437,8 @@ def delete_ppe(request, ppe_id):
     return JsonResponse({'status': 'method not allowed'}, status=405)
 
 @login_required
-def modify_ppe(request, ppe_id):
-    ppe = get_object_or_404(Ppe, idPpe=ppe_id)
+def modify_ppe(request, ppe_name):
+    ppe = get_object_or_404(Ppe, name=ppe_name)
 
     if request.method == 'POST':
         form = CreatePpeForm(request.POST, request.FILES, instance=ppe)
@@ -630,23 +688,41 @@ def total_cost_equip(request):
 def create_equipment(request):
     if request.method == 'POST':
         form = CreateEquipmentForm(request.POST, request.FILES)
-        
+
+        # Validar si ya existe un equipo con el mismo nombre
+        existing_equipment = Equipment.objects.filter(name=form.data.get('name')).exists()
+        if existing_equipment:
+            form.add_error('name', 'Ya existe un equipo con este nombre.')
+
         if form.is_valid():
             equipment = form.save()
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(equipment),
                 object_name=equipment.name,
-                action='Created',
+                action='Creado',
                 user=request.user,
                 timestamp=timezone.now()
             )
             messages.success(request, 'Equipo creado exitosamente.')
             return redirect('create_equipment')
         else:
-            print("Form is not valid")
-            print(form.errors)
+            # Verifica si ya existe un error específico antes de agregar el mensaje general
+            error_added = False
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == 'name' and 'Ya existe un equipo con este nombre.' in error:
+                        messages.error(request, 'Ya existe un equipo con este nombre.')
+                        error_added = True
+                    else:
+                        messages.error(request, f"Error en el campo '{form[field].label}': {error}")
+                        error_added = True
+                        
+            # Si no hay errores específicos, agregar mensaje general
+            if not error_added:
+                messages.error(request, 'Error al crear el Equipo. Verifique los campos e intente nuevamente.')
     else:
         form = CreateEquipmentForm()
+
     return render(request, 'create_equipment.html', {'form': form})
 
 @login_required
@@ -812,12 +888,18 @@ def material_list(request):
 def create_material(request):
     if request.method == 'POST':
         form = CreateMaterialForm(request.POST, request.FILES)
+
+        # Validar si ya existe un material con el mismo nombre
+        existing_material = Material.objects.filter(name=form.data.get('name')).exists()
+        if existing_material:
+            form.add_error('name', 'Ya existe un material con este nombre.')
+
         if form.is_valid():
             material = form.save()
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(material),
                 object_name=material.name,
-                action='Created',
+                action='Creado',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -826,6 +908,11 @@ def create_material(request):
             messages.success(request, 'Material creado exitosamente.')
             return redirect('create_material')
         else:
+            # Verifica si el error específico es por nombre duplicado
+            if form.errors.get('name'):
+                messages.error(request, 'Ya existe un material con este nombre. Por favor, elija un nombre diferente.')
+            else:
+                messages.error(request, 'Error al crear el material. Verifique los campos e intente nuevamente.')
             print("Formulario no válido")
             print(form.errors)
     else:
@@ -1144,18 +1231,29 @@ def total_cost_tool(request):
 def create_tool(request):
     if request.method == 'POST':
         form = CreateToolForm(request.POST, request.FILES)
+
+        # Validar si ya existe una herramienta con el mismo nombre
+        existing_tool = Tool.objects.filter(name=form.data.get('name')).exists()
+        if existing_tool:
+            form.add_error('name', 'Ya existe una herramienta con este nombre.')
+
         if form.is_valid():
             tool = form.save()
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(tool),
                 object_name=tool.name,
-                action='Created',
+                action='Creado',
                 user=request.user,
                 timestamp=timezone.now()
             )
             messages.success(request, 'Herramienta guardada exitosamente.')
             return redirect('create_tool')
         else:
+            # Verifica si el error específico es por nombre duplicado
+            if form.errors.get('name'):
+                messages.error(request, 'Ya existe una herramienta con este nombre. Por favor, elija un nombre diferente.')
+            else:
+                messages.error(request, 'Error al guardar la herramienta. Verifique los campos e intente nuevamente.')
             print("Form is not valid")
             print(form.errors)
     else:
@@ -1185,8 +1283,9 @@ def delete_tool(request, tool_id):
     return JsonResponse({'status': 'method not allowed'}, status=405)
 
 @login_required
-def modify_tool(request, name):
-    tool = get_object_or_404(Tool, name=name)
+def modify_tool(request, tool_name):
+    print(f"Received tool_name: {tool_name}")
+    tool = get_object_or_404(Tool, name=tool_name)
     if request.method == 'POST':
         form = CreateToolForm(request.POST, request.FILES, instance=tool)
         

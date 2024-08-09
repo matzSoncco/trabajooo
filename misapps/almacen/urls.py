@@ -22,7 +22,7 @@ urlpatterns = [
     path('update-ppe-duration/', views.update_ppe_duration, name='update_ppe_duration'),
     path('ppe/show/table/', views.set_duration, name='show_duration_table'),
     path('ppe/add/', views.add_ppe, name='add_ppe'),
-    path('ppe/<str:ppe_id>/modify/', views.modify_ppe, name='modify_ppe'),
+    path('ppe/<str:ppe_name>/modify/', views.modify_ppe, name='modify_ppe'),
     path('ppe/<str:name>/modify_add/', views.modify_ppe_add, name='modify_ppe_add'),
     path('ppe/<str:ppe_id>/delete_ppe', views.delete_ppe, name='delete_ppe'),
     path('ppe/total_ppe_stock/', views.total_ppe_stock, name='total_ppe_stock'),
@@ -58,7 +58,7 @@ urlpatterns = [
     path('tool/create/', views.create_tool, name='create_tool'),
     path('tool/total/', views.tool_total, name='tool_total'),
     path('tool/<str:tool_id>/delete/', views.delete_tool, name='delete_tool'),
-    path('tool/<str:name>/modify/', views.modify_tool, name='modify_tool'),
+    path('tool/<str:tool_name>/modify/', views.modify_tool, name='modify_tool'),
     path('tool/total_tool_stock/', views.total_tool_stock, name='total_tool_list'),
 
     #TRABAJADORES

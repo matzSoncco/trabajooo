@@ -52,9 +52,14 @@
                         <td>{{ ppe.unit }}</td>
                         <td>
                             {% if ppe.image %}
-                            <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}" class="img-total">
+                            <div class="image-container">
+                                <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}" class="img-total">
+                                <div class="preview">
+                                    <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}">
+                                </div>
+                            </div>
                             {% else %}
-                            No Image
+                            <div class="no-image">No hay imágen</div>
                             {% endif %}
                         </td>
                         <td>
@@ -76,9 +81,12 @@
         </div>
     </section>
 </section>
-
+<div id="preview-modal" class="modal">
+    <span class="close" onclick="closePreview()">&times;</span>
+    <img class="modal-content" id="modal-img">
+    <div id="caption"></div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Selecciona todos los botones de eliminación
@@ -129,6 +137,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+    });
+});
+
+// JavaScript
+document.querySelectorAll('.image-container').forEach(container => {
+    const preview = container.querySelector('.preview');
+    
+    container.addEventListener('mouseover', () => {
+        preview.style.display = 'block';
+    });
+
+    container.addEventListener('mouseout', () => {
+        preview.style.display = 'none';
     });
 });
 </script>

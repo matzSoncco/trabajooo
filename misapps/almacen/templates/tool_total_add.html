@@ -37,6 +37,7 @@
                     <table class="tabla">
                         <thead>
                             <tr>
+                                <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Unidad</th>
                                 <th>N° Guia</th>
@@ -51,19 +52,25 @@
                         <tbody>
                             {% for tool in tools %}
                             <tr>
+                                <td>{{ tool.idTool }}</td>
                                 <td>{{ tool.name }}</td>
                                 <td>{{ tool.unit }}</td>
                                 <td>{{ tool.guideNumber }}</td>
                                 <td>{{ tool.level }}</td>
                                 <td>{{ tool.quantity }}</td>
-                                <td>s/.{{ tool.unitCost }}</td>
-                                <td>s/.{{ tool.totalCost}}</td>
+                                <td>S/.{{ tool.unitCost }}</td>
+                                <td>S/.{{ tool.totalCost}}</td>
                                 
                                 <td>
                                     {% if tool.image %}
-                                    <img src="{{ tool.image.url }}" alt="{{ tool.name }}" class="img-thumbnail">
+                                    <div class="image-container">
+                                        <img src="{{ tool.image.url }}" alt="{{ tool.name }}" class="img-total">
+                                        <div class="preview">
+                                            <img src="{{ tool.image.url }}" alt="{{ tool.name }}">
+                                        </div>
+                                    </div>
                                     {% else %}
-                                    No Image
+                                    <div class="no-image">No hay imágen</div>
                                     {% endif %}
                                 </td>
                                 

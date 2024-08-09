@@ -37,6 +37,7 @@
             <table class="tabla">
                 <thead>
                     <tr>
+                        <th>Código</th>
                         <th>Nombre</th>
                         <th>Número de Serie</th>
                         <th>Nivel</th>
@@ -47,14 +48,20 @@
                 <tbody>
                     {% for equipment in equipments %}
                     <tr>
+                        <td>{{ equipment.idEquipment }}</td>
                         <td>{{ equipment.name }}</td>
                         <td>{{ equipment.serialNumber }}</td>
                         <td>{{ equipment.get_level_display }}</td>
                         <td>
                             {% if equipment.image %}
-                            <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" class="img-total">
+                            <div class="image-container">
+                                <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" class="img-total">
+                                <div class="preview">
+                                    <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}">
+                                </div>
+                            </div>
                             {% else %}
-                            No Image
+                            <div class="no-image">No hay imágen</div>
                             {% endif %}
                         </td>
                         <td>
@@ -128,6 +135,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+    });
+});
+
+// JavaScript
+document.querySelectorAll('.image-container').forEach(container => {
+    const preview = container.querySelector('.preview');
+    
+    container.addEventListener('mouseover', () => {
+        preview.style.display = 'block';
+    });
+
+    container.addEventListener('mouseout', () => {
+        preview.style.display = 'none';
     });
 });
 </script>

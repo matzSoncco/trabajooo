@@ -37,6 +37,7 @@
                     <table class="tabla">
                         <thead>
                             <tr>
+                                <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Unidad</th>
                                 <th>N° Guia</th>
@@ -49,20 +50,25 @@
                         <tbody>
                             {% for ppe in ppes %}
                             <tr>
+                                <td>{{ ppe.idPpe }}</td>
                                 <td>{{ ppe.name }}</td>
                                 <td>{{ ppe.unit }}</td>
                                 <td>{{ ppe.guideNumber }}</td>
                                 <td>{{ ppe.quantity }}</td>
                                 <td>S/.{{ ppe.unitCost }}</td>
                                 <td>S/.{{ ppe.totalCost}}</td>
-                                
                                 <td>
                                     {% if ppe.image %}
-                                    <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}" class="img-thumbnail">
+                                    <div class="image-container">
+                                        <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}" class="img-total">
+                                        <div class="preview">
+                                            <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}">
+                                        </div>
+                                    </div>
                                     {% else %}
-                                    No Image
+                                    <div class="no-image">No Image</div>
                                     {% endif %}
-                                </td>                              
+                                </td>                            
                             </tr>
                             {% empty %}
                             <tr>
@@ -229,5 +235,4 @@
         deleteForm.action = "{% url 'delete_ppe' 'placeholder' %}".replace('placeholder', encodeURIComponent(ppeName));
     });
 </script>
-  
 {% endblock %}

@@ -37,6 +37,7 @@
                     <table class="tabla">
                         <thead>
                             <tr>
+                                <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Unidad</th>
                                 <th>N° Guia</th>
@@ -50,18 +51,24 @@
                         <tbody>
                             {% for material in material %}
                             <tr>
+                                <td>{{ material.idMaterial }}</td>
                                 <td>{{ material.name }}</td>
                                 <td>{{ material.unit }}</td>
                                 <td>{{ material.guideNumber }}</td>
                                 <td>{{ material.quantity }}</td>
-                                <td>s/.{{ material.unitCost }}</td>
-                                <td>s/.{{ material.totalCost}}</td>
+                                <td>S/.{{ material.unitCost }}</td>
+                                <td>S/.{{ material.totalCost}}</td>
                                 
                                 <td>
                                     {% if material.image %}
-                                    <img src="{{ material.image.url }}" alt="{{ material.name }}" class="img-thumbnail">
+                                    <div class="image-container">
+                                        <img src="{{ material.image.url }}" alt="{{ material.name }}" class="img-total">
+                                        <div class="preview">
+                                            <img src="{{ material.image.url }}" alt="{{ material.name }}">
+                                        </div>
+                                    </div>
                                     {% else %}
-                                    No Image
+                                    <div class="no-image">No hay imágen</div>
                                     {% endif %}
                                 </td>
                                 

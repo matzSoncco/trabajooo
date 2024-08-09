@@ -37,6 +37,7 @@
                     <table class="tabla">
                         <thead>
                             <tr>
+                                <th>Código</th>
                                 <th>Nombre</th>
                                 <th>N° Guia</th>
                                 <th>Cantidad</th>
@@ -48,17 +49,23 @@
                         <tbody>
                             {% for equipment in equipment %}
                             <tr>
+                                <td>{{ equipment.idEquipment }}</td>
                                 <td>{{ equipment.name }}</td>
                                 <td>{{ equipment.guideNumber }}</td>
                                 <td>{{ equipment.quantity }}</td>
-                                <td>s/.{{ equipment.unitCost }}</td>
-                                <td>s/.{{ equipment.totalCost}}</td>
+                                <td>S/.{{ equipment.unitCost }}</td>
+                                <td>S/.{{ equipment.totalCost}}</td>
                                 
                                 <td>
                                     {% if equipment.image %}
-                                    <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" class="img-thumbnail">
+                                    <div class="image-container">
+                                        <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" class="img-total">
+                                        <div class="preview">
+                                            <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}">
+                                        </div>
+                                    </div>
                                     {% else %}
-                                    No Image
+                                    <div class="no-image">No hay imágen</div>
                                     {% endif %}
                                 </td>
                                 

@@ -617,18 +617,39 @@ input[type="file"]:focus {
     color: var(--text-light);
 }
 
-.img-thumbnail {
-    width: 150px;  
-    height: 75px; 
-    border-radius: 4px; 
-    border: 1px solid #ddd; 
-    padding: 2px; 
+/* CSS */
+.image-container {
+    position: relative;
+    display: inline-block;
 }
 
 .img-total {
-    width: 150px;  
-    height: 75px; 
-    border-radius: 4px; 
-    border: 1px solid #ddd; 
-    padding: 2px; 
+    max-width: 100px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+.preview {
+    display: none;
+    position: absolute;
+    top: -120px; /* Ajusta la distancia desde la imagen */
+    left: 0;
+    background-color: rgba(0,0,0,0.7); /* Fondo semitransparente */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+.preview img {
+    max-width: 250px; /* Ajusta el tamaño de la previsualización */
+    max-height: 250px; /* Ajusta el tamaño de la previsualización */
+    display: block;
 }

@@ -37,6 +37,7 @@
             <table class="tabla">
                 <thead>
                     <tr>
+                        <th>Código</th>
                         <th>Nombre</th>
                         <th>Nivel</th>
                         <th>Imagen</th>
@@ -46,18 +47,24 @@
                 <tbody>
                     {% for tool in tools %}
                     <tr>
+                        <td>{{ tool.idTool }}</td>
                         <td>{{ tool.name }}</td>
                         <td>{{ tool.level }}</td>
                         <td>
                             {% if tool.image %}
-                            <img src="{{ tool.image.url }}" alt="{{ tool.name }}" class="img-total">
+                            <div class="image-container">
+                                <img src="{{ tool.image.url }}" alt="{{ tool.name }}" class="img-total">
+                                <div class="preview">
+                                    <img src="{{ tool.image.url }}" alt="{{ tool.name }}">
+                                </div>
+                            </div>
                             {% else %}
-                            No Image
+                                <div class="no-image">No hay imágen</div>
                             {% endif %}
                         </td>
                         <td>
                             <a href="{% url 'modify_tool' tool.name|urlencode %}" class="form-btn aceptar-btn">Editar</a>
-                            <button type="button" class="delete-tool-btn" id="delete-tool-btn" 
+                            <button type="button" class="form-btn cancelar-btn" id="delete-tool-btn" 
                                     data-tool-name="{{ tool.name }}" 
                                     data-action-url="{% url 'delete_tool' tool.idTool %}">
                                 Eliminar
@@ -128,6 +135,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+// JavaScript
+document.querySelectorAll('.image-container').forEach(container => {
+    const preview = container.querySelector('.preview');
+    
+    container.addEventListener('mouseover', () => {
+        preview.style.display = 'block';
+    });
 
+    container.addEventListener('mouseout', () => {
+        preview.style.display = 'none';
+    });
+});
 </script>
 {% endblock %}

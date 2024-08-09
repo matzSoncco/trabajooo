@@ -37,6 +37,7 @@
             <table class="tabla">
                 <thead>
                     <tr>
+                        <th>Código</th>
                         <th>Nombre</th>
                         <th>Unidad</th>
                         <th>Imagen</th>
@@ -46,13 +47,19 @@
                 <tbody>
                     {% for material in materials %}
                     <tr>
+                        <td>{{ material.idMaterial }}</td>
                         <td>{{ material.name }}</td>
                         <td>{{ material.unit }}</td>
                         <td>
                             {% if material.image %}
-                            <img src="{{ material.image.url }}" alt="{{ material.name }}" class="img-total">
+                            <div class="image-container">
+                                <img src="{{ material.image.url }}" alt="{{ material.name }}" class="img-total">
+                                <div class="preview">
+                                    <img src="{{ material.image.url }}" alt="{{ material.name }}">
+                                </div>
+                            </div>
                             {% else %}
-                            No Image
+                            <div class="no-image">No hay imágen</div>
                             {% endif %}
                         </td>
                         <td>
@@ -125,6 +132,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+    });
+});
+
+// JavaScript
+document.querySelectorAll('.image-container').forEach(container => {
+    const preview = container.querySelector('.preview');
+    
+    container.addEventListener('mouseover', () => {
+        preview.style.display = 'block';
+    });
+
+    container.addEventListener('mouseout', () => {
+        preview.style.display = 'none';
     });
 });
 </script>

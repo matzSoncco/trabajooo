@@ -26,7 +26,7 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'return'%}">Devoluciones</a>
             <a class="link-form" href="{% url 'return_tool'%}">Herramientas</a>
@@ -35,64 +35,63 @@
         <div class="titulo-pagina">
             <h2>Devoluciones de Herramientas</h2>
         </div>
-        <form method="get" action="{% url 'return_tool' %}">
-            <label for="work_order">Orden de Trabajo:</label>
-            <input type="text" id="work_order" name="work_order">
-    
-            <label for="worker_dni">DNI del Trabajador:</label>
-            <input type="text" id="worker_dni" name="worker_dni">
-    
-            <button type="submit">Buscar</button>
-            <button type="submit" name="view_debtors" value="1">Ver lista de todos los deudores</button>
+        <form class="devoluciones" method="get" action="{% url 'return_tool' %}">
+            <div class="fila-form">
+                <div class="campo">
+                    <label for="work_order">Orden de Trabajo:</label>
+                    <input type="text" id="work_order" name="work_order" placeholder="Buscar por OT">
+                </div>
+                <div class="campo">
+                    <label for="worker_dni">DNI del Trabajador:</label>
+                    <input type="text" id="worker_dni" name="worker_dni" placeholder="Buscar por DNI de encargado">
+                </div>
+            </div>
+            <div class="fila-form">
+                <button type="submit">Buscar</button>
+                <button type="submit" name="view_debtors" value="1">Ver lista de todos los deudores</button>
+            </div>
         </form>
-    
-        {% if tool_loans %}
-            <form method="post" action="{% url 'return_tool' %}">
-                {% csrf_token %}
-                <table class="tabla">
-                    <thead>
-                        <tr>
-                            <th>Código de Herramienta</th>
-                            <th>Orden de Trabajo</th>
-                            <th>Nombre de Herramienta</th>
-                            <th>Cantidad del Préstamo</th>
-                            <th>Devolución</th>
-                            <th>Responsable</th>
-                            <th>DNI Responsable</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for loan in tool_loans %}
-                        <tr>
-                            <td>{{ loan.tool.idTool }}</td>
-                            <td>{{ loan.workOrder }}</td>
-                            <td>{{ loan.tool.name }}</td>
-                            <td>{{ loan.loanAmount }}</td>
-                            <td><input type="checkbox" name="returned_{{ loan.idToolLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
-                            <td>{{ loan.worker.name }}</td>
-                            <td>{{ loan.worker.dni }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <button type="submit">Guardar</button>
-            </form>
-        {% else %}
-            <p>No se encontraron préstamos de herramientas.</p>
-        {% endif %}
+        <div class="tabla-mostrar">
+            {% if tool_loans %}
+                <form method="post" action="{% url 'return_tool' %}">
+                    {% csrf_token %}
+                    <table class="tabla">
+                        <thead>
+                            <tr>
+                                <th>Código de Herramienta</th>
+                                <th>Orden de Trabajo</th>
+                                <th>Nombre de Herramienta</th>
+                                <th>Cantidad del Préstamo</th>
+                                <th>Devolución</th>
+                                <th>Responsable</th>
+                                <th>DNI Responsable</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in tool_loans %}
+                            <tr>
+                                <td>{{ loan.tool.idTool }}</td>
+                                <td>{{ loan.workOrder }}</td>
+                                <td>{{ loan.tool.name }}</td>
+                                <td>{{ loan.loanAmount }}</td>
+                                <td><input type="checkbox" name="returned_{{ loan.idToolLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
+                                <td>{{ loan.worker.name }}</td>
+                                <td>{{ loan.worker.dni }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="fixed-button">
+                        <button type="submit">Guardar</button>
+                    </div>
+                </form>
+            {% else %}
+                <p>No se encontraron préstamos de herramientas.</p>
+            {% endif %}
+        </div>
     </section>
-    
 </section>
 <style>
-    .titulo-pagina h2 {
-        margin-bottom: 20px;
-        font-size: 24px;
-        color: #333;
-    }
-    form {
-        margin-bottom: 20px;
-    }
-
     form button[type="submit"] {
         padding: 10px 20px;
         background-color: #2c3e50;
@@ -101,34 +100,8 @@
         border-radius: 5px;
         cursor: pointer;
     }
-
     form button[type="submit"]:hover {
         background-color: #233445;
-    }
-
-    .tabla {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-
-    .tabla th, .tabla td {
-        padding: 15px;
-        text-align: left;
-        border-bottom: 1px solid #dddddd;
-    }
-
-    .tabla th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }
-
-    .tabla tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-    .tabla tr:hover {
-        background-color: #f1f1f1;
     }
     button[type="submit"] {
         padding: 10px 20px;
@@ -139,15 +112,8 @@
         cursor: pointer;
         margin-top: 20px;
     }
-
     button[type="submit"]:hover {
         background-color: #218838;
-    }
-
-    .no-resultados {
-        text-align: center;
-        margin: 20px;
-        color: #666;
     }
 </style>
 {% endblock %}

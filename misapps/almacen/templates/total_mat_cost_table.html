@@ -26,7 +26,7 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'total_cost_table' %}">Total</a>
             <a class="link-form" href="{% url 'total_ppe_cost_table' %}">EPPs</a>
@@ -35,43 +35,59 @@
             <a class="link-form" href="{% url 'total_mat_cost_table' %}">Materiales</a>
         </nav>
         <div class="contenedor-principal" id="cost-table-container">
-            <nav class="navegacion-tabla-costo">
-                <a class="volver-btn" href="{% url 'home' %}">Volver</a>
-            </nav>
-            <h2 class="titulo-primario">Tabla de costos de EPPs</h2>
-            <table class="tabla">
-                <thead>
-                    <tr>
-                        <th>Codigo</th>
-                        <th>Nombre</th>
-                        <th>Cantidad</th>
-                        <th>Costo Unitario</th>
-                        <th>Costo sub Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in materials %}
+            <div class="top-form">
+                <h2 class="titulo-primario">Tabla de costos de Material</h2>
+                <a class="form-btn ver-obj-btn" href="{% url 'home' %}">Volver</a>
+            </div>
+            <div class="tabla-mostrar">
+                <table class="tabla">
+                    <thead>
                         <tr>
-                            <td>{{ item.idMaterial }}</td>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.quantity}}</td>
-                            <td>s/.{{ item.unitCost }}</td>
-                            <td>s/.{{ item.totalCost }}</td>
+                            <th>Codigo</th>
+                            <th>Nombre</th>
+                            <th>Cantidad</th>
+                            <th>Costo Unitario</th>
+                            <th>Costo sub Total</th>
                         </tr>
-                    {% empty %}
+                    </thead>
+                    <tbody>
+                        {% for item in materials %}
+                            <tr>
+                                <td>{{ item.idMaterial }}</td>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.quantity}}</td>
+                                <td>s/.{{ item.unitCost }}</td>
+                                <td>s/.{{ item.totalCost }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4">No hay materiales disponibles.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="pie-tabla">
                         <tr>
-                            <td colspan="4">No hay materiales disponibles.</td>
+                            <td colspan="4"><strong>Costo Total Final </strong>
+                            <td><strong>s/. {{ total_cost_final }}</strong></td>
                         </tr>
-                    {% endfor %}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="4"><strong>Costo Total Final </strong>
-                        <td><strong>s/. {{ total_cost_final }}</strong></td>
-                    </tr>
-                </tfoot>
-            </table>            
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </section>
 </section>
+<style>
+.pie-tabla {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.pie-tabla td {
+    border-top: 2px solid #ddd;
+    padding: 8px;
+}
+</style>
 {% endblock %}

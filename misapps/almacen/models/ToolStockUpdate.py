@@ -8,4 +8,4 @@ class ToolStockUpdate(models.Model):
     date = models.DateField(auto_now_add=True)
     
     def __str__(self):
-        return f"{self.ppe.name} - {self.quantity} @ {self.unitCost}"
+        return f"{self.tool.name} - {self.quantity} @ {self.unitCost}"

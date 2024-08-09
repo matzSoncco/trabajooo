@@ -84,6 +84,7 @@ urlpatterns = [
     path('ppeloan/modify/<int:id>/', views.modify_ppe_loan, name='modify_ppe_loan'),
 
     #ASIGNACIONES DE HERRAMIENTAS
+    path('return', views.return_view, name='return'),
     path('return/tool/', views.return_tool_view, name='return_tool'),
     path('tool_loan_list/', views.tool_loan_list, name='tool_loan_list'),
     path('add_tool_loan/', views.add_tool_loan, name='add_tool_loan'),

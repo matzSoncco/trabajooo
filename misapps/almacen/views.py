@@ -138,6 +138,14 @@ def save_all_ppe(request):
                 ppe.stock = stock
                 ppe.save()
                 
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(ppe),
+                    object_name=ppe.name,
+                    action='Add Stock',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+
                 PpeStockUpdate.objects.create(
                     ppe=ppe,
                     quantity=quantity,
@@ -325,7 +333,7 @@ def add_ppe(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(ppe),
                 object_name=ppe.name,
-                action='Add',
+                action='Add Stock',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -472,7 +480,7 @@ def add_equipment(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(equipment),
                 object_name=equipment.name,
-                action='Add',
+                action='Add Stock',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -528,7 +536,7 @@ def save_all_equipment(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(equipment),
                     object_name=equipment.name,
-                    action='Created',
+                    action='Add Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -714,7 +722,7 @@ def save_all_material(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(material),
                     object_name=material.name,
-                    action='Add',
+                    action='Add Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -854,7 +862,7 @@ def add_material(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(material),
                 object_name=material.name,
-                action='Created',
+                action='Add Stock',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -979,7 +987,7 @@ def add_tool(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(tool),
                 object_name=tool.name,
-                action='Created',
+                action='Add Stock',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1024,7 +1032,7 @@ def save_all_tools(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(tool),
                     object_name=tool.name,
-                    action='Created',
+                    action='Add Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -1177,6 +1185,61 @@ def total_tool_stock(request):
     total_stock = Tool.objects.aggregate(Sum('stock'))['stock__sum'] or 0
     return JsonResponse({'total_stock': total_stock})
 
+@login_required
+def return_view(request):
+    # Obtener todos los préstamos de herramientas y equipos
+    tool_loans = ToolLoan.objects.all()
+    equipment_loans = EquipmentLoan.objects.all()
+
+    # Manejo de la búsqueda
+    work_order = request.GET.get('work_order')
+    worker_dni = request.GET.get('worker_dni')
+
+    if work_order:
+        tool_loans = tool_loans.filter(workOrder=work_order)
+        equipment_loans = equipment_loans.filter(workOrder=work_order)
+    elif worker_dni:
+        tool_loans = tool_loans.filter(workerDni=worker_dni)
+        equipment_loans = equipment_loans.filter(workerDni=worker_dni)
+    elif 'view_debtors' in request.GET:
+        tool_loans = tool_loans.filter(loanStatus=False)
+        equipment_loans = equipment_loans.filter(loanStatus=False)
+
+    # Manejo del POST para actualizar loanStatus
+    if request.method == 'POST':
+        for loan in tool_loans:
+            checkbox_name = f'returned_{loan.idToolLoan}'
+            loan.loanStatus = checkbox_name in request.POST
+            loan.save()
+
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(loan),
+                object_name=loan.tool.name,
+                action='Return',
+                user=request.user,
+                timestamp=timezone.now()
+            )
+
+        for loan in equipment_loans:
+            checkbox_name = f'returned_{loan.idEquipmentLoan}'
+            loan.loanStatus = checkbox_name in request.POST
+            loan.save()
+
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(loan),
+                object_name=loan.equipment.name,
+                action='Return',
+                user=request.user,
+                timestamp=timezone.now()
+            )
+        
+        return HttpResponseRedirect(request.path_info)
+
+    return render(request, 'return.html', {
+        'tool_loans': tool_loans,
+        'equipment_loans': equipment_loans,
+        'show_debtors': 'view_debtors' in request.GET,
+    })
 @login_required
 def return_tool_view(request):
     tool_loans = ToolLoan.objects.all()  # Mostrar todos los ToolLoan por defecto
@@ -1525,11 +1588,7 @@ def process_tool_loan(loan):
 def confirm_tool_loan(request):
     if request.method == 'POST':
         try:
-            # Parsear los datos JSON
             data = json.loads(request.body)
-            print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
-
-            # Obtener los datos del formulario
             work_order = data.get('workOrder')
             loan_date_str = data.get('loanDate')
             return_loan_date_str = data.get('returnLoanDate')
@@ -1537,24 +1596,14 @@ def confirm_tool_loan(request):
             worker_name = data.get('worker')
             worker_position = data.get('workerPosition')
             manager = data.get('manager', '')
-            
-            # Extraer datos generales
-            work_order = data.get('workOrder')
-            loan_date_str = data.get('loanDate')
-            return_loan_date_str = data.get('returnLoanDate')
-            worker_dni = data.get('workerDni')
-            worker_name = data.get('worker')
-            worker_position = data.get('workerPosition')
             tool_loans = data.get('tool_loans', [])
 
             responses = []
 
-            # Verificar la presencia de la fecha de retorno
             if not return_loan_date_str:
                 responses.append({'success': False, 'error': 'Falta la fecha de retorno'})
                 return JsonResponse({'success': False, 'errors': responses}, status=400)
 
-            # Verificar y convertir las fechas
             try:
                 loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
                 return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
@@ -1572,17 +1621,9 @@ def confirm_tool_loan(request):
                 responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 return JsonResponse({'success': False, 'errors': responses}, status=400)
 
-            # Validar y convertir fechas
-            try:
-                loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
-                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
-            except (ValueError, TypeError):
-                return JsonResponse({'success': False, 'error': 'Fechas de préstamo o devolución no válidas'}, status=400)
-            
             if not tool_loans:
                 return JsonResponse({'success': False, 'error': 'No se proporcionaron préstamos de herramientas'}, status=400)
 
-            # Procesar cada préstamo de herramienta
             for loan in tool_loans:
                 try:
                     tool_name = loan.get('name')
@@ -1592,13 +1633,9 @@ def confirm_tool_loan(request):
                         responses.append({'success': False, 'error': 'Datos de herramienta incompletos'})
                         continue
 
-                    # Buscar la herramienta y el trabajador
                     tool = Tool.objects.get(name=tool_name)
-                    worker = Worker.objects.get(dni=worker_dni)
 
-                    # Verificar cantidad disponible
                     if tool.quantity >= quantity:
-                        # Crear un nuevo préstamo de herramienta
                         new_loan = ToolLoan(
                             worker=worker,
                             workerPosition=worker_position,
@@ -1612,15 +1649,15 @@ def confirm_tool_loan(request):
                         )
                         new_loan.save()
 
+                        # Crear registro en History
                         History.objects.create(
-                            content_type=ContentType.objects.get_for_model(ToolLoan),
-                            object_name=ToolLoan.name,
+                            content_type=ContentType.objects.get_for_model(new_loan),
+                            object_name=tool.name,
                             action='Loan Created',
-                            user=request.user,
+                            user=request.user,  # Asegúrate de que el usuario esté autenticado
                             timestamp=timezone.now()
                         )
 
-                        # Actualizar cantidad de herramienta
                         tool.quantity -= quantity
                         tool.save()
 
@@ -1630,8 +1667,6 @@ def confirm_tool_loan(request):
 
                 except Tool.DoesNotExist:
                     responses.append({'success': False, 'error': f'Herramienta {tool_name} no encontrada'})
-                except Worker.DoesNotExist:
-                    responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 except Exception as e:
                     print(f"Error procesando préstamo de herramienta: {str(e)}")
                     responses.append({'success': False, 'error': str(e)})
@@ -1868,15 +1903,6 @@ def confirm_equipment_loan(request):
             worker_dni = data.get('workerDni')
             worker_name = data.get('worker')
             worker_position = data.get('workerPosition')
-            manager = data.get('manager', '')
-            
-            # Extraer datos generales
-            work_order = data.get('workOrder')
-            loan_date_str = data.get('loanDate')
-            return_loan_date_str = data.get('returnLoanDate')
-            worker_dni = data.get('workerDni')
-            worker_name = data.get('worker')
-            worker_position = data.get('workerPosition')
             equipment_loans = data.get('equipment_loans', [])
 
             responses = []
@@ -1904,13 +1930,6 @@ def confirm_equipment_loan(request):
                 responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 return JsonResponse({'success': False, 'errors': responses}, status=400)
 
-            # Validar y convertir fechas
-            try:
-                loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
-                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
-            except (ValueError, TypeError):
-                return JsonResponse({'success': False, 'error': 'Fechas de préstamo o devolución no válidas'}, status=400)
-            
             if not equipment_loans:
                 return JsonResponse({'success': False, 'error': 'No se proporcionaron préstamos de equipos'}, status=400)
 
@@ -1926,12 +1945,11 @@ def confirm_equipment_loan(request):
 
                     # Buscar la herramienta y el trabajador
                     equipment = Equipment.objects.get(name=equipment_name)
-                    worker = Worker.objects.get(dni=worker_dni)
 
                     # Verificar cantidad disponible
                     if equipment.quantity >= quantity:
                         # Crear un nuevo préstamo de herramienta
-                        new_loan = Equipment(
+                        new_loan = EquipmentLoan(  # Cambiar a EquipmentLoan u otro modelo adecuado
                             worker=worker,
                             workerPosition=worker_position,
                             workerDni=worker_dni,
@@ -1944,8 +1962,8 @@ def confirm_equipment_loan(request):
                         )
                         new_loan.save()
                         History.objects.create(
-                            content_type=ContentType.objects.get_for_model(EquipmentLoan),
-                            object_name=EquipmentLoan.name,
+                            content_type=ContentType.objects.get_for_model(new_loan),
+                            object_name=equipment.name,
                             action='Loan Created',
                             user=request.user,
                             timestamp=timezone.now()
@@ -1953,12 +1971,14 @@ def confirm_equipment_loan(request):
 
                         # Actualizar cantidad de herramienta
                         equipment.quantity -= quantity
+                        equipment.save()
+
                         responses.append({'success': True, 'message': f'Préstamo para {equipment_name} procesado con éxito'})
                     else:
                         responses.append({'success': False, 'error': f'Cantidad insuficiente disponible para {equipment_name}'})
 
                 except Equipment.DoesNotExist:
-                    responses.append({'success': False, 'error': f'Equipo {equipment_name} no encontrada'})
+                    responses.append({'success': False, 'error': f'Equipo {equipment_name} no encontrado'})
                 except Worker.DoesNotExist:
                     responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 except Exception as e:
@@ -1977,6 +1997,7 @@ def confirm_equipment_loan(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
 
 #MATERIALLOAN
 @login_required

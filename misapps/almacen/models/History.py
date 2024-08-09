@@ -8,7 +8,7 @@ class History(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     content_object = GenericForeignKey('content_type', 'object_name')
     object_name = models.CharField(max_length=255, blank=True, null=True)
-    action = models.CharField(max_length=10)
+    action = models.CharField(max_length=40)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
 

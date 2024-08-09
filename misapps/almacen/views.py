@@ -357,22 +357,30 @@ def add_ppe(request):
     return render(request, 'add_ppe.html', context)
 
 @login_required
-def delete_ppe(request, ppe_name):
+def delete_ppe(request, ppe_id):
     if request.method == 'DELETE':
-        ppe = get_object_or_404(Ppe, name=ppe_name)
-        ppe.delete()
-        History.objects.create(
-            content_type=ContentType.objects.get_for_model(ppe),
-            object_name=ppe.name, 
-            action='Deleted',
-            user=request.user,
-            timestamp=timezone.now()
-        )
-        return redirect('ppe_total')
+        try:
+            data = json.loads(request.body)
+            if data.get('confirm') == 'yes':
+                ppe = get_object_or_404(Ppe, idPpe=ppe_id)
+                ppe_name = ppe.name
+                ppe.delete()
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(ppe),
+                    object_name=ppe_name,
+                    action='Deleted',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+                return JsonResponse({'status': 'success'}, status=200)
+            return JsonResponse({'status': 'error'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error'}, status=400)
+    return JsonResponse({'status': 'method not allowed'}, status=405)
 
 @login_required
-def modify_ppe(request, name):
-    ppe = get_object_or_404(Ppe, name=name)
+def modify_ppe(request, ppe_id):
+    ppe = get_object_or_404(Ppe, idPpe=ppe_id)
 
     if request.method == 'POST':
         form = CreatePpeForm(request.POST, request.FILES, instance=ppe)
@@ -642,18 +650,26 @@ def create_equipment(request):
     return render(request, 'create_equipment.html', {'form': form})
 
 @login_required
-def delete_equipment(request, equipment_name):
-    if request.method == 'POST':
-        equipment = get_object_or_404(Equipment, name=equipment_name)
-        equipment.delete()
-        History.objects.create(
-            content_type=ContentType.objects.get_for_model(equipment),
-            object_name=equipment.name, 
-            action='Deleted',
-            user=request.user,
-            timestamp=timezone.now()
-        )
-        return redirect('equipment_total')
+def delete_equipment(request, equipment_id):
+    if request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            if data.get('confirm') == 'yes':
+                equipment = get_object_or_404(Equipment, idMaterial=equipment_id)
+                equipment_name = equipment.name
+                equipment.delete()
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(equipment),
+                    object_name=equipment_name,
+                    action='Eliminar',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+                return JsonResponse({'status': 'success'}, status=200)
+            return JsonResponse({'status': 'error'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error'}, status=400)
+    return JsonResponse({'status': 'method not allowed'}, status=405)
 
 @login_required
 def modify_equipment(request, name):
@@ -887,18 +903,26 @@ def add_material(request):
     return render(request, 'add_material.html', context)
 
 @login_required
-def delete_material(request, material_name):
-    if request.method == 'POST':
-        material = get_object_or_404(Ppe, name=material_name)
-        material.delete()
-        History.objects.create(
-            content_type=ContentType.objects.get_for_model(material),
-            object_name=material.name, 
-            action='Deleted',
-            user=request.user,
-            timestamp=timezone.now()
-        )
-        return redirect('material_total')
+def delete_material(request, material_id):
+    if request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            if data.get('confirm') == 'yes':
+                material = get_object_or_404(Material, idMaterial=material_id)
+                material_name = material.name
+                material.delete()
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(material),
+                    object_name=material_name,
+                    action='Eliminar',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+                return JsonResponse({'status': 'success'}, status=200)
+            return JsonResponse({'status': 'error'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error'}, status=400)
+    return JsonResponse({'status': 'method not allowed'}, status=405)
 
 @login_required   
 def modify_material(request, material_name):
@@ -1139,18 +1163,26 @@ def create_tool(request):
     return render(request, 'create_tool.html', {'form': form})
 
 @login_required
-def delete_tool(request, tool_name):
-    if request.method == 'POST':
-        tool = get_object_or_404(Ppe, name=tool_name)
-        tool.delete()
-        History.objects.create(
-            content_type=ContentType.objects.get_for_model(tool),
-            object_name=tool.name, 
-            action='Deleted',
-            user=request.user,
-            timestamp=timezone.now()
-        )
-        return redirect('tool_total')
+def delete_tool(request, tool_id):
+    if request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            if data.get('confirm') == 'yes':
+                tool = get_object_or_404(Tool, idMaterial=tool_id)
+                tool_name = tool.name
+                tool.delete()
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(tool),
+                    object_name=tool_name,
+                    action='Eliminar',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+                return JsonResponse({'status': 'success'}, status=200)
+            return JsonResponse({'status': 'error'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error'}, status=400)
+    return JsonResponse({'status': 'method not allowed'}, status=405)
 
 @login_required
 def modify_tool(request, name):
@@ -1347,43 +1379,57 @@ def create_worker(request):
         form = WorkerForm()
     return render(request, 'create_worker.html', {'form': form})
 
-
-@login_required
-def delete_worker(request, id):
-    workers = get_object_or_404(Worker, dni=id)
-
-    if request.method == 'POST':
-        workers.delete()
-        History.objects.create(
-            content_type=ContentType.objects.get_for_model(workers),
-            object_name=workers.name,
-            action='Delete',
-            user=request.user,
-            timestamp=timezone.now()
-        )
-        return redirect('worker_list')
-    else:
-        return render(request, 'delete_worker.html', {'workers': workers})
     
 @login_required
-def modify_worker(request, id):
-    workers = get_object_or_404(Worker, dni=id)
-    form = WorkerForm(instance=workers)
+def delete_worker(request, worker_id):
+    if request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            if data.get('confirm') == 'yes':
+                worker = get_object_or_404(Worker, idMaterial=worker_id)
+                worker_name = worker.name
+                worker.delete()
+                History.objects.create(
+                    content_type=ContentType.objects.get_for_model(worker),
+                    object_name=worker_name,
+                    action='Eliminar',
+                    user=request.user,
+                    timestamp=timezone.now()
+                )
+                return JsonResponse({'status': 'success'}, status=200)
+            return JsonResponse({'status': 'error'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error'}, status=400)
+    return JsonResponse({'status': 'method not allowed'}, status=405)
+
+@login_required
+def modify_worker(request, name):
+    worker = get_object_or_404(Worker, name=name)
 
     if request.method == 'POST':
-        form = WorkerForm(request.POST, instance=workers)
+        form = WorkerForm(request.POST, request.FILES, instance=worker)
+        
         if form.is_valid():
-            form.save()
+            worker = form.save(commit=False)
+            worker.save()
+
             History.objects.create(
-                content_type=ContentType.objects.get_for_model(workers),
-                object_name=workers.name,
+                content_type=ContentType.objects.get_for_model(worker),
+                object_name=worker.name, 
                 action='Modified',
                 user=request.user,
                 timestamp=timezone.now()
             )
+
+            messages.success(request, 'Trabajador modificado exitosamente.')
             return redirect('worker_list')
+        else:
+            print("Form is not valid")
+            print(form.errors)
     else:
-        return render(request, 'modify_worker.html', {'form': form})
+        form = WorkerForm(instance=worker)
+
+    return render(request, 'modify_worker.html', {'form': form, 'worker': worker})
 
 #TOOLLOAN
 @login_required

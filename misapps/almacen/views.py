@@ -159,7 +159,7 @@ def save_all_ppe(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(ppe),
                     object_name=ppe.name,
-                    action='Add Stock',
+                    action='Ingreso Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -384,7 +384,7 @@ def add_ppe(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(ppe),
                     object_name=ppe.name,
-                    action='Add Stock',
+                    action='Ingresar Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -546,7 +546,7 @@ def add_equipment(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(equipment),
                 object_name=equipment.name,
-                action='Add Stock',
+                action='Ingresar Stock',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -588,17 +588,40 @@ def save_all_equipment(request):
         try:
             data = json.loads(request.body)
             for item in data:
-                equipment = Equipment.objects.get(name=item['name'])
+                # Validación de campos vacíos o cero
+                if not item.get('name'):
+                    return JsonResponse({'status': 'error', 'message': 'Nombre del equipo es obligatorio.'})
+                if int(item.get('quantity', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Cantidad debe ser mayor que 0.'})
+                if Decimal(item.get('unitCost', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Costo unitario debe ser mayor que 0.'})
+                if int(item.get('stock', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Stock ideal debe ser mayor que 0.'})
+                
+                try:
+                    equipment = Equipment.objects.get(name=item['name'])
+                except Equipment.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': f'Equipo con nombre {item["name"]} no existe.'})
+                
                 quantity = int(item['quantity'])
                 unitCost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
+                creationDate = item.get('creationDate')
                 
+                # Validar fecha de creación
+                try:
+                    creationDate = timezone.datetime.fromisoformat(creationDate)
+                except (TypeError, ValueError):
+                    return JsonResponse({'status': 'error', 'message': 'Fecha de creación inválida.'})
+
+                # Actualización del costo total y cantidad
                 total_cost = (equipment.unitCost * Decimal(equipment.quantity)) + (unitCost * quantity)
                 equipment.quantity += quantity
                 equipment.unitCost = total_cost / equipment.quantity
                 equipment.stock = stock
                 equipment.save()
                 
+                # Crear registros de historial y actualización de stock
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(equipment),
                     object_name=equipment.name,
@@ -610,11 +633,14 @@ def save_all_equipment(request):
                     equipment=equipment,
                     quantity=quantity,
                     unitCost=unitCost,
-                    date=item['creationDate']
+                    date=creationDate
                 )
             return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Error al decodificar JSON.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
+    
     return JsonResponse({'status': 'invalid method'})
 
 def equipment_total_add(request):
@@ -800,21 +826,46 @@ def save_all_material(request):
         try:
             data = json.loads(request.body)
             for item in data:
-                material = Material.objects.get(name=item['name'])
+                # Validaciones
+                if not item.get('name'):
+                    return JsonResponse({'status': 'error', 'message': 'Nombre del material es obligatorio.'})
+                if int(item.get('quantity', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Cantidad debe ser mayor que 0.'})
+                if Decimal(item.get('unitCost', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Costo unitario debe ser mayor que 0.'})
+                if int(item.get('stock', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Stock ideal debe ser mayor que 0.'})
+                if int(item.get('guideNumber', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Número guia no puede ser 0.'})
+                
+                try:
+                    material = Material.objects.get(name=item['name'])
+                except Material.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': f'Material con nombre {item["name"]} no existe.'})
+                
                 quantity = int(item['quantity'])
                 unitCost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
-                
+                creationDate = item.get('creationDate')
+
+                # Validar fecha de creación
+                try:
+                    creationDate = timezone.datetime.fromisoformat(creationDate)
+                except (TypeError, ValueError):
+                    return JsonResponse({'status': 'error', 'message': 'Fecha de creación inválida.'})
+
+                # Actualizar material
                 total_cost = (material.unitCost * Decimal(material.quantity)) + (unitCost * quantity)
                 material.quantity += quantity
                 material.unitCost = total_cost / material.quantity
                 material.stock = stock
                 material.save()
                 
+                # Crear registros de historial y actualización de stock
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(material),
                     object_name=material.name,
-                    action='Add Stock',
+                    action='Ingreso Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -823,11 +874,16 @@ def save_all_material(request):
                     material=material,
                     quantity=quantity,
                     unitCost=unitCost,
-                    date=item['creationDate']
+                    date=creationDate
                 )
+            
             return JsonResponse({'status': 'success'})
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Error al decodificar JSON.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
+
     return JsonResponse({'status': 'invalid method'})
 
 def material_total_add(request):
@@ -1098,7 +1154,7 @@ def add_tool(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(tool),
                 object_name=tool.name,
-                action='Add Stock',
+                action='Ingresar Stock',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1122,28 +1178,52 @@ def add_tool(request):
     }
     return render(request, 'add_tool.html', context)
 
+
 @csrf_exempt
 def save_all_tools(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+
             for item in data:
-                tool = Tool.objects.get(name=item['name'])
+                # Validación de campos vacíos o cero
+                if not item.get('name'):
+                    return JsonResponse({'status': 'error', 'message': 'Nombre de la herramienta es obligatorio.'})
+                if int(item.get('quantity', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Cantidad debe ser mayor que 0.'})
+                if Decimal(item.get('unitCost', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Costo unitario debe ser mayor que 0.'})
+                if int(item.get('stock', 0)) <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Stock ideal debe ser mayor que 0.'})
+                
+                try:
+                    tool = Tool.objects.get(name=item['name'])
+                except Tool.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': f'Herramienta con nombre {item["name"]} no existe.'})
+
                 quantity = int(item['quantity'])
                 unitCost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
-                creationDate = item['creationDate']  # Asegúrate de que esto esté presente
-                
+                creationDate = item.get('creationDate')
+
+                # Validar fecha de creación
+                try:
+                    creationDate = timezone.datetime.fromisoformat(creationDate)
+                except (TypeError, ValueError):
+                    return JsonResponse({'status': 'error', 'message': 'Fecha de creación inválida.'})
+
+                # Actualización del costo total y cantidad
                 total_cost = (tool.unitCost * Decimal(tool.quantity)) + (unitCost * quantity)
                 tool.quantity += quantity
                 tool.unitCost = total_cost / tool.quantity
                 tool.stock = stock
                 tool.save()
-                
+
+                # Crear registros de historial y actualización de stock
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(tool),
                     object_name=tool.name,
-                    action='Add Stock',
+                    action='Ingreso Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -1154,9 +1234,14 @@ def save_all_tools(request):
                     unitCost=unitCost,
                     date=creationDate
                 )
+
             return JsonResponse({'status': 'success'})
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Error al decodificar JSON.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
+
     return JsonResponse({'status': 'invalid method'})
 
 def tool_total_add(request):

@@ -88,6 +88,15 @@ $(document).ready(function() {
             });
             return;
         }
+        if (guideNumber <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El Número guia no puede ser 0.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
 
         var formData = {
             guideNumber: guideNumber,

@@ -33,7 +33,7 @@
             </div>
             <div class="centrado">
                 <div class="formulario-contenedor-individual">
-                    <form method="post" action="{% url 'modify_ppe' ppe.name %}" enctype="multipart/form-data" class="box">
+                    <form method="post" action="{% url 'modify_ppe' ppe.idPpe %}" enctype="multipart/form-data" class="box">
                         {% csrf_token %}
                         <div class="fila-form">
                             <div class="campo">

@@ -2501,34 +2501,19 @@ def confirm_material_loan(request):
             # Obtener los datos del formulario
             work_order = data.get('workOrder')
             loan_date_str = data.get('loanDate')
-            return_loan_date_str = data.get('returnLoanDate')
             worker_dni = data.get('workerDni')
             worker_name = data.get('worker')
             worker_position = data.get('workerPosition')
             manager = data.get('manager', '')
-            
-            # Extraer datos generales
-            work_order = data.get('workOrder')
-            loan_date_str = data.get('loanDate')
-            return_loan_date_str = data.get('returnLoanDate')
-            worker_dni = data.get('workerDni')
-            worker_name = data.get('worker')
-            worker_position = data.get('workerPosition')
             material_loans = data.get('material_loans', [])
 
             responses = []
 
-            # Verificar la presencia de la fecha de retorno
-            if not return_loan_date_str:
-                responses.append({'success': False, 'error': 'Falta la fecha de retorno'})
-                return JsonResponse({'success': False, 'errors': responses}, status=400)
-
             # Verificar y convertir las fechas
             try:
                 loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
-                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
             except (ValueError, TypeError):
-                responses.append({'success': False, 'error': 'Fecha de préstamo o retorno no válida'})
+                responses.append({'success': False, 'error': 'Fecha de préstamo no válida'})
                 return JsonResponse({'success': False, 'errors': responses}, status=400)
 
             if worker_dni is None or worker_dni.strip() == "":
@@ -2540,43 +2525,33 @@ def confirm_material_loan(request):
             except Worker.DoesNotExist:
                 responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
                 return JsonResponse({'success': False, 'errors': responses}, status=400)
-
-            # Validar y convertir fechas
-            try:
-                loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
-                return_loan_date = datetime.strptime(return_loan_date_str, '%Y-%m-%d').date()
-            except (ValueError, TypeError):
-                return JsonResponse({'success': False, 'error': 'Fechas de préstamo o devolución no válidas'}, status=400)
             
             if not material_loans:
-                return JsonResponse({'success': False, 'error': 'No se proporcionaron préstamos de herramientas'}, status=400)
+                return JsonResponse({'success': False, 'error': 'No se proporcionaron préstamos de materiales'}, status=400)
 
-            # Procesar cada préstamo de herramienta
+            # Procesar cada préstamo de material
             for loan in material_loans:
                 try:
                     material_name = loan.get('name')
                     quantity = int(loan.get('quantity'))
 
                     if not material_name or not quantity:
-                        responses.append({'success': False, 'error': 'Datos de herramienta incompletos'})
+                        responses.append({'success': False, 'error': 'Datos de material incompletos'})
                         continue
 
-                    # Buscar la herramienta y el trabajador
+                    # Buscar el material
                     material = Material.objects.get(name=material_name)
-                    worker = Worker.objects.get(dni=worker_dni)
 
                     # Verificar cantidad disponible
                     if material.quantity >= quantity:
-                        # Crear un nuevo préstamo de herramienta
+                        # Crear un nuevo préstamo de material
                         new_loan = MaterialLoan(
                             worker=worker,
                             workerPosition=worker_position,
                             workerDni=worker_dni,
                             loanDate=loan_date,
-                            returnLoanDate=return_loan_date,
                             loanAmount=quantity,
                             material=material,
-                            loanStatus=False,
                             workOrder=work_order
                         )
                         new_loan.save()
@@ -2589,7 +2564,7 @@ def confirm_material_loan(request):
                             timestamp=timezone.now()
                         )
 
-                        # Actualizar cantidad de herramienta
+                        # Actualizar cantidad de material
                         material.quantity -= quantity
                         material.save()
 
@@ -2597,12 +2572,10 @@ def confirm_material_loan(request):
                     else:
                         responses.append({'success': False, 'error': f'Cantidad insuficiente disponible para {material_name}'})
 
-                except Tool.DoesNotExist:
-                    responses.append({'success': False, 'error': f'Herramienta {material_name} no encontrada'})
-                except Worker.DoesNotExist:
-                    responses.append({'success': False, 'error': f'Trabajador con DNI {worker_dni} no encontrado'})
+                except Material.DoesNotExist:
+                    responses.append({'success': False, 'error': f'Material {material_name} no encontrado'})
                 except Exception as e:
-                    print(f"Error procesando préstamo de herramienta: {str(e)}")
+                    print(f"Error procesando préstamo de material: {str(e)}")
                     responses.append({'success': False, 'error': str(e)})
 
             if any(not r['success'] for r in responses):
@@ -2617,6 +2590,7 @@ def confirm_material_loan(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
 
 #PPELOAN
 @login_required

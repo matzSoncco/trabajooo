@@ -167,7 +167,7 @@
                 workerDni: $('#id_workerDni').val(),
                 worker: $('#id_worker').val(),
                 workerPosition: $('#id_workerPosition').val(),
-                materiales_loans: addedItems
+                material_loans: addedItems
             };
 
             $.ajax({
@@ -231,7 +231,7 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <nav class="navegacion-link-formularios-top">
             <a class="link-form" href="{% url 'add_ppe_loan' %}">EPPs</a>
             <a class="link-form" href="{% url 'add_tool_loan' %}">Herramientas</a>
@@ -264,10 +264,6 @@
                             <div class="campo">
                                 <label for="id_loandate" class="label">Fecha de asignación</label>
                                 {{ form.loanDate }}
-                            </div>
-                            <div class="campo">
-                                <label for="id_loandate" class="label">Fecha de devolución</label>
-                                {{ form.returnLoanDate }}
                             </div>
                         </div>
         

@@ -53,22 +53,24 @@
             </nav>
         </div>
     </aside>
-    <section class="contendor-lateral-derecho">
+    <section class="contenedor-lateral-derecho">
         <div class="titulo-pagina">
             <h2>Tabla de Equipos asignados</h2>
-            <button type="button" id="volver-btn" onclick="location.href='{% url 'add_equipment_loan' %}'">Volver</button>
         </div>
-        <div class="buscar">
-            <form class="formulario-buscar" id="search-form" method="get" action="{% url 'equipment_loan_list' %}">
-                <div class="cuadro-busqueda">
-                    <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o DNI">
-                </div>
-                <div class="btn-busqueda-elemento">
-                    <button type="submit" id="buscar-tabla">Buscar</button>
-                </div>
-            </form>
-        </div>   
-        <div class="tabla-creacion" id="table-container">
+        <div class="tabla-mostrar">
+            <div class="cuadro-buscar">
+                <button class="form-btn ver-obj-btn" type="button" id="volver-btn" onclick="location.href='{% url 'add_equipment_loan' %}'">Volver</button>
+                <form class="formulario-buscar" id="search-form" method="get" action="{% url 'equipment_loan_list' %}">
+                    <div class="cuadro-busqueda">
+                        <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o DNI">
+                    </div>
+                    <div class="btn-busqueda-elemento">
+                        <button type="submit"class="form-btn aceptar-btn">Buscar</button>
+                    </div>
+                </form>
+            </div>
+        </div> 
+        <div class="centrado" id="table-container">
             <table class="tabla">
                 <thead>
                     <tr>
@@ -78,10 +80,11 @@
                         <th>Equipos</th>
                         <th>Cantidad</th>
                         <th>Fecha de préstamo</th>
+                        <th>Fecha de devolución</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for loan in ppe_loans %}
+                    {% for loan in equipment_loans %}
                     <tr>
                         <td>{{ loan.worker.dni }}</td>
                         <td>{{ loan.worker.name }}</td>
@@ -89,6 +92,7 @@
                         <td>{{ loan.equipment.name }}</td>
                         <td>{{ loan.loanAmount }}</td>
                         <td>{{ loan.loanDate }}</td>
+                        <td>{{ loan.returnLoanDate }}</td>
                     </tr>
                     {% empty %}
                     <tr>

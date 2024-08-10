@@ -143,6 +143,7 @@ def get_ppe_data(request):
         'stock': ppe.stock
     }
     return JsonResponse(data)
+
 @csrf_exempt
 def save_all_ppe(request):
     if request.method == 'POST':
@@ -168,12 +169,14 @@ def save_all_ppe(request):
                 quantity = int(item['quantity'])
                 unitCost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
+                guideNumber = item['guideNumber']
 
                 # Actualización del costo total y cantidad
                 total_cost = (ppe.unitCost * Decimal(ppe.quantity)) + (unitCost * quantity)
                 ppe.quantity += quantity
                 ppe.unitCost = total_cost / ppe.quantity
                 ppe.stock = stock
+                ppe.guideNumber = guideNumber
                 ppe.save()
 
                 # Crear registros de historial y actualización de stock
@@ -189,7 +192,7 @@ def save_all_ppe(request):
                     ppe=ppe,
                     quantity=quantity,
                     unitCost=unitCost,
-                    date=item['creationDate']
+                    date=item['creationDate']                    
                 )
 
             return JsonResponse({'status': 'success'})
@@ -266,8 +269,8 @@ def ppe_total(request):
     return render(request, 'ppe_total.html', {'ppes': ppes, 'form': form})
 
 def ppe_total_add(request):
-    ppes = Ppe.objects.all()  
-    
+    ppes = Ppe.objects.all()
+
     if request.method == 'POST':
         if 'delete' in request.POST:
             ppe_id = request.POST.get('delete')
@@ -280,12 +283,25 @@ def ppe_total_add(request):
             ppe_id = request.POST.get('edit')
             ppe = get_object_or_404(Ppe, id=ppe_id)
             form = PpeForm(request.POST, request.FILES, instance=ppe)
-            if form.is_valid():
-                form.save()
-                messages.success(request, 'EPP actualizado exitosamente.')
-                return redirect('ppe_total')
-    
-    form = PpeForm()  # Inicializa el formulario para crear o editar
+        else:
+            form = PpeForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            # Imprimir los datos del formulario para depuración
+            print("Datos del formulario:")
+            for field in form.cleaned_data:
+                print(f"{field}: {form.cleaned_data[field]}")
+            
+            ppe = form.save(commit=False)
+            # Asegúrate de que guideNumber se establezca explícitamente
+            ppe.guideNumber = form.cleaned_data['guideNumber']
+            ppe.save()
+            messages.success(request, 'EPP guardado exitosamente.')
+            return redirect('ppe_total')
+        else:
+            print("Errores del formulario:", form.errors)
+    else:
+        form = PpeForm()
     return render(request, 'ppe_total_add.html', {'ppes': ppes, 'form': form})
 
 @login_required
@@ -400,6 +416,7 @@ def add_ppe(request):
                 ppe.unitCost = total_cost / total_quantity
                 ppe.quantity = total_quantity
                 ppe.stock = stock
+                ppe.guideNumber = guideNumber
                 ppe.save()
                 
                 History.objects.create(
@@ -562,6 +579,7 @@ def add_equipment(request):
             equipment.unitCost = total_cost / total_quantity
             equipment.quantity = total_quantity
             equipment.stock = stock
+            equipment.guideNumber = guideNumber
             equipment.save()
             
             History.objects.create(
@@ -628,6 +646,7 @@ def save_all_equipment(request):
                 unitCost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
                 creationDate = item.get('creationDate')
+                guideNumber = item['guideNumber']                
                 
                 # Validar fecha de creación
                 try:
@@ -640,6 +659,7 @@ def save_all_equipment(request):
                 equipment.quantity += quantity
                 equipment.unitCost = total_cost / equipment.quantity
                 equipment.stock = stock
+                equipment.guideNumber = guideNumber
                 equipment.save()
                 
                 # Crear registros de historial y actualización de stock
@@ -868,6 +888,7 @@ def save_all_material(request):
                 unitCost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
                 creationDate = item.get('creationDate')
+                guideNumber = item['guideNumber']
 
                 # Validar fecha de creación
                 try:
@@ -880,6 +901,7 @@ def save_all_material(request):
                 material.quantity += quantity
                 material.unitCost = total_cost / material.quantity
                 material.stock = stock
+                material.guideNumber = guideNumber
                 material.save()
                 
                 # Crear registros de historial y actualización de stock
@@ -1037,6 +1059,7 @@ def add_material(request):
             material.unitCost = total_cost / total_quantity
             material.quantity = total_quantity
             material.stock = stock
+            material.guideNumber = guideNumber
             material.save()
             
             History.objects.create(
@@ -1227,6 +1250,7 @@ def save_all_tools(request):
                 unitCost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
                 creationDate = item.get('creationDate')
+                guideNumber = item['guideNumber']
 
                 # Validar fecha de creación
                 try:
@@ -1239,6 +1263,7 @@ def save_all_tools(request):
                 tool.quantity += quantity
                 tool.unitCost = total_cost / tool.quantity
                 tool.stock = stock
+                tool.guideNumber = guideNumber
                 tool.save()
 
                 # Crear registros de historial y actualización de stock

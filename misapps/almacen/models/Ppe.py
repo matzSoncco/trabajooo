@@ -13,7 +13,6 @@ class Ppe(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
     duration = models.IntegerField(null=False, default=0, editable=True)
     image = models.ImageField(upload_to='uploads/', blank=True, null=True)
-    serialNumber = models.IntegerField(verbose_name=_('Stock'), null=False, default=0)
     creationDate = models.DateField(auto_now_add=False, blank=False, null=True)
 
     def save(self, *args, **kwargs):

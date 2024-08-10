@@ -39,7 +39,6 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Nombre</th>
-                                <th>Unidad</th>
                                 <th>N° Guia</th>
                                 <th>Nivel</th>
                                 <th>Cantidad</th>                             
@@ -54,7 +53,6 @@
                             <tr>
                                 <td>{{ tool.idTool }}</td>
                                 <td>{{ tool.name }}</td>
-                                <td>{{ tool.unit }}</td>
                                 <td>{{ tool.guideNumber }}</td>
                                 <td>{{ tool.level }}</td>
                                 <td>{{ tool.quantity }}</td>
@@ -87,158 +85,5 @@
         </div>
     </section>
 </section>
-
-<!-- Modal -->
-<div id="customDeleteModal" class="custom-modal">
-    <div class="custom-modal-content">
-        <div class="custom-modal-header">
-            <span class="custom-modal-close">&times;</span>
-            <h2>Confirmar eliminación</h2>
-        </div>
-        <div class="custom-modal-body">
-            ¿Estás seguro de que deseas eliminar el Herramienta <span id="toolName"></span>?
-        </div>
-        <div class="custom-modal-footer">
-            <form method="post" id="deleteForm">
-                {% csrf_token %}
-                <button type="submit" class="custom-btn custom-btn-danger">Eliminar</button>
-                <button type="button" class="custom-btn custom-btn-secondary" id="cancelDelete">Cancelar</button>
-            </form>
-        </div>
-    </div>
-</div>
-<style>
-    .custom-modal {
-        display: none; /* Oculto por defecto */
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4); /* Fondo oscuro */
-    }
-
-    /* Contenido del modal */
-    .custom-modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 5px;
-    }
-
-    /* Encabezado del modal */
-    .custom-modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .custom-modal-close {
-        color: #aaa;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .custom-modal-close:hover,
-    .custom-modal-close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    /* Cuerpo del modal */
-    .custom-modal-body {
-        margin: 15px 0;
-    }
-
-    /* Pie del modal */
-    .custom-modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    /* Botones del modal */
-    .custom-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .custom-btn-danger {
-        background-color: #d9534f;
-        color: white;
-    }
-
-    .custom-btn-danger:hover {
-        background-color: #c9302c;
-    }
-
-    .custom-btn-secondary {
-        background-color: #5bc0de;
-        color: white;
-    }
-
-    .custom-btn-secondary:hover {
-        background-color: #31b0d5;
-    }
-</style>
-<script>
-    // Función para abrir el modal
-    function openDeleteModal(toolName, actionUrl) {
-        const modal = document.getElementById('customDeleteModal');
-        const toolNameSpan = document.getElementById('toolName');
-        const deleteForm = document.getElementById('deleteForm');
-        
-        toolNameSpan.textContent = toolName;
-        deleteForm.action = actionUrl;
-
-        modal.style.display = 'block';
-    }
-
-    // Cerrar el modal cuando se hace clic en el botón de cerrar
-    document.querySelector('.custom-modal-close').addEventListener('click', function () {
-        document.getElementById('customDeleteModal').style.display = 'none';
-    });
-
-    // Cerrar el modal cuando se hace clic en el botón de cancelar
-    document.getElementById('cancelDelete').addEventListener('click', function () {
-        document.getElementById('customDeleteModal').style.display = 'none';
-    });
-
-    // Cerrar el modal cuando se hace clic fuera del modal
-    window.onclick = function (event) {
-        if (event.target === document.getElementById('customDeleteModal')) {
-            document.getElementById('customDeleteModal').style.display = 'none';
-        }
-    };
-
-    // Configura el botón de eliminación
-    document.querySelectorAll('[data-action="delete"]').forEach(button => {
-        button.addEventListener('click', function () {
-            const toolName = this.getAttribute('data-tool-name');
-            const actionUrl = this.getAttribute('data-action-url');
-            openDeleteModal(toolName, actionUrl);
-        });
-    });
-    const deleteModal = document.getElementById('deleteModal');
-    deleteModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const toolName = button.getAttribute('data-tool-name');
-        const modalBody = deleteModal.querySelector('.modal-body #toolName');
-        modalBody.textContent = toolName;
-
-        const deleteForm = document.getElementById('deleteForm');
-        // Construye la URL de eliminación correctamente
-        deleteForm.action = "{% url 'delete_tool' 'placeholder' %}".replace('placeholder', encodeURIComponent(toolName));
-    });
-</script>
   
 {% endblock %}

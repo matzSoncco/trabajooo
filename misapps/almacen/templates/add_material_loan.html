@@ -89,22 +89,40 @@
             const quantity = $('#id_loanAmount').val();
 
             // Check material availability
-            $.ajax({
-                url: '/check_material_availability/',  // Update this URL to match your Django URL configuration
-                method: 'GET',
-                data: { material_name: materialName },
-                success: function(response) {
-                    if (response.can_assign && response.available >= quantity) {
-                        addItemToTable(materialName, quantity);
-                        clearForm();
-                    } else {
-                        alert('No hay suficiente cantidad disponible de este material.');
-                    }
-                },
-                error: function() {
-                    alert('Error al verificar la disponibilidad del material.');
+        $.ajax({
+            url: '/check_material_availability/',  // Asegúrate de que esta URL coincida con tu configuración de Django
+            method: 'GET',
+            data: { material_name: materialName },
+            success: function(response) {
+                if (quantity < 1) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Cantidad inválida',
+                        text: 'La cantidad debe ser mayor que 0.',
+                        confirmButtonText: 'Aceptar'
+                    });
+                } else if (response.can_assign && response.available >= quantity) {
+                    addItemToTable(materialName, quantity);
+                    clearForm();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Cantidad insuficiente',
+                        text: 'No hay suficiente cantidad disponible de este material.',
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
-            });
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al verificar la disponibilidad del material.',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+
         });
 
         function addItemToTable(materialName, quantity) {
@@ -155,7 +173,8 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Advertencia',
-                    text: 'No hay materiales para asignar.'
+                    text: 'No hay materiales para asignar.',
+                    confirmButtonText: 'Aceptar'
                 });
                 return;
             }
@@ -188,6 +207,7 @@
                             addedItems.length = 0;  // Limpiar el array
                             updateGivenItemsTable();
                             clearForm();
+                            window.location.reload();
                         });
                     } else {
                         Swal.fire({

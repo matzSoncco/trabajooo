@@ -110,10 +110,17 @@
                 url: '{% url "check_ppe_availability" %}',
                 data: {
                     'ppe_name': ppeName,
-                    'ppe_loan_amount': loanAmount  // Asegúrate de que este nombre coincida con el de la vista
+                    'ppe_loan_amount': loanAmount
                 },
                 success: function(response) {
-                    if (response.can_assign) {
+                    if (loanAmount < 1) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Cantidad no válida',
+                            text: 'La cantidad debe ser mayor o igual a 1.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    } else if (response.can_assign) {
                         let ppeData = {
                             name: ppeName,
                             quantity: loanAmount,
@@ -126,11 +133,21 @@
                         updatePreDeliveryTable();
                         $("#id_ppe, #id_loanAmount").val('');
                     } else {
-                        alert(response.message || 'No se puede asignar el EPP.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Stock insuficiente',
+                            text: response.message || 'No hay suficiente cantidad de EPP disponible.',
+                            confirmButtonText: 'Aceptar'
+                        });
                     }
                 },
                 error: function() {
-                    alert('Error al verificar la disponibilidad del EPP.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al verificar la disponibilidad del EPP.',
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             });
         });
@@ -320,7 +337,7 @@
                             if (response.created_loans && response.created_loans.length > 0) {
                                 updateLoanTable(response.created_loans);
                             } else {
-                                window.location.href = '{% url "ppe_loan_list" %}';
+                                window.location.reload();
                             }
                         });
                     } else {

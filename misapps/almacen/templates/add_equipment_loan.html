@@ -5,6 +5,7 @@
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script>
     function getCookie(name) {
@@ -89,21 +90,39 @@
 
             // Check equipment availability
             $.ajax({
-                url: '/check_equipment_availability/',  // Update this URL to match your Django URL configuration
+                url: '/check_equipment_availability/',  // Asegúrate de que esta URL coincida con tu configuración de Django
                 method: 'GET',
                 data: { equipment_name: equipmentName },
                 success: function(response) {
-                    if (response.can_assign && response.available >= quantity) {
+                    if (quantity < 1) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Cantidad no válida',
+                            text: 'La cantidad debe ser mayor o igual a 1.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    } else if (response.can_assign && response.available >= quantity) {
                         addItemToTable(equipmentName, quantity);
                         clearForm();
                     } else {
-                        alert('No hay suficiente cantidad disponible de este equipo.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Stock insuficiente',
+                            text: 'No hay suficiente cantidad disponible de este equipo.',
+                            confirmButtonText: 'Aceptar'
+                        });
                     }
                 },
                 error: function() {
-                    alert('Error al verificar la disponibilidad del equipo.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al verificar la disponibilidad del equipo.',
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             });
+
         });
 
         function addItemToTable(equipmentName, quantity) {
@@ -151,7 +170,12 @@
         // Handle "Entregar" button click
         $('#give-btn').on('click', function() {
             if (addedItems.length === 0) {
-                alert('No hay equipos para asignar.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Advertencia',
+                    text: 'No hay equipos para asignar.',
+                    confirmButtonText: 'Aceptar'
+                });
                 return;
             }
 
@@ -166,7 +190,7 @@
             };
 
             $.ajax({
-                url: '/confirm_equipment_loan/',  // Update this URL to match your Django URL configuration
+                url: '/confirm_equipment_loan/',  // Asegúrate de que esta URL coincida con tu configuración de Django
                 method: 'POST',
                 data: JSON.stringify(formData),
                 contentType: 'application/json',
@@ -175,16 +199,35 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('Asignación de equipos completada con éxito.');
-                        addedItems.length = 0;  // Clear the array
-                        updateGivenItemsTable();
-                        clearForm();
+                        let successMessages = response.messages.map(msg => msg.message).join('<br>');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            html: successMessages,  // Aquí usamos 'html' en lugar de 'text' para permitir el uso de etiquetas HTML
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => {
+                            addedItems.length = 0;  // Vaciar el array
+                            updateGivenItemsTable();
+                            clearForm();
+                            window.location.reload();
+                        });
                     } else {
-                        alert('Error al asignar equipos: ' + response.error);
+                        let errorMessages = response.errors.map(err => err.error).join('<br>');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: errorMessages,  // Mostrar múltiples errores
+                            confirmButtonText: 'Aceptar'
+                        });
                     }
                 },
                 error: function() {
-                    alert('Error al procesar la asignación de equipos.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al procesar la asignación de equipos.',
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             });
         });

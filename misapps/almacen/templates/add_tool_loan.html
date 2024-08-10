@@ -6,6 +6,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script>
     function getCookie(name) {
@@ -74,19 +75,36 @@
 
             // Check tool availability
             $.ajax({
-                url: '/check_tool_availability/',  // Update this URL to match your Django URL configuration
+                url: '/check_tool_availability/',  // Asegúrate de que esta URL coincida con tu configuración de Django
                 method: 'GET',
                 data: { tool_name: toolName },
                 success: function(response) {
-                    if (response.can_assign && response.available >= quantity) {
+                    if (quantity < 1) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Cantidad no válida',
+                            text: 'La cantidad debe ser mayor a 0.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    } else if (response.can_assign && response.available >= quantity) {
                         addItemToTable(toolName, quantity);
                         clearForm();
                     } else {
-                        alert('No hay suficiente cantidad disponible de esta herramienta.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Cantidad insuficiente',
+                            text: 'No hay suficiente cantidad disponible de esta herramienta.',
+                            confirmButtonText: 'Aceptar'
+                        });
                     }
                 },
                 error: function() {
-                    alert('Error al verificar la disponibilidad de la herramienta.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al verificar la disponibilidad de la herramienta.',
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             });
         });
@@ -139,7 +157,8 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Advertencia',
-                    text: 'No hay herramientas para asignar.'
+                    text: 'No hay herramientas para asignar.',
+                    confirmButtonText: 'Aceptar'  // Añade un botón de confirmación para cerrar el popup
                 });
                 return;
             }
@@ -172,6 +191,7 @@
                             addedItems.length = 0;  // Limpiar el array
                             updateGivenItemsTable();
                             clearForm();
+                            window.location.reload();
                         });
                     } else {
                         Swal.fire({

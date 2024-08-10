@@ -37,5 +37,10 @@ class Ppe(models.Model):
         
         super(Ppe, self).save(*args, **kwargs)
 
+    def calculate_average_cost(self, new_quantity, new_unit_cost):
+        total_cost = (self.unitCost * self.quantity) + (new_unit_cost * new_quantity)
+        total_quantity = self.quantity + new_quantity
+        return total_cost / total_quantity
+
     def __str__(self):
         return f"{self.idPpe} {self.name} {self.quantity} {self.guideNumber} {self.unitCost} {self.totalCost} {self.stock}"

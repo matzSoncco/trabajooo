@@ -167,14 +167,25 @@ def save_all_ppe(request):
                     return JsonResponse({'status': 'error', 'message': f'EPP con nombre {item["name"]} no existe.'})
 
                 quantity = int(item['quantity'])
-                unitCost = Decimal(item['unitCost'])
+                new_unit_cost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
                 guideNumber = item['guideNumber']
 
-                # Actualización del costo total y cantidad
-                total_cost = (ppe.unitCost * Decimal(ppe.quantity)) + (unitCost * quantity)
+                # Calcular el costo promedio
+                total_updates = PpeStockUpdate.objects.filter(ppe=ppe).count()
+
+                if total_updates == 0:
+                    # Primera vez que se ingresa este EPP
+                    average_cost = new_unit_cost
+                else:
+                    # Calcular el promedio con el nuevo costo
+                    total_cost = (ppe.unitCost * Decimal(ppe.quantity)) + (new_unit_cost * quantity)
+                    total_quantity = ppe.quantity + quantity
+                    average_cost = total_cost / total_quantity
+
+                # Actualizar el EPP
                 ppe.quantity += quantity
-                ppe.unitCost = total_cost / ppe.quantity
+                ppe.unitCost = average_cost
                 ppe.stock = stock
                 ppe.guideNumber = guideNumber
                 ppe.save()
@@ -191,8 +202,8 @@ def save_all_ppe(request):
                 PpeStockUpdate.objects.create(
                     ppe=ppe,
                     quantity=quantity,
-                    unitCost=unitCost,
-                    date=item['creationDate']                    
+                    unitCost=new_unit_cost,
+                    date=item['creationDate'],                   
                 )
 
             return JsonResponse({'status': 'success'})
@@ -392,13 +403,11 @@ def add_ppe(request):
             guideNumber = form.cleaned_data['guideNumber']
             creationDate = form.cleaned_data['creationDate']
             name = form.cleaned_data['name']
-            unitCost = Decimal(form.cleaned_data['unitCost'])
+            new_unit_cost = Decimal(form.cleaned_data['unitCost'])
             quantity = int(form.cleaned_data['quantity'])
             stock = int(form.cleaned_data['stock'])
             
             # Validaciones adicionales
-            if unitCost <= 0:
-                form.add_error('unitCost', 'El costo unitario debe ser un número positivo mayor a 0.')
             if quantity <= 0:
                 form.add_error('quantity', 'La cantidad debe ser un número positivo mayor a 0.')
             if stock <= 0:
@@ -411,10 +420,19 @@ def add_ppe(request):
             else:
                 ppe, created = Ppe.objects.get_or_create(name=name)
                 
-                total_cost = (ppe.unitCost * Decimal(ppe.quantity)) + (unitCost * quantity)
-                total_quantity = ppe.quantity + quantity
-                ppe.unitCost = total_cost / total_quantity
-                ppe.quantity = total_quantity
+                total_updates = PpeStockUpdate.objects.filter(ppe=ppe).count()
+                
+                if total_updates == 0 or created:
+                    # Primera vez que se ingresa este EPP
+                    average_cost = new_unit_cost
+                else:
+                    # Calcular el promedio con el nuevo costo
+                    total_cost = (ppe.unitCost * Decimal(ppe.quantity)) + (new_unit_cost * quantity)
+                    total_quantity = ppe.quantity + quantity
+                    average_cost = total_cost / total_quantity
+
+                ppe.quantity += quantity
+                ppe.unitCost = average_cost
                 ppe.stock = stock
                 ppe.guideNumber = guideNumber
                 ppe.save()
@@ -430,8 +448,8 @@ def add_ppe(request):
                 PpeStockUpdate.objects.create(
                     ppe=ppe,
                     quantity=quantity,
-                    unitCost=unitCost,
-                    date=creationDate
+                    unitCost=new_unit_cost,
+                    date=creationDate,
                 )
                 
                 messages.success(request, 'Se añadió EPP correctamente.')
@@ -566,18 +584,26 @@ def add_equipment(request):
             guideNumber = form.cleaned_data['guideNumber']
             creationDate = form.cleaned_data['creationDate']
             name = form.cleaned_data['name']
-            unitCost = Decimal(form.cleaned_data['unitCost'])
+            new_unit_cost = Decimal(form.cleaned_data['unitCost'])
             quantity = int(form.cleaned_data['quantity'])
             stock = int(form.cleaned_data['stock'])
             
             # Obtener o crear el objeto Ppe
             equipment, created = Equipment.objects.get_or_create(name=name)
             
-            # Actualizar la cantidad y el costo unitario del Ppe
-            total_cost = (equipment.unitCost * Decimal(equipment.quantity)) + (unitCost * quantity)
-            total_quantity = equipment.quantity + quantity
-            equipment.unitCost = total_cost / total_quantity
-            equipment.quantity = total_quantity
+            total_updates = EquipmentStockUpdate.objects.filter(equipment=equipment).count()
+                
+            if total_updates == 0 or created:
+                # Primera vez que se ingresa este EPP
+                average_cost = new_unit_cost
+            else:
+                # Calcular el promedio con el nuevo costo
+                total_cost = (equipment.unitCost * Decimal(equipment.quantity)) + (new_unit_cost * quantity)
+                total_quantity = equipment.quantity + quantity
+                average_cost = total_cost / total_quantity
+
+            equipment.quantity += quantity
+            equipment.unitCost = average_cost
             equipment.stock = stock
             equipment.guideNumber = guideNumber
             equipment.save()
@@ -593,7 +619,7 @@ def add_equipment(request):
             EquipmentStockUpdate.objects.create(
                 equipment=equipment,
                 quantity=quantity,
-                unitCost=unitCost,
+                unitCost=new_unit_cost,
                 date=creationDate
             )
             messages.success(request, 'Se añadió equipos correctamente.')
@@ -643,21 +669,25 @@ def save_all_equipment(request):
                     return JsonResponse({'status': 'error', 'message': f'Equipo con nombre {item["name"]} no existe.'})
                 
                 quantity = int(item['quantity'])
-                unitCost = Decimal(item['unitCost'])
+                new_unit_cost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
-                creationDate = item.get('creationDate')
-                guideNumber = item['guideNumber']                
-                
-                # Validar fecha de creación
-                try:
-                    creationDate = timezone.datetime.fromisoformat(creationDate)
-                except (TypeError, ValueError):
-                    return JsonResponse({'status': 'error', 'message': 'Fecha de creación inválida.'})
+                guideNumber = item['guideNumber']
+
+                # Calcular el costo promedio
+                total_updates = EquipmentStockUpdate.objects.filter(equipment=equipment).count()
+
+                if total_updates == 0:
+                    # Primera vez que se ingresa este EPP
+                    average_cost = new_unit_cost
+                else:
+                    # Calcular el promedio con el nuevo costo
+                    total_cost = (equipment.unitCost * Decimal(equipment.quantity)) + (new_unit_cost * quantity)
+                    total_quantity = equipment.quantity + quantity
+                    average_cost = total_cost / total_quantity
 
                 # Actualización del costo total y cantidad
-                total_cost = (equipment.unitCost * Decimal(equipment.quantity)) + (unitCost * quantity)
                 equipment.quantity += quantity
-                equipment.unitCost = total_cost / equipment.quantity
+                equipment.unitCost = average_cost
                 equipment.stock = stock
                 equipment.guideNumber = guideNumber
                 equipment.save()
@@ -673,8 +703,8 @@ def save_all_equipment(request):
                 EquipmentStockUpdate.objects.create(
                     equipment=equipment,
                     quantity=quantity,
-                    unitCost=unitCost,
-                    date=creationDate
+                    unitCost=new_unit_cost,
+                    date=item['creationDate'], 
                 )
             return JsonResponse({'status': 'success'})
         except json.JSONDecodeError:
@@ -885,21 +915,26 @@ def save_all_material(request):
                     return JsonResponse({'status': 'error', 'message': f'Material con nombre {item["name"]} no existe.'})
                 
                 quantity = int(item['quantity'])
-                unitCost = Decimal(item['unitCost'])
+                new_unit_cost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
                 creationDate = item.get('creationDate')
                 guideNumber = item['guideNumber']
 
-                # Validar fecha de creación
-                try:
-                    creationDate = timezone.datetime.fromisoformat(creationDate)
-                except (TypeError, ValueError):
-                    return JsonResponse({'status': 'error', 'message': 'Fecha de creación inválida.'})
+                # Calcular el costo promedio
+                total_updates = MaterialStockUpdate.objects.filter(material=material).count()
 
-                # Actualizar material
-                total_cost = (material.unitCost * Decimal(material.quantity)) + (unitCost * quantity)
+                if total_updates == 0:
+                    # Primera vez que se ingresa este EPP
+                    average_cost = new_unit_cost
+                else:
+                    # Calcular el promedio con el nuevo costo
+                    total_cost = (material.unitCost * Decimal(material.quantity)) + (new_unit_cost * quantity)
+                    total_quantity = material.quantity + quantity
+                    average_cost = total_cost / total_quantity
+
+                # Actualizar el EPP
                 material.quantity += quantity
-                material.unitCost = total_cost / material.quantity
+                material.unitCost = average_cost
                 material.stock = stock
                 material.guideNumber = guideNumber
                 material.save()
@@ -916,7 +951,7 @@ def save_all_material(request):
                 MaterialStockUpdate.objects.create(
                     material=material,
                     quantity=quantity,
-                    unitCost=unitCost,
+                    unitCost=new_unit_cost,
                     date=creationDate
                 )
             
@@ -1046,18 +1081,26 @@ def add_material(request):
             guideNumber = form.cleaned_data['guideNumber']
             creationDate = form.cleaned_data['creationDate']
             name = form.cleaned_data['name']
-            unitCost = Decimal(form.cleaned_data['unitCost'])
+            new_unit_cost = Decimal(form.cleaned_data['unitCost'])
             quantity = int(form.cleaned_data['quantity'])
             stock = int(form.cleaned_data['stock'])
             
             # Obtener o crear el objeto Ppe
             material, created = Material.objects.get_or_create(name=name)
             
-            # Actualizar la cantidad y el costo unitario del Ppe
-            total_cost = (material.unitCost * Decimal(material.quantity)) + (unitCost * quantity)
-            total_quantity = material.quantity + quantity
-            material.unitCost = total_cost / total_quantity
-            material.quantity = total_quantity
+            total_updates = MaterialStockUpdate.objects.filter(material=material).count()
+                
+            if total_updates == 0 or created:
+                # Primera vez que se ingresa este EPP
+                average_cost = new_unit_cost
+            else:
+                # Calcular el promedio con el nuevo costo
+                total_cost = (material.unitCost * Decimal(material.quantity)) + (new_unit_cost * quantity)
+                total_quantity = material.quantity + quantity
+                average_cost = total_cost / total_quantity
+
+            material.quantity += quantity
+            material.unitCost = average_cost
             material.stock = stock
             material.guideNumber = guideNumber
             material.save()
@@ -1074,7 +1117,7 @@ def add_material(request):
             PpeStockUpdate.objects.create(
                 material=material,
                 quantity=quantity,
-                unitCost=unitCost,
+                unitCost=new_unit_cost,
                 date=creationDate
             )
             messages.success(request, 'Se añadió material correctamente.')
@@ -1181,19 +1224,29 @@ def add_tool(request):
             guideNumber = form.cleaned_data['guideNumber']
             creationDate = form.cleaned_data.get('creationDate')
             name = form.cleaned_data['name']
-            unitCost = Decimal(form.cleaned_data['unitCost'])
+            new_unit_cost = Decimal(form.cleaned_data['unitCost'])
             quantity = int(form.cleaned_data['quantity'])
             stock = int(form.cleaned_data['stock'])
             level = int(form.cleaned_data['level'])
             
             tool, created = Tool.objects.get_or_create(name=name)
             
-            # Actualizar la cantidad y el costo unitario del Ppe
-            total_cost = (tool.unitCost * Decimal(tool.quantity)) + (unitCost * quantity)
-            total_quantity = tool.quantity + quantity
-            tool.unitCost = total_cost / total_quantity
-            tool.quantity = total_quantity
+            total_updates = PpeStockUpdate.objects.filter(tool=tool).count()
+                
+            if total_updates == 0 or created:
+                # Primera vez que se ingresa este EPP
+                average_cost = new_unit_cost
+            else:
+                # Calcular el promedio con el nuevo costo
+                total_cost = (tool.unitCost * Decimal(tool.quantity)) + (new_unit_cost * quantity)
+                total_quantity = tool.quantity + quantity
+                average_cost = total_cost / total_quantity
+
+            tool.quantity += quantity
+            tool.unitCost = average_cost
             tool.stock = stock
+            tool.guideNumber = guideNumber
+            tool.level = level
             tool.save()
             
             History.objects.create(
@@ -1208,7 +1261,7 @@ def add_tool(request):
             ToolStockUpdate.objects.create(
                 tool=tool,
                 quantity=quantity,
-                unitCost=unitCost,
+                unitCost=new_unit_cost,
                 date=creationDate
             )
             messages.success(request, 'Se añadió herramientas correctamente.')
@@ -1247,21 +1300,26 @@ def save_all_tools(request):
                     return JsonResponse({'status': 'error', 'message': f'Herramienta con nombre {item["name"]} no existe.'})
 
                 quantity = int(item['quantity'])
-                unitCost = Decimal(item['unitCost'])
+                new_unit_cost = Decimal(item['unitCost'])
                 stock = int(item['stock'])
                 creationDate = item.get('creationDate')
                 guideNumber = item['guideNumber']
 
-                # Validar fecha de creación
-                try:
-                    creationDate = timezone.datetime.fromisoformat(creationDate)
-                except (TypeError, ValueError):
-                    return JsonResponse({'status': 'error', 'message': 'Fecha de creación inválida.'})
+                # Calcular el costo promedio
+                total_updates = ToolStockUpdate.objects.filter(tool=tool).count()
 
-                # Actualización del costo total y cantidad
-                total_cost = (tool.unitCost * Decimal(tool.quantity)) + (unitCost * quantity)
+                if total_updates == 0:
+                    # Primera vez que se ingresa este EPP
+                    average_cost = new_unit_cost
+                else:
+                    # Calcular el promedio con el nuevo costo
+                    total_cost = (tool.unitCost * Decimal(tool.quantity)) + (new_unit_cost * quantity)
+                    total_quantity = tool.quantity + quantity
+                    average_cost = total_cost / total_quantity
+
+                # Actualizar el EPP
                 tool.quantity += quantity
-                tool.unitCost = total_cost / tool.quantity
+                tool.unitCost = average_cost
                 tool.stock = stock
                 tool.guideNumber = guideNumber
                 tool.save()
@@ -1278,7 +1336,7 @@ def save_all_tools(request):
                 ToolStockUpdate.objects.create(
                     tool=tool,
                     quantity=quantity,
-                    unitCost=unitCost,
+                    unitCost=new_unit_cost,
                     date=creationDate
                 )
 

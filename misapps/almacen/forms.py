@@ -150,7 +150,6 @@ class PpeForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "Ingrese el número de guía",
-        "id": "id_guideNumber"
     }))
     
     quantity = forms.IntegerField(widget=forms.NumberInput(attrs={

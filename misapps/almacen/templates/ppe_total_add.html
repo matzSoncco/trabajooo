@@ -15,6 +15,42 @@
         });
     });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const filterButton = document.getElementById('filter-warning');
+    const clearFilterButton = document.getElementById('clear-filter');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    filterButton.addEventListener('click', () => {
+        let isFiltered = filterButton.textContent === 'Deshacer Filtro';
+        
+        if (isFiltered) {
+            // Mostrar todas las filas
+            tableRows.forEach(row => row.style.display = '');
+            filterButton.textContent = 'Filtrar';
+            clearFilterButton.style.display = 'none';
+        } else {
+            // Filtrar filas rojas
+            tableRows.forEach(row => {
+                if (row.classList.contains('rojo')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            filterButton.textContent = 'Deshacer Filtro';
+            clearFilterButton.style.display = 'inline';
+        }
+    });
+
+    clearFilterButton.addEventListener('click', () => {
+        // Mostrar todas las filas
+        tableRows.forEach(row => row.style.display = '');
+        filterButton.textContent = 'Filtrar';
+        clearFilterButton.style.display = 'none';
+    });
+});
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -51,6 +87,7 @@
         <div class="contenedor-principal">
             <div class="top-form">
                 <h2 class="titulo-primario">Listado de EPPs</h2>
+                <button id="filter-warning">Filtrar</button>
             </div>
             <div class="centrado">
                 <div class="tabla-mostrar">
@@ -62,37 +99,26 @@
                                 <th>Unidad</th>
                                 <th>N° Guia</th>
                                 <th>Cantidad</th>
+                                <th>Stock Ideal</th>
                                 <th>Precio Unitario</th>
                                 <th>Precio Subtotal</th>
-                                <th>Imagen</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for ppe in ppes %}
-                            <tr>
-                                <td>{{ ppe.idPpe }}</td>
-                                <td>{{ ppe.name }}</td>
-                                <td>{{ ppe.unit }}</td>
-                                <td>{{ ppe.guideNumber }}</td>
-                                <td>{{ ppe.quantity }}</td>
-                                <td>S/.{{ ppe.unitCost }}</td>
-                                <td>S/.{{ ppe.totalCost}}</td>
-                                <td>
-                                    {% if ppe.image %}
-                                    <div class="image-container">
-                                        <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}" class="img-total">
-                                        <div class="preview">
-                                            <img src="{{ ppe.image.url }}" alt="{{ ppe.name }}">
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <div class="no-image">No Image</div>
-                                    {% endif %}
-                                </td>                            
+                            {% for item in ppes %}
+                            <tr class="{% if item.quantity <= item.stock %}rojo{% endif %}">
+                                <td>{{ item.idPpe }}</td>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.unit }}</td>
+                                <td>{{ item.guideNumber }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.stock }}</td>
+                                <td>S/.{{ item.unitCost }}</td>
+                                <td>S/.{{ item.totalCost}}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6">No se encontraron EPPs añadidos recientemente.</td>
+                                <td colspan="8">No se encontraron EPPs añadidos recientemente.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -102,4 +128,12 @@
         </div>
     </section>
 </section>
+<style>
+/* Opción alternativa con fondo más llamativo */
+.rojo {    
+    color: #be0013; /* Texto rojo oscuro */
+    border: 2px solid #f5a0a1; /* Borde rojo más intenso */
+    font-weight: bold; /* Texto en negrita para mayor énfasis */
+}
+</style>
 {% endblock %}

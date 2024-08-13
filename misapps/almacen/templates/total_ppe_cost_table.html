@@ -20,16 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const sortButton = document.getElementById('sortButton');
     const tableBody = document.getElementById('tableBody');
 
-    if (!sortButton) {
-        console.error('El botón de ordenar no se encontró en el DOM');
-        return;
-    }
-
-    if (!tableBody) {
-        console.error('El cuerpo de la tabla no se encontró en el DOM');
-        return;
-    }
-
     sortButton.addEventListener('click', function() {
         console.log('Botón de ordenar clickeado');
 
@@ -41,34 +31,23 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        try {
-            rows.sort((a, b) => {
-                const aCost = extractCost(a);
-                const bCost = extractCost(b);
-                console.log(`Comparando: ${aCost} vs ${bCost}`);
-                return bCost - aCost; // Ordenar de mayor a menor
-            });
+        rows.sort((a, b) => {
+            const aCost = extractCost(a);
+            const bCost = extractCost(b);
+            console.log(`Comparando: ${aCost} vs ${bCost}`);
+            return bCost - aCost; // Ordenar de mayor a menor
+        });
 
-            // Reinsertar las filas ordenadas
-            rows.forEach(row => tableBody.appendChild(row));
-            console.log('Ordenamiento completado con éxito');
-        } catch (error) {
-            console.error('Error durante el ordenamiento:', error);
-        }
+        // Reinsertar las filas ordenadas
+        rows.forEach(row => tableBody.appendChild(row));
     });
 
     function extractCost(row) {
         const costCell = row.cells[4]; // Asumiendo que el costo total está en la quinta columna (índice 4)
-        if (!costCell) {
-            console.warn(`Celda de costo no encontrada para la fila: ${row.innerHTML}`);
-            return 0;
-        }
+
         const costText = costCell.textContent.trim().replace('S/. ', '');
         const cost = parseFloat(costText);
-        if (isNaN(cost)) {
-            console.warn(`Valor de costo inválido encontrado: ${costText}`);
-            return 0;
-        }
+
         return cost;
     }
 });

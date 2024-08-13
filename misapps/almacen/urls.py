@@ -1,12 +1,12 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from .views import home, register_admin, login, exit, history
+from .views import home, register_admin, login, exit, history, home_out
 from . import views
 
 urlpatterns = [
-    path('', home, name='home'),
-
+    path('', home_out, name='home_out'),
+    path('home', home, name='home'),
     #EPP
     path('ppe/create/', views.create_ppe, name='create_ppe'),
     path('ppe/total/add', views.ppe_total_add, name='ppe_total_add'),

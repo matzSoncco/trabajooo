@@ -1,18 +1,24 @@
 {% extends 'base.html' %}
 
 {% block title %}Registrar Admin{% endblock %}
-
+{% block page_title %}
+    <h1 id="page-title">Bienvenidos a la página del sistema</h1>
+{% endblock %}
 {% block content %}
-
 <style>
     .contenedor-general {
         display: flex;
         justify-content: center;
         align-items: center;
-        min-height: 80vh;
-        background-color: #f0f0f0;
+        background-image: url('https://fhingenieros.com.pe/wp-content/themes/realfactory/images/page-title-background.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        margin: 0; 
+        padding: 0; 
+        
     }
-
     .contenedor-formulario {
         background: #ffffff;
         padding: 20px;
@@ -23,19 +29,10 @@
     }
 
     .centrado {
-        text-align: center;
-    }
-
-    .box {
         display: flex;
+        justify-content: center;
         flex-direction: column;
-        gap: 15px;
-    }
-
-    .fila-form {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
+        align-items: center;
     }
 
     .campo {
@@ -43,45 +40,6 @@
         flex-direction: column;
         gap: 5px;
         flex: 1;
-    }
-
-    .label {
-        font-weight: bold;
-        color: #333;
-    }
-
-    .form-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-    .aceptar-btn {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    .aceptar-btn:hover {
-        background-color: #45a049;
-    }
-
-    .cancelar-btn {
-        background-color: #f44336;
-        color: white;
-        margin-left: 10px;
-    }
-
-    .cancelar-btn:hover {
-        background-color: #e53935;
-    }
-
-    .campo-botones {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
     }
 
     .campo input {
@@ -99,12 +57,20 @@
             gap: 10px;
         }
     }
+    h1 {
+        color: white;
+        font-size: 40px;
+        text-align: center;
+        font-weight: bold;
+        margin-top: 50px;
+    }
 </style>
-
+<h1 id="page-title">Bienvenidos a la página del sistema</h1>
 <div class="contenedor-general">
     <div class="contenedor-formulario">
         <div class="centrado">
-            <form method="post" action="{% url 'register_admin' %}" class="box">
+            <h2 class="titulo-formulario">Registrarse</h2>
+            <form id="register-form" method="post" action="{% url 'register_admin' %}" class="box">
                 {% csrf_token %}
 
                 <div class="fila-form">
@@ -149,5 +115,57 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('register-form');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita el envío del formulario tradicional
+
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: data.message,
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{% url 'login' %}"; 
+                        }
+                    });
+                } else if (data.status === 'error') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un problema al procesar la solicitud.',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        });
+    });
+</script>
 
 {% endblock %}

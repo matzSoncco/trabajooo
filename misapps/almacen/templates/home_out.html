@@ -1,10 +1,10 @@
-{% csrf_token %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     {% load static %}
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <title>{% block title %}Inicio{% endblock %}</title>
@@ -19,19 +19,31 @@
                 </div>
             {% else %}
                 <div class="item-top">
-                    <a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a>
+                    <a class="nav-link" href="{% url 'login' %}" onclick="adjustTitle()">Iniciar Sesión</a>
                 </div>
                 <div class="item-top">
-                    <a class="nav-link" href="{% url 'register_admin' %}">Crear Cuenta</a>
+                    <a class="nav-link" href="{% url 'register_admin' %}" onclick="adjustTitle()">Crear Cuenta</a>
                 </div>
             {% endif %}
         </nav>
     </div>
-    <main class="container mt-4">
+
+    {% block page_title %}
+        <h1 id="page-title">Bienvenidos a la página del sistema</h1>
+    {% endblock %}
+
+    <main class="container mt-4" id="content-area">
         {% block content %}{% endblock %}
     </main>
 </body>
 <style>
+    h1 {
+        color: white;
+        font-size: 60px;
+        text-align: center;
+        font-weight: bold;
+        margin-top: 50px;
+    }
     #special-page {
         background-image: url('https://fhingenieros.com.pe/wp-content/themes/realfactory/images/page-title-background.jpg');
         background-size: cover;

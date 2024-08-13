@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from decimal import Decimal
+from django.urls import reverse
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from django.http import HttpResponseRedirect
@@ -47,6 +48,9 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 def home(request):
     return render(request, 'home.html')
+
+def home_out(request):
+    return render(request, 'home_out.html')
 
 #DURACIÓN
 @login_required
@@ -1531,7 +1535,14 @@ def return_view(request):
     if request.method == 'POST':
         for loan in tool_loans:
             checkbox_name = f'returned_tool_{loan.idToolLoan}'
-            loan.loanStatus = checkbox_name in request.POST
+            if checkbox_name in request.POST:
+                # Sumamos la cantidad prestada al inventario
+                tool = loan.tool
+                tool.quantity += loan.loanAmount
+                tool.save()
+                loan.loanStatus = True
+            else:
+                loan.loanStatus = False
             loan.save()
 
             History.objects.create(
@@ -1544,7 +1555,14 @@ def return_view(request):
 
         for loan in equipment_loans:
             checkbox_name = f'returned_equipment_{loan.idEquipmentLoan}'
-            loan.loanStatus = checkbox_name in request.POST
+            if checkbox_name in request.POST:
+                # Sumamos la cantidad prestada al inventario
+                equipment = loan.equipment
+                equipment.quantity += loan.loanAmount
+                equipment.save()
+                loan.loanStatus = True
+            else:
+                loan.loanStatus = False
             loan.save()
 
             History.objects.create(
@@ -1581,7 +1599,14 @@ def return_tool_view(request):
     if request.method == 'POST':
         for loan in tool_loans:
             checkbox_name = f'returned_tool_{loan.idToolLoan}'
-            loan.loanStatus = checkbox_name in request.POST
+            if checkbox_name in request.POST:
+                # Sumamos la cantidad prestada al inventario
+                tool = loan.tool
+                tool.quantity += loan.loanAmount
+                tool.save()
+                loan.loanStatus = True
+            else:
+                loan.loanStatus = False
             loan.save()
 
             History.objects.create(
@@ -1617,7 +1642,14 @@ def return_equipment_view(request):
     if request.method == 'POST':
         for loan in equipment_loans:
             checkbox_name = f'returned_equipment_{loan.idEquipmentLoan}'
-            loan.loanStatus = checkbox_name in request.POST
+            if checkbox_name in request.POST:
+                # Sumamos la cantidad prestada al inventario
+                equipment = loan.equipment
+                equipment.quantity += loan.loanAmount
+                equipment.save()
+                loan.loanStatus = True
+            else:
+                loan.loanStatus = False
             loan.save()
 
             History.objects.create(
@@ -1647,22 +1679,34 @@ def worker_list(request):
         workers = Worker.objects.all().order_by('-contractDate')
     return render(request, 'worker_list.html', {'workers': workers, 'query': query})
 
+logger = logging.getLogger(__name__)
+
 @login_required
 def create_worker(request):
     if request.method == 'POST':
         form = WorkerForm(request.POST)
+        logger.debug(f'Formulario recibido: {request.POST}')
+        
         if form.is_valid():
             dni = form.cleaned_data.get('dni')
             name = form.cleaned_data.get('name')
             surname = form.cleaned_data.get('surname')
 
+            logger.debug(f'Procesando formulario: DNI={dni}, Nombre={name}, Apellido={surname}')
+
             if Worker.objects.filter(dni=dni).exists():
-                messages.error(request, 'Ya existe un trabajador con este DNI.')
-                return render(request, 'create_worker.html', {'form': form})
+                logger.debug(f'Error: DNI {dni} ya existe')
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Ya existe un trabajador con este DNI.'
+                })
 
             if Worker.objects.filter(name=name, surname=surname).exists():
-                messages.error(request, 'Ya existe un trabajador con este nombre y apellido.')
-                return render(request, 'create_worker.html', {'form': form})
+                logger.debug(f'Error: Trabajador con Nombre={name} y Apellido={surname} ya existe')
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Ya existe un trabajador con este nombre y apellido.'
+                })
 
             worker = form.save()
             History.objects.create(
@@ -1672,16 +1716,25 @@ def create_worker(request):
                 user=request.user,
                 timestamp=timezone.now()
             )
-            messages.success(request, 'Trabajador creado con éxito')
-            return redirect('create_worker')
+            logger.debug('Trabajador creado con éxito')
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Trabajador creado con éxito'
+            })
         else:
-            messages.error(request, 'Hubo un error al crear el trabajador. Por favor, revisa el formulario.')
-            return render(request, 'create_worker.html', {'form': form})
+            # Extrae los errores específicos del formulario
+            errors = form.errors.as_json()
+            logger.debug(f'Errores del formulario: {errors}')
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Hubo un error al crear el trabajador. Por favor, revisa el formulario.',
+                'errors': errors
+            })
     else:
         form = WorkerForm()
     return render(request, 'create_worker.html', {'form': form})
 
-    
+
 @login_required
 def delete_worker(request, worker_id):
     if request.method == 'DELETE':
@@ -3232,17 +3285,37 @@ def history(request):
     return render(request, 'history.html', {'history_records': history_records})
     
 #REGISTER
+@csrf_exempt
 def register_admin(request):
     if request.method == 'POST':
         form = AdminSignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
-            return redirect('login')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                # Handle AJAX request
+                response = {
+                    'status': 'success',
+                    'message': '¡Registrado exitosamente! Cuenta creada con éxito.'
+                }
+                return JsonResponse(response)
+            else:
+                # Handle standard request
+                return redirect('login')
         else:
-            print(form.errors)
+            # Handle errors
+            first_error = list(form.errors.values())[0][0] if form.errors else 'Error desconocido'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                response = {
+                    'status': 'error',
+                    'message': first_error
+                }
+                return JsonResponse(response)
+            else:
+                return render(request, 'register_admin.html', {'form': form, 'error': first_error})
     else:
         form = AdminSignUpForm()
+
     return render(request, 'register_admin.html', {'form': form})
 
 def login(request):
@@ -3267,4 +3340,4 @@ def user_list(request):
 
 def exit(request):
     logout(request)
-    return redirect('home')
+    return redirect('home_out')

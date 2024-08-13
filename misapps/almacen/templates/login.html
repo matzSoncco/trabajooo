@@ -7,6 +7,7 @@
 <style>
     .contenedor-general {
         display: flex;
+        flex-direction: column; /* Cambiar a columna para apilar los elementos verticalmente */
         justify-content: center;
         align-items: center;
         background-image: url('https://fhingenieros.com.pe/wp-content/themes/realfactory/images/page-title-background.jpg');
@@ -16,7 +17,7 @@
         background-attachment: fixed;
         margin: 0; 
         padding: 0; 
-        
+        min-height: 100vh; /* Asegura que el contenedor ocupe al menos toda la altura de la ventana */
     }
     .contenedor-formulario {
         background: #ffffff;
@@ -61,11 +62,13 @@
         font-size: 40px;
         text-align: center;
         font-weight: bold;
-        margin-top: 50px;
+        margin-top: 0px;
+        margin-bottom: 30px; /* Espacio debajo del h1 */
     }
 </style>
-<h1 id="page-title">Bienvenidos a la página del sistema</h1>
-<div class="contenedor-general">     
+
+<div class="contenedor-general">
+    <h1 id="page-title">Bienvenidos a la página del sistema</h1>     
     <div class="contenedor-formulario">
         <div class="centrado">
             <!-- Título del formulario -->

@@ -75,7 +75,7 @@
                             <td>{{ loan.workOrder }}</td>
                             <td>{{ loan.tool.name }}</td>
                             <td>{{ loan.loanAmount }}</td>
-                            <td><input type="checkbox" name="returned_{{ loan.idToolLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
+                            <td><input type="checkbox" name="returned_tool_{{ loan.idToolLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
                             <td>{{ loan.worker.name }}</td>
                             <td>{{ loan.worker.surname }}</td>
                             <td>{{ loan.worker.dni }}</td>
@@ -87,8 +87,9 @@
                             <td>{{ loan.workOrder }}</td>
                             <td>{{ loan.equipment.name }}</td>
                             <td>{{ loan.loanAmount }}</td>
-                            <td><input type="checkbox" name="returned_{{ loan.idEquipmentLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
+                            <td><input type="checkbox" name="returned_equipment_{{ loan.idEquipmentLoan }}" {% if loan.loanStatus %}checked{% endif %}></td>
                             <td>{{ loan.worker.name }}</td>
+                            <td>{{ loan.worker.surname }}</td>
                             <td>{{ loan.worker.dni }}</td>
                         </tr>
                         {% endfor %}

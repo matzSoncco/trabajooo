@@ -102,7 +102,7 @@
     </script>
 {% endif %}
 <script>
-    document.getElementById('add-unit-btn').addEventListener('click', function() {
+        document.getElementById('add-unit-btn').addEventListener('click', function() {
         const newUnitField = document.getElementById('id_new_unit');
         const unitSelect = document.getElementById('id_unit');
         const newUnit = newUnitField.value.trim();
@@ -123,16 +123,40 @@
                     unitSelect.add(newOption);
                     unitSelect.value = newUnit;
                     newUnitField.value = '';
-                    document.querySelector('form').submit();  // Actualiza y envía el formulario automáticamente
+                    
+                    // Aquí se ha eliminado el envío automático del formulario
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Unidad agregada',
+                        text: 'La nueva unidad se ha agregado correctamente.',
+                        confirmButtonText: 'Aceptar'
+                    });
+
                 } else {
-                    alert(data.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un problema al agregar la unidad.',
+                    confirmButtonText: 'Aceptar'
+                });
             });
         } else {
-            alert('Por favor, ingresa un nombre de unidad.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Advertencia',
+                text: 'Por favor, ingresa un nombre de unidad.',
+                confirmButtonText: 'Aceptar'
+            });
         }
     });
 </script>

@@ -194,7 +194,7 @@ def save_all_ppe(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(ppe),
                     object_name=ppe.name,
-                    action='Ingreso Stock',
+                    action='Ingresar Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -342,7 +342,7 @@ def create_ppe(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(ppe),
                 object_name=ppe.name,
-                action='Creado',
+                action='Crear',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -364,6 +364,13 @@ def add_new_unit(request):
         new_unit_name = json.loads(request.body).get('new_unit', '').strip()
         if new_unit_name:
             unit, created = Unit.objects.get_or_create(name=new_unit_name)
+            History.objects.create(
+                content_type=ContentType.objects.get_for_model(unit),
+                object_name=unit.name,
+                action='Crer',
+                user=request.user,
+                timestamp=timezone.now()
+            )
             if created:
                 return JsonResponse({'success': True, 'message': 'Unidad creada Exitosamente'})
             else:
@@ -465,7 +472,7 @@ def delete_ppe(request, ppe_id):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(ppe),
                     object_name=ppe_name,
-                    action='Deleted',
+                    action='Eliminar',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -675,7 +682,7 @@ def save_all_equipment(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(equipment),
                     object_name=equipment.name,
-                    action='Add Stock',
+                    action='Ingresar Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -775,7 +782,7 @@ def create_equipment(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(equipment),
                 object_name=equipment.name,
-                action='Creado',
+                action='Crear',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -918,7 +925,7 @@ def save_all_material(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(material),
                     object_name=material.name,
-                    action='Ingreso Stock',
+                    action='Ingresar Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -1020,7 +1027,7 @@ def create_material(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(material),
                 object_name=material.name,
-                action='Creado',
+                action='Crear',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1090,7 +1097,7 @@ def add_material(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(material),
                 object_name=material.name,
-                action='Add Stock',
+                action='Ingreso Stock',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1305,7 +1312,7 @@ def save_all_tools(request):
                 History.objects.create(
                     content_type=ContentType.objects.get_for_model(tool),
                     object_name=tool.name,
-                    action='Ingreso Stock',
+                    action='Ingresar Stock',
                     user=request.user,
                     timestamp=timezone.now()
                 )
@@ -1409,7 +1416,7 @@ def create_tool(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(tool),
                 object_name=tool.name,
-                action='Creado',
+                action='Crear',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1520,7 +1527,7 @@ def return_view(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(loan),
                 object_name=loan.tool.name,
-                action='Return',
+                action='Devolución',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1540,7 +1547,7 @@ def return_view(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(loan),
                 object_name=loan.equipment.name,
-                action='Return',
+                action='Devolución',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1584,7 +1591,7 @@ def return_tool_view(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(loan),
                 object_name=loan.tool.name,
-                action='Return',
+                action='Devolución',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1627,7 +1634,7 @@ def return_equipment_view(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(loan),
                 object_name=loan.equipment.name,
-                action='Return',
+                action='Devolución',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -1684,7 +1691,7 @@ def create_worker(request):
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(worker),
                 object_name=worker.name,
-                action='Created',
+                action='Crear',
                 user=request.user,
                 timestamp=timezone.now()
             )
@@ -2036,7 +2043,7 @@ def confirm_tool_loan(request):
                         History.objects.create(
                             content_type=ContentType.objects.get_for_model(new_loan),
                             object_name=tool.name,
-                            action='Loan Created',
+                            action='Asignar',
                             user=request.user,  # Asegúrate de que el usuario esté autenticado
                             timestamp=timezone.now()
                         )
@@ -2357,7 +2364,7 @@ def confirm_equipment_loan(request):
                         History.objects.create(
                             content_type=ContentType.objects.get_for_model(new_loan),
                             object_name=equipment.name,
-                            action='Loan Created',
+                            action='Asignar',
                             user=request.user,
                             timestamp=timezone.now()
                         )
@@ -2669,7 +2676,7 @@ def confirm_material_loan(request):
                         History.objects.create(
                             content_type=ContentType.objects.get_for_model(MaterialLoan),
                             object_name=material.name,
-                            action='Loan Created',
+                            action='Asignar',
                             user=request.user,
                             timestamp=timezone.now()
                         )
@@ -3088,7 +3095,7 @@ def confirm_ppe_loan(request):
                                 History.objects.create(
                                     content_type=ContentType.objects.get_for_model(PpeLoan),
                                     object_name=ppe.name,
-                                    action='Loan Created' if not is_assigned else 'Loan Assigned',
+                                    action='Asignar',
                                     user=request.user,
                                     timestamp=timezone.now()
                                 )
@@ -3257,7 +3264,7 @@ def delete_ppe_loan(request, id):
         History.objects.create(
             content_type=ContentType.objects.get_for_model(PpeLoan),
             object_name=PpeLoan.name,
-            action='Loan Delete',
+            action='Eliminar Asignación',
             user=request.user,
             timestamp=timezone.now()
         )

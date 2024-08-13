@@ -651,6 +651,7 @@ input[type="file"]:focus {
     letter-spacing: 0.5px;
     background-color: var(--secondary-color);
     color: var(--text-light);
+    text-decoration: none;
 }
 
 /* CSS */

@@ -14,8 +14,7 @@ class Ppe(models.Model):
     duration = models.IntegerField(null=False, default=0, editable=True)
     image = models.ImageField(upload_to='uploads/', blank=True, null=True)
     creationDate = models.DateField(auto_now_add=False, blank=False, null=True)
-    comments = models.TextField(null=True, max_length=120)
-
+    
     def save(self, *args, **kwargs):
         # Calcula el totalCosto antes de guardar
         self.totalCost = self.unitCost * self.quantity

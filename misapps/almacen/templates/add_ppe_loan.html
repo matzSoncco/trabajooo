@@ -172,8 +172,6 @@
             updatePreDeliveryTable();
         });
 
-        let ppeToAssign = [];
-
         // Función para construir la tabla de EPPs en el popup
         function buildPopupTable() {
             let popupTableBody = $('#popup-table tbody');
@@ -184,52 +182,65 @@
                 row.append($('<td>').text(ppe.name));
                 row.append($('<td>').text(ppe.quantity));
 
-                // Verificar si hay una asignación en curso para este EPP y este trabajador
+                let loanDate = $('#id_loanDate').val().trim();
+
                 $.ajax({
                     url: '{% url "check_ppe_assignment" %}',
                     data: {
                         'ppe_name': ppe.name,
-                        'worker_dni': $('#id_workerDni').val().trim()
+                        'worker_dni': $('#id_workerDni').val().trim(),
+                        'loan_date': loanDate
                     },
-                    async: false,  // Hacemos esto síncrono para simplificar la lógica
+                    async: false,
                     success: function(response) {
                         let isAssigned = response.is_assigned;
-                        let assignedCell = $('<td>').text(isAssigned ? 'SÍ' : 'NO');
-                        row.append(assignedCell);
+                        let deserveRenewal = response.deserve_renewal;
+                        
+                        // Columna "¿Merece renovación?"
+                        row.append($('<td>').text(deserveRenewal ? 'SÍ' : 'NO'));
 
-                        let renewalCell = $('<td>');
-                        if (isAssigned) {
-                            let renewalCheckbox = $('<input>').attr({
+                        // Columna "Vale de excepción"
+                        let exceptionCell = $('<td>');
+                        if (!deserveRenewal) {
+                            let exceptionCheckbox = $('<input>').attr({
                                 type: 'checkbox',
-                                class: 'renewal-checkbox',
+                                class: 'exception-checkbox',
                                 'data-ppe-name': ppe.name
                             });
-                            renewalCell.append(renewalCheckbox);
+                            exceptionCell.append(exceptionCheckbox);
                         }
-                        row.append(renewalCell);
+                        row.append(exceptionCell);
 
+                        // Columna "Fecha de Expiración"
                         let expirationDateCell = $('<td>');
-                        if (isAssigned) {
-                            $.ajax({
-                                url: '{% url "check_ppe_duration" %}',
-                                data: {
-                                    'ppe_name': ppe.name,
-                                    'loan_date': $('#id_loanDate').val().trim()
-                                },
-                                async: false,
-                                success: function(durationResponse) {
-                                    if (durationResponse.success) {
-                                        let duration = durationResponse.duration;
-                                        let loanDateObj = new Date($('#id_loanDate').val().trim());
-                                        let expirationDate = new Date(loanDateObj.getTime() + duration * 24 * 60 * 60 * 1000);
-                                        expirationDateCell.text(expirationDate.toISOString().split('T')[0]);
-                                    }
+                        $.ajax({
+                            url: '{% url "check_ppe_duration" %}',
+                            data: {
+                                'ppe_name': ppe.name,
+                                'loan_date': loanDate
+                            },
+                            async: false,
+                            success: function(durationResponse) {
+                                if (durationResponse.success) {
+                                    let duration = durationResponse.duration;
+                                    let loanDateObj = new Date(loanDate);
+                                    let expirationDate = new Date(loanDateObj.getTime() + duration * 24 * 60 * 60 * 1000);
+                                    expirationDateCell.text(expirationDate.toISOString().split('T')[0]);
                                 }
-                            });
-                        }
+                            }
+                        });
                         row.append(expirationDateCell);
 
-                        // Agregar un atributo data para isAssigned
+                        // Columna "Comentarios"
+                        let commentsCell = $('<td>');
+                        let commentsInput = $('<input>').attr({
+                            type: 'text',
+                            class: 'comments-input',
+                            'data-ppe-name': ppe.name
+                        }).prop('disabled', true);
+                        commentsCell.append(commentsInput);
+                        row.append(commentsCell);
+
                         row.attr('data-is-assigned', isAssigned);
                     },
                     error: function() {
@@ -242,6 +253,12 @@
 
             $('#popup, #popup-overlay').show();
         }
+
+        // Añadir event listener para los checkboxes de excepción
+        $(document).on('change', '.exception-checkbox', function() {
+            let commentsInput = $(this).closest('tr').find('.comments-input');
+            commentsInput.prop('disabled', !$(this).is(':checked'));
+        });
 
         $("#give-btn").click(function() {
             if (ppe_loans.length === 0) {
@@ -316,8 +333,9 @@
                 let row = $(this);
                 let ppeName = row.find('td:eq(0)').text();
                 let quantity = row.find('td:eq(1)').text();
-                let isAssigned = row.find('td:eq(2)').text() === 'SÍ';
-                let isRenewal = row.find('.renewal-checkbox').is(':checked');
+                let deserveRenewal = row.find('td:eq(2)').text() === 'SÍ';
+                let isException = row.find('.exception-checkbox').is(':checked');
+                let comments = row.find('.comments-input').val();
                 
                 ppe_loans.push({
                     name: ppeName,
@@ -328,8 +346,9 @@
                         dni: $('#id_workerDni').val().trim()
                     },
                     loanDate: $('#id_loanDate').val().trim(),
-                    isAssigned: isAssigned,
-                    isRenewal: isRenewal
+                    deserveRenewal: deserveRenewal,
+                    isException: isException,
+                    comments: comments
                 });
             });
 
@@ -620,9 +639,10 @@
             <tr>
                 <th>Nombre del EPP</th>
                 <th>Cantidad</th>
-                <th>Asignado</th>
-                <th>Renovación</th>
+                <th>¿Merce renovación?</th>
+                <th>Vale de excepción</th>
                 <th>Fecha de Expiración</th>
+                <th>Comentarios</th>
             </tr>
         </thead>
         <tbody>

@@ -15,6 +15,7 @@ class PpeLoan(models.Model):
     loanAmount = models.IntegerField(default=0)
     ppe = models.ForeignKey(Ppe, on_delete=models.CASCADE, null=True)
     confirmed = models.BooleanField(default=False)
+    comments = models.TextField(null=True, max_length=120)
 
     def save(self, *args, **kwargs):
         if not self.pk:  # Si es un nuevo préstamo

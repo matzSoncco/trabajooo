@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function extractCost(row) {
-        const costCell = row.cells[4]; // Asumiendo que el costo total está en la quinta columna (índice 4)
+        const costCell = row.querySelector('td:nth-child(5)'); // Asumiendo que el costo total está en la quinta columna (índice 4)
 
         const costText = costCell.textContent.trim().replace('S/. ', '');
         const cost = parseFloat(costText);

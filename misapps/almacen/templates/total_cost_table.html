@@ -3,6 +3,18 @@
 {% block title %}Resumen de Costos{% endblock %}
 
 {% block content %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll('.link-form');
+        
+        links.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -22,6 +34,9 @@
                 </div>
                 <div class="item-lateral">
                     <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'ppe_total_add' %}">Almacen General</a>
                 </div>
             </nav>
         </div>

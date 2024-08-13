@@ -3,6 +3,18 @@
 {% block title %}Total de EPPs{% endblock %}
 
 {% block content %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll('.link-form');
+        
+        links.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -23,14 +35,22 @@
                 <div class="item-lateral">
                     <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
                 </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="{% url 'ppe_total_add' %}">Almacen General</a>
+                </div>
             </nav>
         </div>
     </aside>
     <section class="contenedor-lateral-derecho">
+        <nav class="navegacion-link-formularios-top">
+            <a class="link-form" href="{% url 'ppe_total_add' %}">EPP</a>
+            <a class="link-form" href="{% url 'tool_total_add' %}">HERRAMIENTAS</a>
+            <a class="link-form" href="{% url 'equipment_total_add' %}">EQUIPOS</a>
+            <a class="link-form" href="{% url 'material_total_add' %}">MATERIALES</a>
+        </nav>
         <div class="contenedor-principal">
             <div class="top-form">
                 <h2 class="titulo-primario">Listado de EPPs</h2>
-                <a class="form-btn ver-obj-btn" href="{% url 'add_ppe' %}">Volver</a>
             </div>
             <div class="centrado">
                 <div class="tabla-mostrar">

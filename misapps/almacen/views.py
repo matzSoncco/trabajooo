@@ -322,10 +322,11 @@ def create_ppe(request):
 
         new_unit_name = request.POST.get('new_unit')
         if new_unit_name:
+            # Crear o recuperar la unidad nueva
             unit, created = Unit.objects.get_or_create(name=new_unit_name)
             post_data = request.POST.copy()
             post_data['unit'] = unit.id
-            form = CreatePpeForm(post_data, request.FILES)
+            form = CreatePpeForm(post_data, request.FILES)  # Crear un nuevo formulario con la nueva unidad
 
         # Validar si ya existe un EPP con el mismo nombre
         existing_ppe = Ppe.objects.filter(name=form.data.get('name')).exists()
@@ -336,6 +337,7 @@ def create_ppe(request):
             ppe = form.save(commit=False)
             ppe.save()
 
+            # Registrar la acción en el historial
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(ppe),
                 object_name=ppe.name,
@@ -347,7 +349,7 @@ def create_ppe(request):
             messages.success(request, 'EPP creado exitosamente.')
             return redirect('create_ppe')
         else:
-            # Verifica si ya existe un error específico antes de agregar el mensaje general
+            # Manejo de errores y mensajes
             error_added = False
             for field, errors in form.errors.items():
                 for error in errors:
@@ -358,7 +360,6 @@ def create_ppe(request):
                         messages.error(request, f"Error en el campo '{form[field].label}': {error}")
                         error_added = True
 
-            # Si no hay errores específicos, agregar mensaje general
             if not error_added:
                 messages.error(request, 'Error al crear el EPP. Verifique los campos e intente nuevamente.')
     else:
@@ -1529,7 +1530,7 @@ def return_view(request):
     # Manejo del POST para actualizar loanStatus
     if request.method == 'POST':
         for loan in tool_loans:
-            checkbox_name = f'returned_{loan.idToolLoan}'
+            checkbox_name = f'returned_tool_{loan.idToolLoan}'
             loan.loanStatus = checkbox_name in request.POST
             loan.save()
 
@@ -1542,7 +1543,7 @@ def return_view(request):
             )
 
         for loan in equipment_loans:
-            checkbox_name = f'returned_{loan.idEquipmentLoan}'
+            checkbox_name = f'returned_equipment_{loan.idEquipmentLoan}'
             loan.loanStatus = checkbox_name in request.POST
             loan.save()
 
@@ -1563,7 +1564,7 @@ def return_view(request):
     })
 @login_required
 def return_tool_view(request):
-    tool_loans = ToolLoan.objects.all()  # Mostrar todos los ToolLoan por defecto
+    tool_loans = ToolLoan.objects.all()
 
     # Manejo de la búsqueda
     work_order = request.GET.get('work_order')
@@ -1579,13 +1580,13 @@ def return_tool_view(request):
     # Manejo del POST para actualizar loanStatus
     if request.method == 'POST':
         for loan in tool_loans:
-            checkbox_name = f'returned_{loan.idToolLoan}'
+            checkbox_name = f'returned_tool_{loan.idToolLoan}'
             loan.loanStatus = checkbox_name in request.POST
             loan.save()
 
             History.objects.create(
-                content_type=ContentType.objects.get_for_model(loan),  # Obtener el ContentType para cada objeto loan
-                object_name=loan.tool.name,  # Acceder al nombre de la herramienta a través de la relación FK
+                content_type=ContentType.objects.get_for_model(loan),
+                object_name=loan.tool.name,
                 action='Return',
                 user=request.user,
                 timestamp=timezone.now()
@@ -1599,7 +1600,7 @@ def return_tool_view(request):
 
 @login_required
 def return_equipment_view(request):
-    equipment_loans = EquipmentLoan.objects.all()  # Mostrar todos los ToolLoan por defecto
+    equipment_loans = EquipmentLoan.objects.all()
 
     # Manejo de la búsqueda
     work_order = request.GET.get('work_order')
@@ -1615,13 +1616,13 @@ def return_equipment_view(request):
     # Manejo del POST para actualizar loanStatus
     if request.method == 'POST':
         for loan in equipment_loans:
-            checkbox_name = f'returned_{loan.idEquipmentLoan}'
+            checkbox_name = f'returned_equipment_{loan.idEquipmentLoan}'
             loan.loanStatus = checkbox_name in request.POST
             loan.save()
 
             History.objects.create(
-                content_type=ContentType.objects.get_for_model(loan),  # Obtener el ContentType para cada objeto loan
-                object_name=loan.equipment.name,  # Acceder al nombre de la herramienta a través de la relación FK
+                content_type=ContentType.objects.get_for_model(loan),
+                object_name=loan.equipment.name,
                 action='Return',
                 user=request.user,
                 timestamp=timezone.now()

@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     maintainAspectRatio: false,
                     title: {
                         display: true,
-                        text: 'Distribución de Costos por EPP'
+                        text: 'Distribución de Costos por Herramienta'
                     }
                 }
             });
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     maintainAspectRatio: false,
                     title: {
                         display: true,
-                        text: 'Diagrama de Pareto - Costos de EPP'
+                        text: 'Diagrama de Pareto - Costos de Herramienta'
                     },
                     scales: {
                         yAxes: [{
@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Pie button clicked');  // Añadido para depuración
             if (myChart) myChart.destroy();
             myChart = createPieChart();
-            chartTitle.textContent = 'Gráfico de Torta - Costos de EPP';
+            chartTitle.textContent = 'Gráfico de Torta - Costos de Herramienta';
             modal.style.display = 'block';
         });
 
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Pareto button clicked');  // Añadido para depuración
             if (myChart) myChart.destroy();
             myChart = createParetoChart();
-            chartTitle.textContent = 'Diagrama de Pareto - Costos de EPP';
+            chartTitle.textContent = 'Diagrama de Pareto - Costos de Herramienta';
             modal.style.display = 'block';
         });
 

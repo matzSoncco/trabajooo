@@ -231,6 +231,27 @@ body {
     opacity: 1;
 }
 
+/* Estilos para el elemento activo */
+.navegacion-lateral .navbar-brand.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.navegacion-lateral .navbar-brand.active::before {
+    transform: scaleY(1);
+    opacity: 1;
+}
+
+.navegacion-lateral .navbar-brand.active::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background-color: var(--primary-light);
+}
+
 /* Estilos para el contenido principal */
 .contenedor-lateral-derecho {
     flex: 1;

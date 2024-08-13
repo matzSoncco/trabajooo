@@ -139,12 +139,8 @@ def get_ppe_data(request):
     ppe_id = request.GET.get('id')
     ppe = get_object_or_404(Ppe, idPpe=ppe_id)
     data = {
-        'guideNumber': ppe.guideNumber,
         'creationDate': ppe.creationDate,
         'name': ppe.name,
-        'unitCost': ppe.unitCost,
-        'quantity': ppe.quantity,
-        'stock': ppe.stock
     }
     return JsonResponse(data)
 
@@ -322,16 +318,17 @@ def ppe_total_add(request):
 @login_required
 def create_ppe(request):
     if request.method == 'POST':
-        form = CreatePpeForm(request.POST, request.FILES)
-
+        # Manejo de la creación de una nueva unidad antes de validar el formulario
         new_unit_name = request.POST.get('new_unit')
         if new_unit_name:
             # Crear o recuperar la unidad nueva
             unit, created = Unit.objects.get_or_create(name=new_unit_name)
             post_data = request.POST.copy()
-            post_data['unit'] = unit.id
-            form = CreatePpeForm(post_data, request.FILES)  # Crear un nuevo formulario con la nueva unidad
-
+            post_data['unit'] = unit.id  # Asignar la nueva unidad al formulario
+            request.POST = post_data  # Actualizar el POST request con la nueva unidad
+        
+        form = CreatePpeForm(request.POST, request.FILES)
+        
         # Validar si ya existe un EPP con el mismo nombre
         existing_ppe = Ppe.objects.filter(name=form.data.get('name')).exists()
         if existing_ppe:
@@ -353,18 +350,7 @@ def create_ppe(request):
             messages.success(request, 'EPP creado exitosamente.')
             return redirect('create_ppe')
         else:
-            # Manejo de errores y mensajes
-            error_added = False
-            for field, errors in form.errors.items():
-                for error in errors:
-                    if field == 'name' and 'Ya existe un EPP con este nombre.' in error:
-                        messages.error(request, 'Ya existe un EPP con este nombre.')
-                        error_added = True
-                    else:
-                        messages.error(request, f"Error en el campo '{form[field].label}': {error}")
-                        error_added = True
-
-            if not error_added:
+            if not new_unit_name:  # Solo mostrar errores si no se añadió una nueva unidad
                 messages.error(request, 'Error al crear el EPP. Verifique los campos e intente nuevamente.')
     else:
         form = CreatePpeForm()
@@ -372,27 +358,19 @@ def create_ppe(request):
     return render(request, 'create_ppe.html', {'form': form})
 
 @csrf_exempt
-@require_POST
+@login_required
 def add_new_unit(request):
-    try:
-        data = json.loads(request.body)
-        new_unit_name = data.get('new_unit')
+    if request.method == 'POST':
+        new_unit_name = json.loads(request.body).get('new_unit', '').strip()
         if new_unit_name:
             unit, created = Unit.objects.get_or_create(name=new_unit_name)
-            History.objects.create(
-                content_type=ContentType.objects.get_for_model(unit),
-                object_name=unit.name,
-                action='Created',
-                user=request.user,
-                timestamp=timezone.now()
-            )
             if created:
-                return JsonResponse({'success': True, 'unit': unit.name})
+                return JsonResponse({'success': True, 'message': 'Unidad creada Exitosamente'})
             else:
                 return JsonResponse({'success': False, 'message': 'La unidad ya existe.'})
-        return JsonResponse({'success': False, 'message': 'Nombre de la unidad no proporcionado.'})
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Error al procesar la solicitud.'})
+        else:
+            return JsonResponse({'success': False, 'message': 'El nombre de la unidad no puede estar vacío.'})
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'})
 
 @login_required
 def add_ppe(request):
@@ -474,7 +452,7 @@ def add_ppe(request):
         'query': query
     }
     return render(request, 'add_ppe.html', context)
-
+@csrf_exempt
 @login_required
 def delete_ppe(request, ppe_id):
     if request.method == 'DELETE':
@@ -643,12 +621,8 @@ def get_equipment_data(request):
     equipment_id = request.GET.get('id')
     equipment = get_object_or_404(Equipment, idEquipment=equipment_id)
     data = {
-        'guideNumber': equipment.guideNumber,
         'creationDate': equipment.creationDate,
         'name': equipment.name,
-        'unitCost': equipment.unitCost,
-        'quantity': equipment.quantity,
-        'stock': equipment.stock
     }
     return JsonResponse(data)
 
@@ -826,7 +800,7 @@ def create_equipment(request):
         form = CreateEquipmentForm()
 
     return render(request, 'create_equipment.html', {'form': form})
-
+@csrf_exempt
 @login_required
 def delete_equipment(request, equipment_id):
     if request.method == 'DELETE':
@@ -887,12 +861,8 @@ def get_material_data(request):
     material_id = request.GET.get('id')
     material = get_object_or_404(Material, idMaterial=material_id)
     data = {
-        'guideNumber': material.guideNumber,
         'creationDate': material.creationDate,
         'name': material.name,
-        'unitCost': material.unitCost,
-        'quantity': material.quantity,
-        'stock': material.stock
     }
     return JsonResponse(data)
 
@@ -1026,15 +996,27 @@ def material_list(request):
 @login_required
 def create_material(request):
     if request.method == 'POST':
+        # Manejo de la creación de una nueva unidad antes de validar el formulario
+        new_unit_name = request.POST.get('new_unit')
+        if new_unit_name:
+            # Crear o recuperar la unidad nueva
+            unit, created = Unit.objects.get_or_create(name=new_unit_name)
+            post_data = request.POST.copy()
+            post_data['unit'] = unit.id  # Asignar la nueva unidad al formulario
+            request.POST = post_data  # Actualizar el POST request con la nueva unidad
+        
         form = CreateMaterialForm(request.POST, request.FILES)
-
+        
         # Validar si ya existe un material con el mismo nombre
         existing_material = Material.objects.filter(name=form.data.get('name')).exists()
         if existing_material:
             form.add_error('name', 'Ya existe un material con este nombre.')
 
         if form.is_valid():
-            material = form.save()
+            material = form.save(commit=False)
+            material.save()
+
+            # Registrar la acción en el historial
             History.objects.create(
                 content_type=ContentType.objects.get_for_model(material),
                 object_name=material.name,
@@ -1042,20 +1024,15 @@ def create_material(request):
                 user=request.user,
                 timestamp=timezone.now()
             )
-            print(f"Material creado: {material.idMaterial}")
-            print(f"Datos del POST: {request.POST}")
+
             messages.success(request, 'Material creado exitosamente.')
             return redirect('create_material')
         else:
-            # Verifica si el error específico es por nombre duplicado
-            if form.errors.get('name'):
-                messages.error(request, 'Ya existe un material con este nombre. Por favor, elija un nombre diferente.')
-            else:
+            if not new_unit_name:  # Solo mostrar errores si no se añadió una nueva unidad
                 messages.error(request, 'Error al crear el material. Verifique los campos e intente nuevamente.')
-            print("Formulario no válido")
-            print(form.errors)
     else:
         form = CreateMaterialForm()
+
     return render(request, 'create_material.html', {'form': form})
 
 @login_required
@@ -1136,7 +1113,7 @@ def add_material(request):
         'query': query
     }
     return render(request, 'add_material.html', context)
-
+@csrf_exempt
 @login_required
 def delete_material(request, material_id):
     if request.method == 'DELETE':
@@ -1206,13 +1183,8 @@ def get_tool_data(request):
     tool_id = request.GET.get('id')
     tool = get_object_or_404(Tool, idTool=tool_id)
     data = {
-        'guideNumber': tool.guideNumber,
         'creationDate': tool.creationDate,
         'name': tool.name,
-        'unitCost': tool.unitCost,
-        'quantity': tool.quantity,
-        'stock': tool.stock,
-        'level': tool.level,
     }
     return JsonResponse(data)
 @login_required
@@ -1454,7 +1426,7 @@ def create_tool(request):
     else:
         form = CreateToolForm()
     return render(request, 'create_tool.html', {'form': form})
-
+@csrf_exempt
 @login_required
 def delete_tool(request, tool_id):
     if request.method == 'DELETE':
@@ -1734,7 +1706,7 @@ def create_worker(request):
         form = WorkerForm()
     return render(request, 'create_worker.html', {'form': form})
 
-
+@csrf_exempt
 @login_required
 def delete_worker(request, worker_id):
     if request.method == 'DELETE':
@@ -3275,7 +3247,7 @@ def process_ppe_loan(loan):
         ppe.quantity -= quantity  # Actualizar stock en lugar de quantity
         ppe.save()
         return {'success': True, 'message': f'Nuevo préstamo creado para {ppe_name} asignado a {worker.name}'}
-
+@csrf_exempt
 @login_required
 def delete_ppe_loan(request, id):
     ppe_loans = get_object_or_404(PpeLoan, idPpeLoan=id)

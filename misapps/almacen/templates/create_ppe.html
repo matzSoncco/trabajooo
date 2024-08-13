@@ -115,14 +115,23 @@
             {% endfor %}
         });
     </script>
-{% endif %}
+{% endif %}  
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
 <script>
-        document.getElementById('add-unit-btn').addEventListener('click', function() {
+    document.getElementById('add-unit-btn').addEventListener('click', function() {
+        const form = document.querySelector('form');
         const newUnitField = document.getElementById('id_new_unit');
         const unitSelect = document.getElementById('id_unit');
         const newUnit = newUnitField.value.trim();
 
         if (newUnit) {
+            // Guardar valores actuales del formulario
+            const formData = new FormData(form);
+            const formValues = {};
+            formData.forEach((value, key) => {
+                formValues[key] = value;
+            });
+
             fetch('{% url "add_new_unit" %}', {
                 method: 'POST',
                 headers: {
@@ -134,12 +143,26 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const newOption = new Option(newUnit, newUnit, true, true);
+                    // Agregar la nueva opción a la lista desplegable
+                    const newOption = new Option(newUnit, newUnit);
                     unitSelect.add(newOption);
-                    unitSelect.value = newUnit;
+
+                    // Resetear el campo de selección a la opción por defecto
+                    unitSelect.selectedIndex = 0;
+
+                    // Limpiar el campo de entrada para la nueva unidad
                     newUnitField.value = '';
-                    
-                    // Aquí se ha eliminado el envío automático del formulario
+
+                    // Restaurar los valores anteriores del formulario
+                    for (const key in formValues) {
+                        if (key !== 'unit') {  // Excepto la unidad que se acaba de actualizar
+                            const field = document.querySelector(`[name="${key}"]`);
+                            if (field) {
+                                field.value = formValues[key];
+                            }
+                        }
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Unidad agregada',
@@ -156,15 +179,6 @@
                     });
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Ocurrió un problema al agregar la unidad.',
-                    confirmButtonText: 'Aceptar'
-                });
-            });
         } else {
             Swal.fire({
                 icon: 'warning',

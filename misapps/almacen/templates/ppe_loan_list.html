@@ -84,6 +84,7 @@
                         <th>Cantidad</th>
                         <th>Fecha de asignación</th>
                         <th>Fecha de expiración</th>
+                        <th>Comentario</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -96,15 +97,146 @@
                         <td>{{ loan.loanAmount }}</td>
                         <td>{{ loan.loanDate }}</td>
                         <td>{{ loan.expirationDate }}</td>
+                        <td>
+                            {% if loan.comments %}
+                            <button onclick="showComment('{{ loan.id }}', '{{ loan.comments|escapejs }}')">Ver comentario</button>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6">No hay EPPs asignados.</td>
+                        <td colspan="8">No hay EPPs asignados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            <div id="overlay" class="overlay"></div>
+            <div id="commentPopup" class="popup">
+                <div class="popup-content">
+                    <span class="close" onclick="closePopup()">&times;</span>
+                    <h2>Comentario</h2>
+                    <p id="commentText"></p>
+                </div>
+            </div>
         </div>
     </section>
 </section>
+<script>
+    function showComment(loanId, comment) {
+        document.getElementById('commentText').textContent = comment;
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('commentPopup').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        // Añade esta línea para activar la animación
+        setTimeout(() => document.getElementById('commentPopup').classList.add('active'), 10);
+    }
+
+    function closePopup() {
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('commentPopup').classList.remove('active');
+        setTimeout(() => {
+            document.getElementById('commentPopup').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+    
+    // Cerrar el popup si se hace clic en el overlay
+    document.getElementById('overlay').onclick = closePopup;
+</script>
+<style>
+    :root {
+        --primary-color: #4a6fa5;
+        --primary-light: #6989b9;
+        --primary-dark: #345d8a;
+        --secondary-color: #e63946;
+        --accent-color: #f9c74f;
+        --text-color: #2b2d42;
+        --text-light: #f1faee;
+        --background-color: #f8f9fa;
+        --sidebar-bg: #2b2d42;
+        --card-bg: #ffffff;
+        --border-radius: 10px;
+        --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1001;
+    }
+    
+    .popup-content {
+        background-color: var(--card-bg);
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        max-width: 500px;
+        width: 90%;
+        position: relative;
+        transform: scale(0.7);
+        opacity: 0;
+        transition: var(--transition);
+    }
+    
+    .popup.active .popup-content {
+        transform: scale(1);
+        opacity: 1;
+    }
+    
+    .close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 1.5rem;
+        color: var(--text-color);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .close:hover {
+        color: var(--secondary-color);
+    }
+    
+    h2 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    #commentText {
+        color: var(--text-color);
+        line-height: 1.6;
+    }
+    
+    button {
+        background-color: var(--primary-color);
+        color: var(--text-light);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    button:hover {
+        background-color: var(--primary-dark);
+    }
+</style>
 {% endblock %}

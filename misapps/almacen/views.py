@@ -2840,20 +2840,33 @@ def worker_autocomplete(request):
 
 def dni_autocomplete(request):
     if 'term' in request.GET:
-        qs = Worker.objects.filter(dni__icontains=request.GET.get('term'))
+        term = request.GET.get('term')
+        qs = Worker.objects.filter(dni__icontains=term)
         dnis = list(qs.values_list('dni', flat=True))
+        # Convertir los DNIs a cadenas de texto si no lo son
+        dnis = [str(dni) for dni in dnis]
         return JsonResponse(dnis, safe=False)
     return JsonResponse([], safe=False)
 
 def worker_details(request):
-    if 'worker_name' in request.GET:
-        worker = Worker.objects.get(name=request.GET.get('worker_name'))
-        return JsonResponse({
-            'name': worker.name,
-            'dni': worker.dni,
-            'position': worker.position
-        })
-    return JsonResponse({}, status=400)
+    if 'worker_dni' in request.GET:
+        try:
+            worker = Worker.objects.get(dni=request.GET.get('worker_dni'))
+        except Worker.DoesNotExist:
+            return JsonResponse({}, status=404)  # No encontrado
+    elif 'worker_name' in request.GET:
+        try:
+            worker = Worker.objects.get(name=request.GET.get('worker_name'))
+        except Worker.DoesNotExist:
+            return JsonResponse({}, status=404)  # No encontrado
+    else:
+        return JsonResponse({}, status=400)  # Solicitud inválida
+    
+    return JsonResponse({
+        'name': worker.name,
+        'dni': worker.dni,
+        'position': worker.position
+    })
 
 @require_GET
 def check_ppe_availability(request):
@@ -2892,18 +2905,30 @@ def check_ppe_availability(request):
 @require_http_methods(["GET"])
 def check_ppe_duration(request):
     ppe_name = request.GET.get('ppe_name')
+    loan_date_str = request.GET.get('loan_date')
+
+    if not ppe_name or not loan_date_str:
+        return JsonResponse({'success': False, 'message': 'Se requieren nombre de EPP y fecha de préstamo'}, status=400)
 
     try:
         ppe = Ppe.objects.get(name=ppe_name)
+        loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
+        expiration_date = loan_date + timedelta(days=ppe.duration)
         return JsonResponse({
             'success': True,
-            'duration': ppe.duration
+            'duration': ppe.duration,
+            'expiration_date': expiration_date.strftime('%Y-%m-%d')
         })
     except Ppe.DoesNotExist:
         return JsonResponse({
             'success': False,
             'message': 'EPP no encontrado.'
-        }, status=404) 
+        }, status=404)
+    except ValueError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Formato de fecha inválido.'
+        }, status=400)
 
 @require_GET
 def check_ppe_loan_duration(request):
@@ -2941,9 +2966,8 @@ def check_ppe_loan_duration(request):
             'message': 'Trabajador no encontrado.'
         }
 
-    return JsonResponse(response)    
+    return JsonResponse(response)
 
-#Vistaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas
 @require_GET
 def check_ppe_renewal(request):
     ppe_name = request.GET.get('ppe_name')
@@ -3013,7 +3037,6 @@ def confirm_ppe_loan(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            print("Datos recibidos:", json.dumps(data, indent=2))  # Depuración mejorada
             ppe_loans = data.get('ppe_loans', [])
             responses = []
             created_or_updated_loans = []
@@ -3029,6 +3052,9 @@ def confirm_ppe_loan(request):
                     quantity = int(loan.get('quantity'))
                     is_renewal = loan.get('isRenewal', False)
                     is_assigned = loan.get('isAssigned', False)
+                    deserve_renewal = loan.get('deserveRenewal', False)
+                    is_exception = loan.get('isException', False)
+                    comments = loan.get('comments', '')
                     
                     # Verificar y convertir la fecha del préstamo
                     try:
@@ -3065,10 +3091,11 @@ def confirm_ppe_loan(request):
                             })
                             continue
 
-                        if ppe.quantity >= quantity or is_renewal:
-                            if active_loan and is_renewal:
+                        if deserve_renewal or is_exception:
+                            if active_loan:
                                 # Actualizar el préstamo existente
                                 active_loan.expirationDate = new_expiration_date
+                                active_loan.comments = comments
                                 active_loan.save()
                                 created_or_updated_loans.append(active_loan)
                             else:
@@ -3081,7 +3108,8 @@ def confirm_ppe_loan(request):
                                     expirationDate=new_expiration_date,
                                     loanAmount=quantity,
                                     ppe=ppe,
-                                    confirmed=True
+                                    confirmed=True,
+                                    comments=comments
                                 )
                                 new_loan.save()
                                 created_or_updated_loans.append(new_loan)
@@ -3143,27 +3171,34 @@ def confirm_ppe_loan(request):
 def check_ppe_assignment(request):
     ppe_name = request.GET.get('ppe_name')
     worker_dni = request.GET.get('worker_dni')
+    loan_date_str = request.GET.get('loan_date')
 
-    if not ppe_name or not worker_dni:
-        return JsonResponse({'error': 'Se requieren nombre de EPP y DNI del trabajador'}, status=400)
+    if not ppe_name or not worker_dni or not loan_date_str:
+        return JsonResponse({'error': 'Se requieren nombre de EPP, DNI del trabajador y fecha de préstamo'}, status=400)
 
     try:
         ppe = Ppe.objects.get(name=ppe_name)
+        loan_date = datetime.strptime(loan_date_str, '%Y-%m-%d').date()
     except Ppe.DoesNotExist:
         return JsonResponse({'error': 'EPP no encontrado'}, status=404)
+    except ValueError:
+        return JsonResponse({'error': 'Formato de fecha inválido'}, status=400)
 
     # Buscar préstamos activos para este EPP y trabajador
     active_loan = PpeLoan.objects.filter(
         ppe=ppe,
         workerDni=worker_dni,
-        expirationDate__gt=timezone.now().date(),
+        loanDate__lte=loan_date,
+        expirationDate__gte=loan_date,
         confirmed=True
     ).first()
 
     is_assigned = active_loan is not None
+    deserve_renewal = not is_assigned or active_loan.expirationDate <= loan_date
 
     return JsonResponse({
         'is_assigned': is_assigned,
+        'deserve_renewal': deserve_renewal,
         'loan_id': active_loan.idPpeLoan if active_loan else None
     })
     

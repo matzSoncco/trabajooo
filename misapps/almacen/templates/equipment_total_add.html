@@ -15,6 +15,42 @@
         });
     });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const filterButton = document.getElementById('filter-warning');
+    const clearFilterButton = document.getElementById('clear-filter');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    filterButton.addEventListener('click', () => {
+        let isFiltered = filterButton.textContent === 'Deshacer Filtro';
+        
+        if (isFiltered) {
+            // Mostrar todas las filas
+            tableRows.forEach(row => row.style.display = '');
+            filterButton.textContent = 'Filtrar';
+            clearFilterButton.style.display = 'none';
+        } else {
+            // Filtrar filas rojas
+            tableRows.forEach(row => {
+                if (row.classList.contains('rojo')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            filterButton.textContent = 'Deshacer Filtro';
+            clearFilterButton.style.display = 'inline';
+        }
+    });
+
+    clearFilterButton.addEventListener('click', () => {
+        // Mostrar todas las filas
+        tableRows.forEach(row => row.style.display = '');
+        filterButton.textContent = 'Filtrar';
+        clearFilterButton.style.display = 'none';
+    });
+});
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -51,6 +87,7 @@
         <div class="contenedor-principal">
             <div class="top-form">
                 <h2 class="titulo-primario">Listado de Equipos</h2>
+                <button id="filter-warning">Filtrar</button>
             </div>
             <div class="centrado">
                 <div class="tabla-mostrar">
@@ -61,38 +98,25 @@
                                 <th>Nombre</th>
                                 <th>N° Guia</th>
                                 <th>Cantidad</th>
+                                <th>Stock Ideal</th>
                                 <th>Precio Unitario</th>
                                 <th>Precio Subtotal</th>
-                                <th>Imagen</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for equipment in equipment %}
-                            <tr>
-                                <td>{{ equipment.idEquipment }}</td>
-                                <td>{{ equipment.name }}</td>
-                                <td>{{ equipment.guideNumber }}</td>
-                                <td>{{ equipment.quantity }}</td>
-                                <td>S/.{{ equipment.unitCost }}</td>
-                                <td>S/.{{ equipment.totalCost}}</td>
-                                
-                                <td>
-                                    {% if equipment.image %}
-                                    <div class="image-container">
-                                        <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" class="img-total">
-                                        <div class="preview">
-                                            <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}">
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <div class="no-image">No hay imágen</div>
-                                    {% endif %}
-                                </td>
-                                
+                            {% for item in equipment %}
+                            <tr class="{% if item.quantity <= item.stock %}rojo{% endif %}">
+                                <td>{{ item.idEquipment }}</td>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.guideNumber }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.stock }}</td>
+                                <td>S/.{{ item.unitCost }}</td>
+                                <td>S/.{{ item.totalCost}}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6">No se encontraron Equipos añadidos recientemente.</td>
+                                <td colspan="8">No se encontraron Equipos añadidos recientemente.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -102,56 +126,12 @@
         </div>
     </section>
 </section>
-
-<script>
-    // Función para abrir el modal
-    function openDeleteModal(equipmentName, actionUrl) {
-        const modal = document.getElementById('customDeleteModal');
-        const equipmentNameSpan = document.getElementById('equipmentName');
-        const deleteForm = document.getElementById('deleteForm');
-        
-        equipmentNameSpan.textContent = equipmentName;
-        deleteForm.action = actionUrl;
-
-        modal.style.display = 'block';
-    }
-
-    // Cerrar el modal cuando se hace clic en el botón de cerrar
-    document.querySelector('.custom-modal-close').addEventListener('click', function () {
-        document.getElementById('customDeleteModal').style.display = 'none';
-    });
-
-    // Cerrar el modal cuando se hace clic en el botón de cancelar
-    document.getElementById('cancelDelete').addEventListener('click', function () {
-        document.getElementById('customDeleteModal').style.display = 'none';
-    });
-
-    // Cerrar el modal cuando se hace clic fuera del modal
-    window.onclick = function (event) {
-        if (event.target === document.getElementById('customDeleteModal')) {
-            document.getElementById('customDeleteModal').style.display = 'none';
-        }
-    };
-
-    // Configura el botón de eliminación
-    document.querySelectorAll('[data-action="delete"]').forEach(button => {
-        button.addEventListener('click', function () {
-            const equipmentName = this.getAttribute('data-equipment-name');
-            const actionUrl = this.getAttribute('data-action-url');
-            openDeleteModal(equipmentName, actionUrl);
-        });
-    });
-    const deleteModal = document.getElementById('deleteModal');
-    deleteModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const equipmentName = button.getAttribute('data-equipment-name');
-        const modalBody = deleteModal.querySelector('.modal-body #equipmentName');
-        modalBody.textContent = equipmentName;
-
-        const deleteForm = document.getElementById('deleteForm');
-        // Construye la URL de eliminación correctamente
-        deleteForm.action = "{% url 'delete_equipment' 'placeholder' %}".replace('placeholder', encodeURIComponent(equipmentName));
-    });
-</script>
-  
+<style>
+/* Opción alternativa con fondo más llamativo */
+.rojo {    
+    color: #be0013; /* Texto rojo oscuro */
+    border: 2px solid #f5a0a1; /* Borde rojo más intenso */
+    font-weight: bold; /* Texto en negrita para mayor énfasis */
+}
+</style>
 {% endblock %}

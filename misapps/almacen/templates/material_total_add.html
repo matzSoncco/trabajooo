@@ -15,6 +15,42 @@
         });
     });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const filterButton = document.getElementById('filter-warning');
+    const clearFilterButton = document.getElementById('clear-filter');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    filterButton.addEventListener('click', () => {
+        let isFiltered = filterButton.textContent === 'Deshacer Filtro';
+        
+        if (isFiltered) {
+            // Mostrar todas las filas
+            tableRows.forEach(row => row.style.display = '');
+            filterButton.textContent = 'Filtrar';
+            clearFilterButton.style.display = 'none';
+        } else {
+            // Filtrar filas rojas
+            tableRows.forEach(row => {
+                if (row.classList.contains('rojo')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            filterButton.textContent = 'Deshacer Filtro';
+            clearFilterButton.style.display = 'inline';
+        }
+    });
+
+    clearFilterButton.addEventListener('click', () => {
+        // Mostrar todas las filas
+        tableRows.forEach(row => row.style.display = '');
+        filterButton.textContent = 'Filtrar';
+        clearFilterButton.style.display = 'none';
+    });
+});
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -51,6 +87,7 @@
         <div class="contenedor-principal">
             <div class="top-form">
                 <h2 class="titulo-primario">Listado de Materiales</h2>
+                <button id="filter-warning">Filtrar</button>
             </div>
             <div class="centrado">
                 <div class="tabla-mostrar">
@@ -62,40 +99,26 @@
                                 <th>Unidad</th>
                                 <th>N° Guia</th>
                                 <th>Cantidad</th>
+                                <th>Stock Ideal</th>
                                 <th>Precio Unitario</th>
                                 <th>Precio Subtotal</th>
-                                
-                                <th>Imagen</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for material in material %}
-                            <tr>
-                                <td>{{ material.idMaterial }}</td>
-                                <td>{{ material.name }}</td>
-                                <td>{{ material.unit }}</td>
-                                <td>{{ material.guideNumber }}</td>
-                                <td>{{ material.quantity }}</td>
-                                <td>S/.{{ material.unitCost }}</td>
-                                <td>S/.{{ material.totalCost}}</td>
-                                
-                                <td>
-                                    {% if material.image %}
-                                    <div class="image-container">
-                                        <img src="{{ material.image.url }}" alt="{{ material.name }}" class="img-total">
-                                        <div class="preview">
-                                            <img src="{{ material.image.url }}" alt="{{ material.name }}">
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <div class="no-image">No hay imágen</div>
-                                    {% endif %}
-                                </td>
-                                
+                            {% for item in material %}
+                            <tr class="{% if item.quantity <= item.stock %}rojo{% endif %}">
+                                <td>{{ item.idMaterial }}</td>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.unit }}</td>
+                                <td>{{ item.guideNumber }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.stock }}</td>
+                                <td>S/.{{ item.unitCost }}</td>
+                                <td>S/.{{ item.totalCost}}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6">No se encontraron Materiales añadidos recientemente.</td>
+                                <td colspan="8">No se encontraron Materiales añadidos recientemente.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -105,158 +128,12 @@
         </div>
     </section>
 </section>
-
-<!-- Modal -->
-<div id="customDeleteModal" class="custom-modal">
-    <div class="custom-modal-content">
-        <div class="custom-modal-header">
-            <span class="custom-modal-close">&times;</span>
-            <h2>Confirmar eliminación</h2>
-        </div>
-        <div class="custom-modal-body">
-            ¿Estás seguro de que deseas eliminar el Material <span id="materialName"></span>?
-        </div>
-        <div class="custom-modal-footer">
-            <form method="post" id="deleteForm">
-                {% csrf_token %}
-                <button type="submit" class="custom-btn custom-btn-danger">Eliminar</button>
-                <button type="button" class="custom-btn custom-btn-secondary" id="cancelDelete">Cancelar</button>
-            </form>
-        </div>
-    </div>
-</div>
 <style>
-    .custom-modal {
-        display: none; /* Oculto por defecto */
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4); /* Fondo oscuro */
-    }
-
-    /* Contenido del modal */
-    .custom-modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 5px;
-    }
-
-    /* Encabezado del modal */
-    .custom-modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .custom-modal-close {
-        color: #aaa;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .custom-modal-close:hover,
-    .custom-modal-close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    /* Cuerpo del modal */
-    .custom-modal-body {
-        margin: 15px 0;
-    }
-
-    /* Pie del modal */
-    .custom-modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    /* Botones del modal */
-    .custom-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .custom-btn-danger {
-        background-color: #d9534f;
-        color: white;
-    }
-
-    .custom-btn-danger:hover {
-        background-color: #c9302c;
-    }
-
-    .custom-btn-secondary {
-        background-color: #5bc0de;
-        color: white;
-    }
-
-    .custom-btn-secondary:hover {
-        background-color: #31b0d5;
-    }
+/* Opción alternativa con fondo más llamativo */
+.rojo {    
+    color: #be0013; /* Texto rojo oscuro */
+    border: 2px solid #f5a0a1; /* Borde rojo más intenso */
+    font-weight: bold; /* Texto en negrita para mayor énfasis */
+}
 </style>
-<script>
-    // Función para abrir el modal
-    function openDeleteModal(materialName, actionUrl) {
-        const modal = document.getElementById('customDeleteModal');
-        const materialNameSpan = document.getElementById('materialName');
-        const deleteForm = document.getElementById('deleteForm');
-        
-        materialNameSpan.textContent = materialName;
-        deleteForm.action = actionUrl;
-
-        modal.style.display = 'block';
-    }
-
-    // Cerrar el modal cuando se hace clic en el botón de cerrar
-    document.querySelector('.custom-modal-close').addEventListener('click', function () {
-        document.getElementById('customDeleteModal').style.display = 'none';
-    });
-
-    // Cerrar el modal cuando se hace clic en el botón de cancelar
-    document.getElementById('cancelDelete').addEventListener('click', function () {
-        document.getElementById('customDeleteModal').style.display = 'none';
-    });
-
-    // Cerrar el modal cuando se hace clic fuera del modal
-    window.onclick = function (event) {
-        if (event.target === document.getElementById('customDeleteModal')) {
-            document.getElementById('customDeleteModal').style.display = 'none';
-        }
-    };
-
-    // Configura el botón de eliminación
-    document.querySelectorAll('[data-action="delete"]').forEach(button => {
-        button.addEventListener('click', function () {
-            const materialName = this.getAttribute('data-material-name');
-            const actionUrl = this.getAttribute('data-action-url');
-            openDeleteModal(materialName, actionUrl);
-        });
-    });
-    const deleteModal = document.getElementById('deleteModal');
-    deleteModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const materialName = button.getAttribute('data-material-name');
-        const modalBody = deleteModal.querySelector('.modal-body #materialName');
-        modalBody.textContent = materialName;
-
-        const deleteForm = document.getElementById('deleteForm');
-        // Construye la URL de eliminación correctamente
-        deleteForm.action = "{% url 'delete_material' 'placeholder' %}".replace('placeholder', encodeURIComponent(materialName));
-    });
-</script>
-  
 {% endblock %}

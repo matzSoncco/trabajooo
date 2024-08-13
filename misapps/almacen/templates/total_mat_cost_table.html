@@ -15,6 +15,43 @@
         });
     });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sortButton = document.getElementById('sortButton');
+    const tableBody = document.getElementById('tableBody');
+
+    sortButton.addEventListener('click', function() {
+        console.log('Botón de ordenar clickeado');
+
+        const rows = Array.from(tableBody.getElementsByTagName('tr'));
+        console.log(`Número de filas encontradas: ${rows.length}`);
+
+        if (rows.length === 0) {
+            console.warn('No se encontraron filas para ordenar');
+            return;
+        }
+
+        rows.sort((a, b) => {
+            const aCost = extractCost(a);
+            const bCost = extractCost(b);
+            console.log(`Comparando: ${aCost} vs ${bCost}`);
+            return bCost - aCost; // Ordenar de mayor a menor
+        });
+
+        // Reinsertar las filas ordenadas
+        rows.forEach(row => tableBody.appendChild(row));
+    });
+
+    function extractCost(row) {
+        const costCell = row.querySelector('td:nth-child(5)'); // Asumiendo que el costo total está en la quinta columna (índice 4)
+
+        const costText = costCell.textContent.trim().replace('S/. ', '');
+        const cost = parseFloat(costText);
+
+        return cost;
+    }
+});
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -53,6 +90,7 @@
             <div class="top-form">
                 <h2 class="titulo-primario">Tabla de costos de Material</h2>
                 <a class="form-btn ver-obj-btn" href="{% url 'home' %}">Volver</a>
+                <button id="sortButton">Ordenar por Costo Total</button>
             </div>
             <div class="tabla-mostrar">
                 <table class="tabla">
@@ -65,9 +103,9 @@
                             <th>Costo sub Total</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tableBody">
                         {% for item in materials %}
-                            <tr>
+                            <tr data-total-cost="{{ item.totalCost|floatformat:2 }}">
                                 <td>{{ item.idMaterial }}</td>
                                 <td>{{ item.name }}</td>
                                 <td>{{ item.quantity}}</td>

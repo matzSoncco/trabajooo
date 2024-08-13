@@ -15,6 +15,55 @@
         });
     });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sortButton = document.getElementById('sortButton');
+    const tableBody = document.getElementById('tableBody');
+
+    sortButton.addEventListener('click', function() {
+        console.log('Botón de ordenar clickeado');
+
+        const rows = Array.from(tableBody.getElementsByTagName('tr'));
+        console.log(`Número de filas encontradas: ${rows.length}`);
+
+        if (rows.length === 0) {
+            console.warn('No se encontraron filas para ordenar');
+            return;
+        }
+
+        rows.sort((a, b) => {
+            const aCost = extractCost(a);
+            const bCost = extractCost(b);
+            console.log(`Comparando: ${aCost} vs ${bCost}`);
+            return bCost - aCost; // Ordenar de mayor a menor
+        });
+
+        // Limpiar el tbody
+        tableBody.innerHTML = '';
+
+        // Reinsertar las filas ordenadas
+        rows.forEach(row => tableBody.appendChild(row));
+    });
+
+    function extractCost(row) {
+        const costCell = row.querySelector('td:nth-child(5)'); // Selecciona la quinta columna
+        if (!costCell) {
+            console.warn('No se encontró la celda de costo');
+            return 0;
+        }
+
+        const costText = costCell.textContent.trim().replace('S/.', '').replace(',', '.');
+        const cost = parseFloat(costText);
+
+        if (isNaN(cost)) {
+            console.warn(`No se pudo convertir "${costText}" a número`);
+            return 0;
+        }
+
+        return cost;
+    }
+});
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -53,6 +102,7 @@
             <nav class="top-form">
                 <h2 class="titulo-primario">Resumen de Costos total</h2>
                 <a class="form-btn ver-obj-btn" href="{% url 'home' %}">Volver</a>
+                <button id="sortButton">Ordenar por Costo Total</button>
             </nav>
             <div class="tabla-mostrar">
                 <table class="tabla">
@@ -65,9 +115,9 @@
                             <th>Costo Total</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tableBody">
                         {% for item in all_items %}
-                            <tr>
+                            <tr data-total-cost="{{ item.totalCost|floatformat:2 }}">
                                 {% if item.idTool %}
                                     <td>{{ item.idTool }}</td>
                                 {% elif item.idPpe %}
@@ -80,9 +130,9 @@
                                     <td>N/A</td>
                                 {% endif %}
                                 <td>{{ item.name }}</td>
-                                <td>s/.{{ item.unitCost }}</td>
+                                <td>S/.{{ item.unitCost }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>s/.{{ item.totalCost }}</td>
+                                <td>S/.{{ item.totalCost }}</td>
                             </tr>
                         {% empty %}
                             <tr>
@@ -93,7 +143,7 @@
                     <tfoot class="pie-tabla">
                         <tr>
                             <td colspan="4"><strong>Costo Total Final</strong> </td>
-                            <td><strong>s/.{{ finalTotalCost }}</strong></td>
+                            <td><strong>S/.{{ finalTotalCost }}</strong></td>
                         </tr>
                     </tfoot>
                 </table>

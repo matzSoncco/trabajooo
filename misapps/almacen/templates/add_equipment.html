@@ -3,6 +3,18 @@
 {% block title %}Agregar Equipos{% endblock %}
 
 {% block content %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll('.link-form');
+        
+        links.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -211,6 +223,9 @@ $(document).ready(function() {
                 <div class="item-lateral">
                     <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
                 </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="#">Almacen General</a>
+                </div>
             </nav>
         </div>
     </aside>
@@ -278,61 +293,61 @@ $(document).ready(function() {
                             </div>
                         </form>
                     </div>
-                    <div class="tabla-datos">
-                        <div class="top-form">
-                            <h2 class="titulo-primario">Añadidos</h2>
-                            <button class="form-btn aceptar-btn" id="save-all-btn">Guardar Todos</button>
-                        </div>
-                        <div class="tabla-agregados">
-                            <div id="added-item-table-container">
-
-                            </div>
-                        </div>
+                    <div class="tabla-creacion" id="created-item-table-container">
+                        <div class="cuadro-buscar">
+                            <h2 class="titulo-primario">CREADOS</h2>
+                            <form class="formulario-buscar" method="get" action="{% url 'add_equipment' %}">
+                                <div class="cuadro-busqueda">
+                                    <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+                                </div>
+                                <div class="btn-busqueda-elemento">
+                                    <button class="form-btn aceptar-btn" type="submit">Buscar</button>
+                                </div>
+                            </form>
+                        </div> 
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Nombre</th>
+                                    <th>Imágen</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for equipment in equipment %}
+                                    <tr>
+                                        <td>{{ equipment.idEquipment }}</td>
+                                        <td>{{ equipment.name }}</td>
+                                        <td>
+                                            {% if equipment.image %}
+                                                <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" style="width: 50px; height: 50px;">
+                                            {% else %}
+                                                No image
+                                            {% endif %}
+                                        </td>
+                                        <td><button class="table-btn btn-accion" id="agregar-formulario" data-equipment-id="{{ equipment.idEquipment }}">Ingresar</button></td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4">No hay Equipos disponibles.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-            <div class="tabla-creacion" id="created-item-table-container">
-                <div class="cuadro-buscar">
-                    <h2 class="titulo-primario">Creados</h2>
-                    <form class="formulario-buscar" method="get" action="{% url 'add_equipment' %}">
-                        <div class="cuadro-busqueda">
-                            <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
-                        </div>
-                        <div class="btn-busqueda-elemento">
-                            <button class="form-btn aceptar-btn" type="submit">Buscar</button>
-                        </div>
-                    </form>
-                </div> 
-                <table class="tabla">
-                    <thead>
-                        <tr>
-                            <th>Codigo</th>
-                            <th>Nombre</th>
-                            <th>Imágen</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for equipment in equipment %}
-                            <tr>
-                                <td>{{ equipment.idEquipment }}</td>
-                                <td>{{ equipment.name }}</td>
-                                <td>
-                                    {% if equipment.image %}
-                                        <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" style="width: 50px; height: 50px;">
-                                    {% else %}
-                                        No image
-                                    {% endif %}
-                                </td>
-                                <td><button class="table-btn btn-accion" id="agregar-formulario" data-equipment-id="{{ equipment.idEquipment }}">Ingresar</button></td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4">No hay Equipos disponibles.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="tabla-datos">
+                <div class="top-form">
+                    <h2 class="titulo-primario">AÑADIDOS</h2>
+                    <button class="form-btn aceptar-btn" id="save-all-btn">Guardar Todos</button>
+                </div>
+                <div class="tabla-agregados">
+                    <div id="added-item-table-container">
+
+                    </div>
+                </div>
             </div>
         </div>
     </section>

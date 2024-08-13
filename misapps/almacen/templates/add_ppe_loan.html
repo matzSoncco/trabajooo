@@ -3,6 +3,18 @@
 {% block title %}Agregar EPPs{% endblock %}
 
 {% block content %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll('.link-form');
+        
+        links.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -480,6 +492,9 @@
                 </div>
                 <div class="item-lateral">
                     <a class="navbar-brand" href="{% url 'show_duration_table' %}">Duración de EPPs</a>
+                </div>
+                <div class="item-lateral">
+                    <a class="navbar-brand" href="#">Almacen General</a>
                 </div>
             </nav>
         </div>

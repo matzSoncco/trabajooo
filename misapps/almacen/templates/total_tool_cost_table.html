@@ -3,6 +3,7 @@
 {% block title %}Usuarios Almaceneros{% endblock %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const currentPath = window.location.pathname;
@@ -113,8 +114,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <td>{{ item.idTool }}</td>
                                 <td>{{ item.name }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>s/.{{ item.unitCost }}</td>
-                                <td>s/.{{ item.totalCost}}</td>
+                                <td>S/.{{ item.unitCost }}</td>
+                                <td>S/.{{ item.totalCost}}</td>
                             </tr>
                         {% empty %}
                             <tr>
@@ -133,6 +134,180 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </section>
+<div id="chartModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="chartTitle">Gráfico</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const pieBtn = document.getElementById('pie-graph');
+        const paretoBtn = document.getElementById('pareto-graph');
+        const modal = document.getElementById('chartModal');
+        const closeBtn = modal.querySelector('.close');
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const chartTitle = document.getElementById('chartTitle');
+        let myChart;
+
+        function getChartData() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            const data = Array.from(rows).map(row => {
+                const nameCell = row.querySelector('td:nth-child(2)');
+                const costCell = row.querySelector('td:nth-child(5)');
+                
+                let name = nameCell ? nameCell.textContent.trim() : 'Sin nombre';
+                let costText = costCell ? costCell.textContent.trim() : '0';
+                
+                // Eliminar 's/.' o 'S/.' y cualquier espacio
+                costText = costText.replace(/[sS]\/\.?\s*/g, '');
+                
+                // Reemplazar comas por puntos para manejar decimales correctamente
+                costText = costText.replace(',', '.');
+                
+                let cost = parseFloat(costText);
+
+                if (isNaN(cost)) {
+                console.warn(`Costo inválido para ${name}: ${costText}`);
+                cost = 0;
+                }
+
+                console.log(`Nombre: ${name}, Costo: ${cost}`);
+
+                return { name, cost };
+            });
+
+            console.log('Datos completos:', data);
+            return data.filter(item => item.cost > 0).sort((a, b) => b.cost - a.cost);
+        }
+
+        function createPieChart() {
+            const data = getChartData();
+            console.log('Creating pie chart with data:', data);  // Añadido para depuración
+            try {
+            return new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map(item => item.name),
+                    datasets: [{
+                        data: data.map(item => item.cost),
+                        backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)',
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: 'Distribución de Costos por EPP'
+                    }
+                }
+            });
+            } catch (error) {
+                console.error('Error creating pie chart:', error);  // Añadido para depuración
+            }
+        }
+
+        function createParetoChart() {
+            const data = getChartData();
+            console.log('Creating Pareto chart with data:', data);  // Añadido para depuración
+            const totalCost = data.reduce((sum, item) => sum + item.cost, 0);
+            let cumulativePercentage = 0;
+
+            try {
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item.name),
+                    datasets: [{
+                        label: 'Costo',
+                        data: data.map(item => item.cost),
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        yAxisID: 'y-axis-1',
+                    }, {
+                        label: 'Porcentaje Acumulado',
+                        data: data.map(item => {
+                            cumulativePercentage += (item.cost / totalCost) * 100;
+                            return cumulativePercentage;
+                        }),
+                        type: 'line',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        yAxisID: 'y-axis-2',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: 'Diagrama de Pareto - Costos de EPP'
+                    },
+                    scales: {
+                        yAxes: [{
+                            id: 'y-axis-1',
+                            type: 'linear',
+                            position: 'left',
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }, {
+                            id: 'y-axis-2',
+                            type: 'linear',
+                            position: 'right',
+                            ticks: {
+                                beginAtZero: true,
+                                max: 100,
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }]
+                    }
+                }
+            });
+            } catch (error) {
+                console.error('Error creating Pareto chart:', error);  // Añadido para depuración
+            }
+        }
+
+        pieBtn.addEventListener('click', function() {
+            console.log('Pie button clicked');  // Añadido para depuración
+            if (myChart) myChart.destroy();
+            myChart = createPieChart();
+            chartTitle.textContent = 'Gráfico de Torta - Costos de EPP';
+            modal.style.display = 'block';
+        });
+
+        paretoBtn.addEventListener('click', function() {
+            console.log('Pareto button clicked');  // Añadido para depuración
+            if (myChart) myChart.destroy();
+            myChart = createParetoChart();
+            chartTitle.textContent = 'Diagrama de Pareto - Costos de EPP';
+            modal.style.display = 'block';
+        });
+
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+</script>
 <style>
     .pie-tabla {
         position: sticky;
@@ -146,5 +321,62 @@ document.addEventListener('DOMContentLoaded', function() {
         border-top: 2px solid #ddd;
         padding: 8px;
     }
-    </style>
+</style>
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 70%;
+    max-width: 800px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.modal-body {
+    height: 400px;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+#myChart {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 300px;
+}
+</style>
 {% endblock %}

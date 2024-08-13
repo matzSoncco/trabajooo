@@ -99,11 +99,15 @@ document.addEventListener('DOMContentLoaded', function() {
             <a class="link-form" href="{% url 'total_mat_cost_table' %}">Materiales</a>
         </nav>
         <div class="contenedor-principal" id="cost-summary-table-container">
-            <nav class="top-form">
-                <h2 class="titulo-primario">Resumen de Costos total</h2>
-                <button class="form-btn ver-obj-btn" id="sortButton">Ordenar por Costo Total</button>
+            <div class="top-form">
+                <h2 class="titulo-primario">Tabla de costos de EPPs</h2>
                 <a class="quitar-btn" href="{% url 'home' %}">Volver</a>
-            </nav>
+            </div>
+            <div class="top-form">
+                <button class="form-btn ver-obj-btn" id="sortButton">Ordenar por Costo Total</button>
+                <button class="form-btn ver-obj-btn" id="sortButton">Grafico de tortas</button>
+                <button class="form-btn ver-obj-btn" id="sortButton">Diagrama de Pareto</button>
+            </div>
             <div class="tabla-mostrar">
                 <table class="tabla">
                     <thead>

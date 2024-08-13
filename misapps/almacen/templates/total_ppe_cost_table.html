@@ -89,8 +89,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="contenedor-principal" id="cost-table-container">
             <div class="top-form">
                 <h2 class="titulo-primario">Tabla de costos de EPPs</h2>
-                <button class="form-btn ver-obj-btn" id="sortButton">Ordenar por Costo Total</button>
                 <a class="quitar-btn" href="{% url 'home' %}">Volver</a>
+            </div>
+            <div class="top-form">
+                <button class="form-btn ver-obj-btn" id="sortButton">Ordenar por Costo Total</button>
+                <button class="form-btn ver-obj-btn" id="sortButton">Grafico de tortas</button>
+                <button class="form-btn ver-obj-btn" id="sortButton">Diagrama de Pareto</button>
             </div>
             <div class="tabla-mostrar">
                 <table class="tabla">

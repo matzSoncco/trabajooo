@@ -75,15 +75,16 @@
         $("#id_workerDni").autocomplete({
             source: "{% url 'dni_autocomplete' %}",
             minLength: 2,
-            select: function(event, ui) {
-                $("#id_workerDni").val(ui.item.value);
+            select: function(even, ui) {
                 $.ajax({
-                    url: "{% url 'worker_autocomplete' %}",
-                    data: { term: ui.item.value },
+                    url: "{% url 'worker_details' %}",
+                    data: { worker_dni: ui.item.value},
                     success: function(data) {
-                        $("#id_worker").val(data[0]);
+                        $("#id_worker").val(data.name);
+                        $("#id_workerDni").val(data.dni);
+                        $("#id_workerPosition").val(data.position);
                     }
-                });
+                })
             }
         });
 

@@ -623,7 +623,6 @@ class PpeLoanForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "DNI del trabajador",
-        "readonly": "readonly",
     }))
 
     class Meta:
@@ -677,7 +676,6 @@ class ToolLoanForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "DNI del trabajador",
-        "readonly": "readonly",
     }))
 
     loanStatus = forms.BooleanField(widget=forms.CheckboxInput(attrs={
@@ -736,7 +734,6 @@ class EquipmentLoanForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "DNI del trabajador",
-        "readonly": "readonly",
     }))
 
     loanStatus = forms.BooleanField(widget=forms.CheckboxInput(attrs={
@@ -795,7 +792,6 @@ class MaterialLoanForm(forms.ModelForm):
         "class": "input",
         "type": "text",
         "placeholder": "DNI del trabajador",
-        "readonly": "readonly",
     }))
 
     loanStatus = forms.BooleanField(widget=forms.CheckboxInput(attrs={

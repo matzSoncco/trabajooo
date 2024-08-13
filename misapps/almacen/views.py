@@ -2787,20 +2787,33 @@ def worker_autocomplete(request):
 
 def dni_autocomplete(request):
     if 'term' in request.GET:
-        qs = Worker.objects.filter(dni__icontains=request.GET.get('term'))
+        term = request.GET.get('term')
+        qs = Worker.objects.filter(dni__icontains=term)
         dnis = list(qs.values_list('dni', flat=True))
+        # Convertir los DNIs a cadenas de texto si no lo son
+        dnis = [str(dni) for dni in dnis]
         return JsonResponse(dnis, safe=False)
     return JsonResponse([], safe=False)
 
 def worker_details(request):
-    if 'worker_name' in request.GET:
-        worker = Worker.objects.get(name=request.GET.get('worker_name'))
-        return JsonResponse({
-            'name': worker.name,
-            'dni': worker.dni,
-            'position': worker.position
-        })
-    return JsonResponse({}, status=400)
+    if 'worker_dni' in request.GET:
+        try:
+            worker = Worker.objects.get(dni=request.GET.get('worker_dni'))
+        except Worker.DoesNotExist:
+            return JsonResponse({}, status=404)  # No encontrado
+    elif 'worker_name' in request.GET:
+        try:
+            worker = Worker.objects.get(name=request.GET.get('worker_name'))
+        except Worker.DoesNotExist:
+            return JsonResponse({}, status=404)  # No encontrado
+    else:
+        return JsonResponse({}, status=400)  # Solicitud inválida
+    
+    return JsonResponse({
+        'name': worker.name,
+        'dni': worker.dni,
+        'position': worker.position
+    })
 
 @require_GET
 def check_ppe_availability(request):

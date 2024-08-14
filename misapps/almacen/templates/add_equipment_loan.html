@@ -15,6 +15,8 @@
         });
     });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -246,6 +248,108 @@
         });
     });
 </script>
+<script>
+function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Obtener información del trabajador
+    const workerDni = $('#id_workerDni').val().trim();
+    const workerName = $('#id_worker').val().trim();
+    const loanDate = $('#id_loanDate').val().trim();
+    const returnLoanDate = $('#id_returnLoanDate').val().trim();
+
+    // Añadir título
+    doc.setFontSize(18);
+    doc.text('Entrega de Materiales', 14, 20);
+
+    // Añadir información del trabajador
+    doc.setFontSize(12);
+    doc.text(`DNI del trabajador: ${workerDni}`, 14, 30);
+    doc.text(`Nombre del trabajador: ${workerName}`, 14, 40);
+    doc.text(`Fecha de préstamo: ${loanDate}`, 14, 50);
+    doc.text(`Fecha de devolución: ${returnLoanDate}`, 14, 50);
+
+    // Crear la tabla
+    const headers = ['Nombre', 'Cantidad'];
+    const rows = [];
+
+    $('#view-given-items-table-container table tbody tr').each(function() {
+        const row = [];
+        $(this).find('td').each(function(index) {
+            if (index < 2) { // Solo tomamos las dos primeras columnas (Nombre y Cantidad)
+                row.push($(this).text().trim());
+            }
+        });
+        rows.push(row);
+    });
+
+    doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 60,
+        margin: { top: 60 },
+        styles: {
+            fontSize: 12,
+            cellPadding: 5,
+            overflow: 'linebreak',
+            halign: 'center'
+        },
+        headStyles: {
+            fillColor: [100, 100, 100],
+            textColor: 255,
+            fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+            fillColor: [245, 245, 245]
+        }
+    });
+
+    // Guardar el PDF
+    doc.save(`entrega_materiales_${workerDni}.pdf`);
+}
+
+$(document).ready(function() {
+    $('#generate-pdf-btn').on('click', generatePDF);
+});
+</script>
+<style>
+:root {
+    --primary-color: #4a6fa5;
+    --primary-light: #6989b9;
+    --primary-dark: #345d8a;
+    --secondary-color: #e63946;
+    --accent-color: #f9c74f;
+    --text-color: #2b2d42;
+    --text-light: #f1faee;
+    --background-color: #f8f9fa;
+    --sidebar-bg: #2b2d42;
+    --card-bg: #ffffff;
+    --border-radius: 10px;
+    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.pdf-btn {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin: 5px;
+}
+
+.pdf-btn {
+    background-color: var(--accent-color);
+}
+
+.pdf-btn:hover {
+    background-color: darkgoldenrod;
+}
+</style>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -307,7 +411,7 @@
                                 {{ form.loanDate }}
                             </div>
                             <div class="campo">
-                                <label for="id_loandate" class="label">Fecha de devolución</label>
+                                <label for="id_returnLoandate" class="label">Fecha de devolución</label>
                                 {{ form.returnLoanDate }}
                             </div>
                         </div>
@@ -380,6 +484,7 @@
             <div class="tabla-agregados">
                 <button class="form-btn aceptar-btn" id="give-btn">Entregar</button>
                 <button class="form-btn cancelar-btn" id="volver-btn" onclick="location.href='{% url 'home' %}'">Salir</button>
+                <button class="pdf-btn" type="button" id="generate-pdf-btn">Generar PDF</button>
                 <div id="view-given-items-table-container">
 
                 </div>

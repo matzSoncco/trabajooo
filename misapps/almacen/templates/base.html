@@ -77,16 +77,16 @@
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
+                        <div class="nav-item">
                             <a class="nav-link" href="{% url 'exit' %}">Cerrar sesión</a>
-                        </li>
+                        </div>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register_admin' %}">Crear Cuenta</a>
-                        </li>
+                        <div class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}" onclick="adjustTitle()">Iniciar Sesión</a>
+                        </div>
+                        <div class="nav-item">
+                            <a class="nav-link" href="{% url 'register_admin' %}" onclick="adjustTitle()">Crear Cuenta</a>
+                        </div>
                     {% endif %}
                 </ul>
             </div>

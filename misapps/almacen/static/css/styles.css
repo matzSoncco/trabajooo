@@ -105,7 +105,7 @@ body {
     justify-content: center;
     height: 100px;
     width: 150px;
-    background: #556db3;
+    background: linear-gradient(135deg, #6abf69, #556db3);
     color: white;
     text-decoration: none;
     border-radius: 10px;

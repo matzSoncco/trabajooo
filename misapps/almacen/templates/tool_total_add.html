@@ -15,40 +15,127 @@
         });
     });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+    --primary-color: #4a6fa5;
+    --primary-light: #6989b9;
+    --primary-dark: #345d8a;
+    --secondary-color: #e63946;
+    --accent-color: #f9c74f;
+    --text-color: #2b2d42;
+    --text-light: #f1faee;
+    --background-color: #f8f9fa;
+    --sidebar-bg: #2b2d42;
+    --card-bg: #ffffff;
+    --border-radius: 10px;
+    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.pdf-btn {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin: 5px;
+}
+
+.pdf-btn {
+    background-color: var(--accent-color);
+}
+
+.pdf-btn:hover {
+    background-color: darkgoldenrod;
+}
+</style>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const filterButton = document.getElementById('filter-warning');
-    const clearFilterButton = document.getElementById('clear-filter');
+    const generatePdfButton = document.getElementById('generate-pdf-btn');
     const tableRows = document.querySelectorAll('tbody tr');
 
+    if (!filterButton) {
+        console.error('El botón de filtro no se encontró');
+        return;
+    }
+
+    if (!generatePdfButton) {
+        console.error('El botón de generar PDF no se encontró');
+        return;
+    }
+
+    let isFiltered = false;
+
+    function updateFilterState(filtered) {
+        isFiltered = filtered;
+        tableRows.forEach(row => {
+            if (filtered) {
+                row.style.display = row.classList.contains('rojo') ? '' : 'none';
+            } else {
+                row.style.display = '';
+            }
+        });
+        filterButton.textContent = filtered ? 'Deshacer Filtro' : 'Filtrar';
+    }
+
     filterButton.addEventListener('click', () => {
-        let isFiltered = filterButton.textContent === 'Deshacer Filtro';
-        
-        if (isFiltered) {
-            // Mostrar todas las filas
-            tableRows.forEach(row => row.style.display = '');
-            filterButton.textContent = 'Filtrar';
-            clearFilterButton.style.display = 'none';
-        } else {
-            // Filtrar filas rojas
-            tableRows.forEach(row => {
-                if (row.classList.contains('rojo')) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            filterButton.textContent = 'Deshacer Filtro';
-            clearFilterButton.style.display = 'inline';
-        }
+        updateFilterState(!isFiltered);
     });
 
-    clearFilterButton.addEventListener('click', () => {
-        // Mostrar todas las filas
-        tableRows.forEach(row => row.style.display = '');
-        filterButton.textContent = 'Filtrar';
-        clearFilterButton.style.display = 'none';
-    });
+    generatePdfButton.addEventListener('click', generatePDF);
+
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        if (!jsPDF) {
+            console.error('jsPDF no está disponible');
+            return;
+        }
+        const doc = new jsPDF();
+
+        // Añadir título
+        doc.setFontSize(18);
+        doc.text('Listado de Herramientas' + (isFiltered ? ' (Filtrado)' : ''), 14, 20);
+
+        // Crear la tabla
+        const headers = ['Código', 'Nombre', 'Unidad', 'N° Guia', 'Cantidad', 'Stock Ideal', 'Precio Unitario', 'Precio Subtotal'];
+        const rows = [];
+
+        tableRows.forEach(row => {
+            if (!isFiltered || row.style.display !== 'none') {
+                const rowData = Array.from(row.cells).map(cell => cell.textContent.trim());
+                rows.push(rowData);
+            }
+        });
+
+        doc.autoTable({
+            head: [headers],
+            body: rows,
+            startY: 30,
+            styles: {
+                fontSize: 8,
+                cellPadding: 2,
+                overflow: 'linebreak',
+                halign: 'center'
+            },
+            headStyles: {
+                fillColor: [100, 100, 100],
+                textColor: 255,
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [245, 245, 245]
+            }
+        });
+
+        // Guardar el PDF
+        doc.save('Listado_EPPs' + (isFiltered ? '_filtrado' : '') + '.pdf');
+    }
 });
 </script>
 <section class="principal-general">
@@ -88,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="top-form">
                 <h2 class="titulo-primario">Listado de Herramientas</h2>
                 <button class="form-btn ver-obj-btn" id="filter-warning">Filtrar</button>
+                <button class="pdf-btn" type="button" id="generate-pdf-btn">Generar PDF</button>
             </div>
             <div class="centrado">
                 <div class="tabla-mostrar">

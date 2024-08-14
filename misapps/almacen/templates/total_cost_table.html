@@ -65,6 +65,74 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.22/jspdf.plugin.autotable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const { jsPDF } = window.jspdf;
+        const generatePdfButton = document.getElementById('generate-pdf-btn');
+    
+        if (!generatePdfButton) {
+            console.error('El botón de generar PDF no se encontró');
+            return;
+        }
+    
+        generatePdfButton.addEventListener('click', generatePDF);
+    
+        function generatePDF() {
+            const doc = new jsPDF();
+    
+            // Añadir título
+            doc.setFontSize(18);
+            doc.text('Tabla de Costos totales', 14, 20);
+    
+            // Crear la tabla
+            const headers = ['Código', 'Nombre', 'Costo Unitario', 'Cantidad', 'Costo Total'];
+            const rows = [];
+    
+            const tableBody = document.querySelectorAll('#tableBody tr');
+            tableBody.forEach(row => {
+                const rowData = Array.from(row.cells).map(cell => cell.textContent.trim());
+                rows.push(rowData);
+            });
+    
+            // Agregar los datos de la tabla al PDF
+            doc.autoTable({
+                head: [headers],
+                body: rows,
+                startY: 30,
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2,
+                    overflow: 'linebreak',
+                    halign: 'center'
+                },
+                headStyles: {
+                    fillColor: [100, 100, 100],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245]
+                },
+                margin: { top: 25 },
+            });
+    
+            // Añadir el total final si existe
+            const totalFooter = document.querySelector('tfoot.pie-tabla td:last-child strong');
+            if (totalFooter) {
+                const finalTotalCost = totalFooter.textContent.trim();
+                doc.setFontSize(12);
+                doc.text('Costo Total Final: ' + finalTotalCost, 14, doc.lastAutoTable.finalY + 10);
+            } else {
+                console.warn('No se encontró el costo total final.');
+            }
+    
+            // Guardar el PDF
+            doc.save('Tabla_Costos_Total.pdf');
+        }
+    });
+</script>
 <section class="principal-general">
     <aside class="menu-lateral">
         <div class="tarjeta-presentacion">
@@ -108,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="form-btn ver-obj-btn" id="sortButton">Ordenar por Costo Total</button>
                 <button class="form-btn ver-obj-btn" id="pie-graph">Grafico de tortas</button>
                 <button class="form-btn ver-obj-btn" id="pareto-graph">Diagrama de Pareto</button>
+                <button class="form-btn ver-obj-btn" type="button" id="generate-pdf-btn">Generar PDF</button>
             </div>
             <div class="tabla-mostrar">
                 <table class="tabla">
@@ -147,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </tbody>
                     <tfoot class="pie-tabla">
                         <tr>
-                            <td colspan="4"><strong>Costo Total Final</strong> </td>
+                            <td colspan="5"><strong>Costo Total Final</strong> </td>
                             <td><strong>S/.{{ finalTotalCost }}</strong></td>
                         </tr>
                     </tfoot>

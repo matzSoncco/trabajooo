@@ -105,7 +105,7 @@ body {
     justify-content: center;
     height: 100px;
     width: 150px;
-    background: #556db3;
+    background: linear-gradient(120deg, #4caf50, #2196f3); /* Gradiente verde a azul */
     color: white;
     text-decoration: none;
     border-radius: 10px;

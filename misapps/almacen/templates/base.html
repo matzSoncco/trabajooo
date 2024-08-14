@@ -4,10 +4,50 @@
 <head>
     {% load static %}
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <title>{% block title %}Inicio{% endblock %}</title>
+    <style>
+        body {
+            background-image: url('https://fhingenieros.com.pe/wp-content/themes/realfactory/images/page-title-background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .container {
+            min-height: 100vh; 
+            margin: 0;
+            padding: 0;
+        }
+        .barra-arriba {
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            padding: 10px; 
+        }
+        .logo-container {
+            background-color: white; 
+            border-radius: 8px;
+            padding: 5px;
+            display: flex;
+            align-items: center; 
+        }
+        .navbar-brand img {
+            max-height: 40px; 
+        }
+        .navbar {
+            display: flex;
+            align-items: center; 
+        }
+        .navbar-nav {
+            margin: 0; 
+        }
+        .navbar-nav .nav-item {
+            margin-left: 15px;
+        }
+    </style>
 </head>
 <body>
     <script>
@@ -23,36 +63,38 @@
         });
     </script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Navbar superior -->
     <div class="barra-arriba">
-        <nav>
-            {% if user.is_authenticated %}
-                <div class="item-top">
-                    <a class="nav-link" href="{% url 'exit' %}">Cerrar sesión</a>
-                </div>
-            {% else %}
-                <div class="item-top">
-                    <a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a>
-                </div>
-                <div class="item-top">
-                    <a class="nav-link" href="{% url 'register_admin' %}">Crear Cuenta</a>
-                </div>
-            {% endif %}
+        <!-- Logo -->
+        <div class="logo-container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <img src="https://fhingenieros.com.pe/wp-content/uploads/2017/06/logo_color_V1_241x47.png" alt="Logo">
+            </a>
+        </div>
+        <!-- Botones de navegación -->
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'exit' %}">Cerrar sesión</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register_admin' %}">Crear Cuenta</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </nav>
     </div>
+
     <main class="container mt-4">
         {% block content %}{% endblock %}
     </main>
 </body>
-<style>
-    #special-page {
-        background-image: url('https://fhingenieros.com.pe/wp-content/themes/realfactory/images/page-title-background.jpg');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        min-height: 100vh; 
-        margin: 0;
-        padding: 0;
-    }
-</style>
 </html>

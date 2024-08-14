@@ -22,18 +22,33 @@
         var addedMaterial = [];
 
         function loadAddedMaterialTable() {
-            let html = '<table class="added-item-table"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
-            addedMaterial.forEach(function(material) {
+            let html = '<table class="tabla"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th><th>Acción</th></tr></thead><tbody>';
+            addedMaterial.forEach(function(material, index) {
                 html += `<tr>
                             <td>${material.guideNumber}</td>
                             <td>${material.name}</td>
                             <td>${material.unitCost}</td>
                             <td>${material.quantity}</td>
                             <td>${material.stock}</td>
+                            <td><button class="quitar-btn" id="delete-btn" data-index="${index}">Quitar</button></td>
                          </tr>`;
             });
             html += '</tbody></table>';
             $('#added-items-table-container').html(html);
+
+            $('#delete-btn').on('click', function() {
+                const index = $(this).data('index');
+                // Llamar a una función para eliminar el item basado en el índice
+                deleteItem(index);
+            });
+        }
+
+        // Función para eliminar un item basado en el índice
+        function deleteItem(index) {
+            // Eliminar el item del array addedPpe
+            addedMaterial.splice(index, 1);
+            // Volver a cargar la tabla actualizada
+            loadAddedMaterialTable();
         }
 
         $(document).on('click', '#agregar-formulario', function() {

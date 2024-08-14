@@ -22,18 +22,34 @@ $(document).ready(function() {
     var addedPpe = [];
 
     function loadAddedPpeTable() {
-        let html = '<table class="added-item-table"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
-        addedPpe.forEach(function(ppe) {
+        let html = '<table class="tabla"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th><th>Acción</th></tr></thead><tbody>';
+        addedPpe.forEach(function(ppe, index) {
             html += `<tr>
                         <td>${ppe.guideNumber}</td>
                         <td>${ppe.name}</td>
                         <td>${ppe.unitCost}</td>
                         <td>${ppe.quantity}</td>
                         <td>${ppe.stock}</td>
-                     </tr>`;
+                        <td><button class="quitar-btn" id="delete-btn" data-index="${index}">Quitar</button></td>
+                    </tr>`;
         });
         html += '</tbody></table>';
         $('#added-items-table-container').html(html);
+
+        // Agregar un manejador de eventos para los botones de eliminar
+        $('#delete-btn').on('click', function() {
+            const index = $(this).data('index');
+            // Llamar a una función para eliminar el item basado en el índice
+            deleteItem(index);
+        });
+    }
+
+    // Función para eliminar un item basado en el índice
+    function deleteItem(index) {
+        // Eliminar el item del array addedPpe
+        addedPpe.splice(index, 1);
+        // Volver a cargar la tabla actualizada
+        loadAddedPpeTable();
     }
 
     $(document).on('click', '#agregar-formulario', function() {

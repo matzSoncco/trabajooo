@@ -22,18 +22,33 @@ $(document).ready(function() {
     var addedEquipment = [];
 
     function loadAddedEquipmentTable() {
-        let html = '<table class="added-item-table"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th></tr></thead><tbody>';
-        addedEquipment.forEach(function(equipment) {
+        let html = '<table class="tabla"><thead><tr><th>N° de Guía</th><th>Nombre</th><th>Costo Unitario</th><th>Cantidad</th><th>Stock ideal</th><th>Acción</th></tr></thead><tbody>';
+        addedEquipment.forEach(function(equipment, index) {
             html += `<tr>
                         <td>${equipment.guideNumber}</td>
                         <td>${equipment.name}</td>
                         <td>${equipment.unitCost}</td>
                         <td>${equipment.quantity}</td>
                         <td>${equipment.stock}</td>
+                        <td><button class="quitar-btn" id="delete-btn" data-index="${index}">Quitar</button></td>
                      </tr>`;
         });
         html += '</tbody></table>';
         $('#added-item-table-container').html(html);
+
+        $('#delete-btn').on('click', function() {
+            const index = $(this).data('index');
+            // Llamar a una función para eliminar el item basado en el índice
+            deleteItem(index);
+        });
+    }
+
+    // Función para eliminar un item basado en el índice
+    function deleteItem(index) {
+        // Eliminar el item del array addedPpe
+        addedEquipment.splice(index, 1);
+        // Volver a cargar la tabla actualizada
+        loadAddedEquipmentTable();
     }
 
     $(document).on('click', '#agregar-formulario', function() {

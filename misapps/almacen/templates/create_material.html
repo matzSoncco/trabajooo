@@ -86,9 +86,15 @@
                             </div>
                         </div>
         
-                        <div class="campo">
-                            <label for="id_image" class="label">Imágen</label>
-                            {{ form.image }}
+                        <div class="fila-form">
+                            <div class="campo">
+                                <label for="id_image" class="label">Imágen</label>
+                                {{ form.image }}
+                            </div>
+                            <div class="campo">
+                                <label for="id_image" class="label">Previsualización</label>
+                                <img id="image-preview" src="" alt="Previsualización de la imagen" style="display: none; max-width: 200px; margin-top: 10px;" />
+                            </div>
                         </div>
         
                         <div class="campo-botones">
@@ -187,6 +193,30 @@
                 confirmButtonText: 'Aceptar'
             });
         }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.querySelector('#id_image'); // Selecciona el campo de archivo
+        const previewImage = document.querySelector('#image-preview'); // Selecciona el elemento de imagen para la previsualización
+
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0]; // Obtén el primer archivo seleccionado
+
+            if (file) {
+                const reader = new FileReader(); // Crea un nuevo FileReader para leer el archivo
+
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result; // Actualiza la fuente de la imagen de previsualización
+                    previewImage.style.display = 'block'; // Muestra la imagen de previsualización
+                };
+
+                reader.readAsDataURL(file); // Lee el archivo como una URL de datos
+            } else {
+                previewImage.src = ''; // Borra la fuente si no hay archivo
+                previewImage.style.display = 'none'; // Oculta la imagen si no hay archivo
+            }
+        });
     });
 </script>
 {% endblock %}

@@ -15,6 +15,8 @@
         });
     });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -400,6 +402,60 @@
         });
     });
 </script>
+<script>
+function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Obtener información del trabajador
+    const workerDni = $('#id_workerDni').val().trim();
+    const workerName = $('#id_worker').val().trim();
+    const loanDate = $('#id_loanDate').val().trim();
+
+    // Añadir título
+    doc.setFontSize(18);
+    doc.text('Entrega de EPPs', 14, 20);
+
+    // Añadir información del trabajador
+    doc.setFontSize(12);
+    doc.text(`DNI del trabajador: ${workerDni}`, 14, 30);
+    doc.text(`Fecha de préstamo: ${loanDate}`, 14, 40);
+
+    // Crear la tabla
+    const headers = ['EPP', 'Cantidad', '¿Merece renovación?', 'Vale de excepción', 'Fecha de Expiración', 'Comentarios'];
+    const rows = [];
+
+    $('#popup-table tbody tr').each(function() {
+        const row = [];
+        $(this).find('td').each(function(index) {
+            if (index === 3) { // Vale de excepción
+                row.push($(this).find('input').is(':checked') ? 'Sí' : 'No');
+            } else if (index === 5) { // Comentarios
+                row.push($(this).find('input').val());
+            } else {
+                row.push($(this).text());
+            }
+        });
+        rows.push(row);
+    });
+
+    doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 50,
+        margin: { top: 50 },
+    });
+
+    // Guardar el PDF
+    doc.save('entrega_epps.pdf');
+}
+
+$(document).ready(function() {
+    // ... otros event listeners ...
+
+    $('#generate-pdf-btn').on('click', generatePDF);
+});
+</script>
 <style>
 /* Estilos generales para el popup */
 #popup {
@@ -651,5 +707,6 @@
     </table>
     <button type="button" id="confirm-btn">Confirmar</button>
     <button id="cancel-btn">Cancelar</button>
+    <button type="button" id="generate-pdf-btn">Generar PDF</button>
 </div>
 {% endblock %}

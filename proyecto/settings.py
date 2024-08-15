@@ -82,23 +82,9 @@ WSGI_APPLICATION = 'proyecto.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-'''
 DATABASES = {
     'default': dj_database_url.parse(env('DATABASE_URL'))
 }
-'''
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'tesis',
-        'USER': 'root',
-        'HOST': 'localhost',
-        'PORT': '3307',
-        'PASSWORD': 'matz'
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

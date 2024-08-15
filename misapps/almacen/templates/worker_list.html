@@ -94,13 +94,13 @@
                                 <td>{{ worker.contractDate }}</td>
                                 <td>{% if worker.workerStatus %}Activo{% else %}Inactivo{% endif %}</td>
                                 <td>
-                                    <a href="{% url 'modify_worker' worker.name %}" class="form-btn aceptar-btn">Editar</a>
+                                    <a href="{% url 'modify_worker' worker.name %}" class="form-btn aceptar-btn"><img class="icon-trabajador" src="../static/img/boton-editar.png"></a>
                                     <button type="button" class="form-btn cancelar-btn" id="delete-worker-btn" 
                                         data-worker-name="{{ worker.name }}"
                                         data-worker-surname="{{ worker.surname }}"
                                         data-action-url="{% url 'delete_worker' worker.dni %}">
-                                    Eliminar
-                                </button>
+                                    <img class="icon-trabajador" src="../static/img/borrar.png">
+                                    </button>
                                 </td>
                             </tr>
                         {% empty %}
@@ -115,7 +115,74 @@
     </section>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root {
+    --primary-color: #4a6fa5;
+    --primary-light: #6989b9;
+    --primary-dark: #345d8a;
+    --secondary-color: #e63946;
+    --accent-color: #f9c74f;
+    --text-color: #2b2d42;
+    --text-light: #f1faee;
+    --background-color: #f8f9fa;
+    --sidebar-bg: #2b2d42;
+    --card-bg: #ffffff;
+    --border-radius: 10px;
+    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 
+/* Estilo para el enlace de modificar */
+a.form-btn.aceptar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2px;
+    height: 10px;
+    background-color: var(--primary-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+a.form-btn.aceptar-btn:hover,
+a.form-btn.aceptar-btn:focus {
+    background-color: var(--primary-light);
+}
+
+a.form-btn.aceptar-btn img.icon-trabajador {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+/* Estilo para el botón de cancelar */
+button.form-btn.cancelar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 10px;
+    height: 40px;
+    background-color: var(--secondary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+button.form-btn.cancelar-btn:hover,
+button.form-btn.cancelar-btn:focus {
+    background-color: #d62839; /* Un tono más oscuro del rojo secundario */
+}
+
+button.form-btn.cancelar-btn img.icon-trabajador {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+</style>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Selecciona todos los botones de eliminación

@@ -6,7 +6,7 @@ from django.utils import timezone
 
 class Material(models.Model):
     idMaterial = models.CharField(primary_key=True, editable=False, max_length=10)
-    name = models.CharField(null=False, max_length=20)
+    name = models.CharField(null=False, max_length=100, unique=True)
     quantity = models.IntegerField(validators=[MinValueValidator(0)], null=False, default=0)
     loanAmount = models.IntegerField(null=False, default=0)
     stock = models.IntegerField(null=False, default=0)

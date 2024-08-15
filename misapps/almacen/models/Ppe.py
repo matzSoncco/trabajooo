@@ -4,7 +4,7 @@ from .Unit import Unit
 
 class Ppe(models.Model):
     idPpe = models.CharField(primary_key=True, editable=False, max_length=10)
-    name = models.CharField(null=False, max_length=20, unique=True)
+    name = models.CharField(null=False, max_length=100, unique=True)
     quantity = models.IntegerField(null=False, default=0)
     unitCost = models.DecimalField(default=0.0, null=False, max_digits=8, decimal_places=2)
     totalCost = models.DecimalField(default=0.0, null=False, max_digits=10, decimal_places=2, editable=False)

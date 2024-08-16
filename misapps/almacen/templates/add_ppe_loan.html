@@ -419,8 +419,8 @@ function generatePDF() {
     // Añadir información del trabajador
     doc.setFontSize(12);
     doc.text(`DNI del trabajador: ${workerDni}`, 14, 30);
-    doc.text(`Nombre del trabajdor: ${workerName}`, 14, 30);
-    doc.text(`Fecha de préstamo: ${loanDate}`, 14, 40);
+    doc.text(`Nombre del trabajdor: ${workerName}`, 14, 40);
+    doc.text(`Fecha de préstamo: ${loanDate}`, 14, 50);
 
     // Crear la tabla
     const headers = ['EPP', 'Cantidad', '¿Merece renovación?', 'Vale de excepción', 'Fecha de Expiración', 'Comentarios'];
@@ -443,8 +443,8 @@ function generatePDF() {
     doc.autoTable({
         head: [headers],
         body: rows,
-        startY: 50,
-        margin: { top: 50 },
+        startY: 60,
+        margin: { top: 60 },
     });
 
     // Guardar el PDF

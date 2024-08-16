@@ -268,7 +268,7 @@ function generatePDF() {
     doc.text(`DNI del trabajador: ${workerDni}`, 14, 30);
     doc.text(`Nombre del trabajador: ${workerName}`, 14, 40);
     doc.text(`Fecha de préstamo: ${loanDate}`, 14, 50);
-    doc.text(`Fecha de devolución: ${returnLoanDate}`, 14, 50);
+    doc.text(`Fecha de devolución: ${returnLoanDate}`, 14, 60);
 
     // Crear la tabla
     const headers = ['Nombre', 'Cantidad'];
@@ -287,8 +287,8 @@ function generatePDF() {
     doc.autoTable({
         head: [headers],
         body: rows,
-        startY: 60,
-        margin: { top: 60 },
+        startY: 70,
+        margin: { top: 70 },
         styles: {
             fontSize: 12,
             cellPadding: 5,

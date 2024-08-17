@@ -7,7 +7,6 @@ from .models.Equipment import Equipment
 from .models.Material import Material
 from .models.Tool import Tool
 from .models.Worker import Worker
-from .models.Loan import Loan
 from .models.Unit import Unit
 from .models.ToolLoan import ToolLoan
 from .models.PpeStockUpdate import PpeStockUpdate

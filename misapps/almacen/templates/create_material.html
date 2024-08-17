@@ -153,13 +153,21 @@
                     const newOption = new Option(newUnit, newUnit);
                     unitSelect.add(newOption);
 
-                    // Resetear el campo de selección a la opción por defecto
-                    unitSelect.selectedIndex = 0;
+                    // Seleccionar la nueva unidad en el campo de selección
+                    unitSelect.value = newUnit;
 
                     // Limpiar el campo de entrada para la nueva unidad
                     newUnitField.value = '';
 
-                    // Restaurar los valores anteriores del formulario
+                    // Mostrar mensaje de éxito
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Unidad agregada',
+                        text: 'La nueva unidad se ha agregado y seleccionado correctamente.',
+                        confirmButtonText: 'Aceptar'
+                    });
+
+                    // Restaurar los valores anteriores del formulario excepto la unidad seleccionada
                     for (const key in formValues) {
                         if (key !== 'unit') {  // Excepto la unidad que se acaba de actualizar
                             const field = document.querySelector(`[name="${key}"]`);
@@ -168,14 +176,6 @@
                             }
                         }
                     }
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Unidad agregada',
-                        text: 'La nueva unidad se ha agregado correctamente.',
-                        confirmButtonText: 'Aceptar'
-                    });
-
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -184,7 +184,7 @@
                         confirmButtonText: 'Aceptar'
                     });
                 }
-            })
+            });
         } else {
             Swal.fire({
                 icon: 'warning',

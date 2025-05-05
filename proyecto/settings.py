@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'proyecto.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-#Se cambia la base de datos
+#Se cambia la base de datos otra vez
 DATABASES = {
     'default': dj_database_url.parse(env('DATABASE_URL'))
 }
